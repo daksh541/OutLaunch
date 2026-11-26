@@ -787,6 +787,435 @@ export async function downloadAnalyticsExportCsv({ type = 'campaigns', campaignI
   return { success: true, filename };
 }
 
+// ==========================================
+// AI CAMPAIGN OPTIMIZATION & RECOMMENDATIONS
+// ==========================================
+
+export async function fetchOptimizationOverview() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/optimization/overview', {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load optimization overview');
+  return data;
+}
+
+export async function fetchCampaignOptimizationDetail(campaignId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/campaigns/${campaignId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load campaign optimization detail');
+  return data;
+}
+
+export async function analyzeCampaignOptimization(campaignId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/campaigns/${campaignId}/analyze`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to analyze campaign optimization');
+  return data;
+}
+
+export async function fetchOptimizationRecommendations({ campaignId = null, status = 'all', category = 'all' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (campaignId) params.append('campaignId', campaignId);
+  if (status && status !== 'all') params.append('status', status);
+  if (category && category !== 'all') params.append('category', category);
+
+  const res = await fetch(`/api/optimization/recommendations?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load recommendations');
+  return data.recommendations || [];
+}
+
+export async function reviewOptimizationRecommendation(recommendationId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/recommendations/${recommendationId}/review`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to review recommendation');
+  return data.recommendation;
+}
+
+export async function applyOptimizationRecommendation(recommendationId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/recommendations/${recommendationId}/apply`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to apply recommendation');
+  return data;
+}
+
+export async function dismissOptimizationRecommendation(recommendationId, reason = 'User dismissed') {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/recommendations/${recommendationId}/dismiss`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to dismiss recommendation');
+  return data;
+}
+
+export async function generateCampaignVariants(campaignId, { variantType = 'subject', prompt = '', context = {} } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/campaigns/${campaignId}/variants`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ variantType, prompt, context }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate campaign variants');
+  return data;
+}
+
+export async function createCampaignExperiment(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/optimization/experiments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create experiment');
+  return data;
+}
+
+export async function fetchCampaignExperiments(campaignId = null) {
+  const token = await getAuthToken();
+  const url = campaignId ? `/api/optimization/experiments?campaignId=${campaignId}` : '/api/optimization/experiments';
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch experiments');
+  return data.experiments || [];
+}
+
+export async function fetchCampaignExperimentDetail(experimentId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/experiments/${experimentId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch experiment detail');
+  return data;
+}
+
+export async function pauseCampaignExperiment(experimentId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/experiments/${experimentId}/pause`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to pause experiment');
+  return data.experiment;
+}
+
+export async function completeCampaignExperiment(experimentId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/optimization/experiments/${experimentId}/complete`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to complete experiment');
+  return data.experiment;
+}
+
+// ==========================================
+// LEAD CRM & SALES PIPELINE MANAGEMENT
+// ==========================================
+
+export async function fetchCrmOverview() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/crm/overview', {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load CRM overview');
+  return data;
+}
+
+export async function fetchCrmPipelineStages() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/crm/pipeline', {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load pipeline stages');
+  return data.stages || [];
+}
+
+export async function fetchCrmLeads({
+  search = '',
+  stage = 'all',
+  industry = 'all',
+  source = 'all',
+  minScore = null,
+  sortBy = 'last_activity_at',
+  sortOrder = 'desc',
+  page = 1,
+  limit = 20,
+} = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (stage && stage !== 'all') params.append('stage', stage);
+  if (industry && industry !== 'all') params.append('industry', industry);
+  if (source && source !== 'all') params.append('source', source);
+  if (minScore !== null && minScore !== undefined) params.append('minScore', minScore);
+  if (sortBy) params.append('sortBy', sortBy);
+  if (sortOrder) params.append('sortOrder', sortOrder);
+  if (page) params.append('page', page);
+  if (limit) params.append('limit', limit);
+
+  const res = await fetch(`/api/crm/leads?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load CRM leads');
+  return data;
+}
+
+export async function updateLeadCrmStage(leadId, newStage, notes = '') {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/leads/${leadId}/stage`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ newStage, notes }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update lead stage');
+  return data;
+}
+
+export async function bulkUpdateLeadCrmStage(leadIds, newStage, notes = '') {
+  const token = await getAuthToken();
+  const res = await fetch('/api/crm/leads/bulk-stage', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ leadIds, newStage, notes }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to bulk update lead stages');
+  return data;
+}
+
+export async function fetchLeadProfile(leadId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/leads/${leadId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load lead profile');
+  return data.profile;
+}
+
+export async function fetchLeadActivityTimeline(leadId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/leads/${leadId}/activity`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load lead activity');
+  return data.timeline || [];
+}
+
+export async function fetchLeadNotes(leadId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/leads/${leadId}/notes`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load notes');
+  return data.notes || [];
+}
+
+export async function createLeadNote(leadId, { content, authorName = 'Sales Rep', taskId = null }) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/leads/${leadId}/notes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ content, authorName, taskId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create note');
+  return data.note;
+}
+
+export async function deleteLeadNote(noteId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/notes/${noteId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to delete note');
+  return data;
+}
+
+export async function fetchCrmTasks({ leadId = null, status = 'all' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (leadId) params.append('leadId', leadId);
+  if (status && status !== 'all') params.append('status', status);
+
+  const res = await fetch(`/api/crm/tasks?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load tasks');
+  return data;
+}
+
+export async function createCrmTask({ leadId, title, description = '', taskType = 'follow_up', priority = 'medium', dueDate }) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/crm/tasks', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ leadId, title, description, taskType, priority, dueDate }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create task');
+  return data.task;
+}
+
+export async function updateCrmTask(taskId, updates = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/tasks/${taskId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update task');
+  return data.task;
+}
+
+export async function fetchCrmDeals({ leadId = null, status = 'all' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (leadId) params.append('leadId', leadId);
+  if (status && status !== 'all') params.append('status', status);
+
+  const res = await fetch(`/api/crm/deals?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load deals');
+  return data.deals || [];
+}
+
+export async function createCrmDeal(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/crm/deals', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create deal');
+  return data.deal;
+}
+
+export async function updateCrmDeal(dealId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/crm/deals/${dealId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update deal');
+  return data.deal;
+}
+
+
+
 
 
 

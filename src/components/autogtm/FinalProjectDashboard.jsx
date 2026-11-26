@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import Step4CompaniesTable from './Step4CompaniesTable';
 import Step5PeopleTable from './Step5PeopleTable';
 import Step6EmailComposer from './Step6EmailComposer';
@@ -7,6 +8,7 @@ export default function FinalProjectDashboard({
   companyData,
   onOpenTrialModal
 }) {
+  const { navigate } = useNavigation();
   const [activeTab, setActiveTab] = useState('companies');
 
   return (
@@ -25,7 +27,23 @@ export default function FinalProjectDashboard({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              if (companyData?.domain) {
+                localStorage.setItem('outlaunch_active_company_domain', companyData.domain);
+                const friendlyName = companyData.name || (companyData.domain.split('.')[0].charAt(0).toUpperCase() + companyData.domain.split('.')[0].slice(1));
+                localStorage.setItem('outlaunch_active_company_name', friendlyName);
+              }
+              navigate(PRODUCT_ROUTES.DASHBOARD);
+            }}
+            className="inline-flex items-center gap-1.5 bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-xs cursor-pointer"
+          >
+            <span>Open in Workspace</span>
+            <span className="text-[#00e599]">→</span>
+          </button>
+
           <button
             type="button"
             onClick={onOpenTrialModal}

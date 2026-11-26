@@ -23,7 +23,9 @@ import {
   Loader2,
   AlertCircle,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Zap,
+  Briefcase
 } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -54,9 +56,12 @@ import InboxView from './InboxView';
 import AiResearchView from './AiResearchView';
 import AnalyticsView from './AnalyticsView';
 import CampaignAnalyticsView from './CampaignAnalyticsView';
+import CampaignOptimizationView from './CampaignOptimizationView';
+import LeadCRMView from './LeadCRMView';
 import SettingsView from './SettingsView';
 import FindLeadsView from './FindLeadsView';
 import AiPersonalizationModal from './AiPersonalizationModal';
+import DashboardErrorBoundary from './DashboardErrorBoundary';
 
 export default function DashboardLayout() {
   const { navigate } = useNavigation();
@@ -83,7 +88,13 @@ export default function DashboardLayout() {
   const [activeResearchLead, setActiveResearchLead] = useState(null);
 
   // Workspaces
-  const companyName = profile?.company_name || 'Acme Outbound';
+  const scannedDomain = typeof window !== 'undefined'
+    ? localStorage.getItem('outlaunch_active_company_domain') || sessionStorage.getItem('outlaunch-scanned-domain')
+    : null;
+  const scannedName = typeof window !== 'undefined'
+    ? localStorage.getItem('outlaunch_active_company_name')
+    : null;
+  const companyName = scannedName || profile?.company_name || (scannedDomain ? scannedDomain.split('.')[0].charAt(0).toUpperCase() + scannedDomain.split('.')[0].slice(1) : 'Demo');
   const userDisplayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'Admin User');
   const userInitials = userDisplayName.substring(0, 2).toUpperCase();
 
@@ -304,12 +315,14 @@ export default function DashboardLayout() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'find-leads', label: 'Find Leads', icon: Search, badge: 'New', highlight: true },
     { id: 'leads', label: 'Prospects', icon: Users, badge: prospects.length.toString() },
+    { id: 'crm', label: 'CRM & Pipeline', icon: Briefcase, badge: 'Deals' },
     { id: 'campaigns', label: 'Campaigns', icon: Send, badge: `${activeCampaignsCount} Active` },
     { id: 'sequences', label: 'Sequences', icon: Mail },
     { id: 'tasks', label: 'LinkedIn Tasks', icon: Linkedin, badge: '3 Review' },
     { id: 'inbox', label: 'Unified Inbox', icon: Inbox, badge: '2 New' },
     { id: 'research', label: 'AI Deep Research', icon: Sparkles },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'optimization', label: 'Optimize', icon: Zap, badge: 'AI' },
     { id: 'settings', label: 'Workspace Settings', icon: Settings }
   ];
 
@@ -747,93 +760,107 @@ export default function DashboardLayout() {
             </div>
           )}
 
-          {currentTab === 'overview' && (
-            <OverviewView
-              metrics={metrics}
-              campaigns={campaigns}
-              prospects={prospects}
-              linkedinTasks={linkedinTasks}
-              onNavigate={(tab) => setCurrentTab(tab)}
-              onToggleCampaignStatus={handleToggleCampaignStatus}
-            />
-          )}
+          <DashboardErrorBoundary key={currentTab} onReset={() => setCurrentTab('overview')}>
+            {currentTab === 'overview' && (
+              <OverviewView
+                metrics={metrics}
+                campaigns={campaigns}
+                prospects={prospects}
+                linkedinTasks={linkedinTasks}
+                onNavigate={(tab) => setCurrentTab(tab)}
+                onToggleCampaignStatus={handleToggleCampaignStatus}
+              />
+            )}
 
-          {currentTab === 'find-leads' && (
-            <FindLeadsView
-              userId={user?.id}
-              existingLeads={prospects}
-              campaigns={campaigns}
-              onLeadsSaved={(savedList) => {
-                setProspects((prev) => [...savedList, ...prev]);
-              }}
-              onOpenAiResearch={(lead) => {
-                setActiveResearchLead(lead);
-              }}
-              onNavigate={(tab) => setCurrentTab(tab)}
-            />
-          )}
+            {currentTab === 'find-leads' && (
+              <FindLeadsView
+                userId={user?.id}
+                existingLeads={prospects}
+                campaigns={campaigns}
+                onLeadsSaved={(savedList) => {
+                  setProspects((prev) => [...savedList, ...prev]);
+                }}
+                onOpenAiResearch={(lead) => {
+                  setActiveResearchLead(lead);
+                }}
+                onNavigate={(tab) => setCurrentTab(tab)}
+              />
+            )}
 
-          {currentTab === 'leads' && (
-            <LeadsView
-              prospects={prospects}
-              userId={user?.id}
-              onAddLead={handleAddLead}
-              onUpdateLead={handleUpdateLead}
-              onDeleteLead={handleDeleteLead}
-              onImportLeads={handleImportLeads}
-              isLoading={isLoadingData}
-              error={dataError}
-            />
-          )}
+            {currentTab === 'leads' && (
+              <LeadsView
+                prospects={prospects}
+                userId={user?.id}
+                onAddLead={handleAddLead}
+                onUpdateLead={handleUpdateLead}
+                onDeleteLead={handleDeleteLead}
+                onImportLeads={handleImportLeads}
+                isLoading={isLoadingData}
+                error={dataError}
+              />
+            )}
 
-          {currentTab === 'campaigns' && (
-            <CampaignsView
-              campaigns={campaigns}
-              prospects={prospects}
-              sequenceSteps={sequences[0]?.steps || []}
-              onAddCampaign={handleAddCampaign}
-              onUpdateCampaign={handleUpdateCampaign}
-              onDeleteCampaign={handleDeleteCampaign}
-              onToggleStatus={handleToggleCampaignStatus}
-              onNavigate={(tab) => setCurrentTab(tab)}
-              isLoading={isLoadingData}
-              error={dataError}
-            />
-          )}
+            {currentTab === 'crm' && (
+              <LeadCRMView
+                onNavigateToLeads={() => setCurrentTab('leads')}
+              />
+            )}
 
-          {currentTab === 'sequences' && (
-            <SequencesView
-              sequences={sequences}
-            />
-          )}
+            {currentTab === 'campaigns' && (
+              <CampaignsView
+                campaigns={campaigns}
+                prospects={prospects}
+                sequenceSteps={sequences[0]?.steps || []}
+                onAddCampaign={handleAddCampaign}
+                onUpdateCampaign={handleUpdateCampaign}
+                onDeleteCampaign={handleDeleteCampaign}
+                onToggleStatus={handleToggleCampaignStatus}
+                onNavigate={(tab) => setCurrentTab(tab)}
+                isLoading={isLoadingData}
+                error={dataError}
+              />
+            )}
 
-          {currentTab === 'tasks' && (
-            <LinkedInTasksView
-              tasks={linkedinTasks}
-              onCompleteTask={handleCompleteLinkedInTask}
-            />
-          )}
+            {currentTab === 'sequences' && (
+              <SequencesView
+                sequences={sequences}
+              />
+            )}
 
-          {currentTab === 'inbox' && (
-            <InboxView
-              conversations={conversations}
-              onReplyToConversation={handleReplyToConversation}
-            />
-          )}
+            {currentTab === 'tasks' && (
+              <LinkedInTasksView
+                tasks={linkedinTasks}
+                onCompleteTask={handleCompleteLinkedInTask}
+              />
+            )}
 
-          {currentTab === 'research' && (
-            <AiResearchView />
-          )}
+            {currentTab === 'inbox' && (
+              <InboxView
+                conversations={conversations}
+                onReplyToConversation={handleReplyToConversation}
+              />
+            )}
 
-          {currentTab === 'analytics' && (
-            <CampaignAnalyticsView
-              onNavigateToCampaigns={() => setCurrentTab('campaigns')}
-            />
-          )}
+            {currentTab === 'research' && (
+              <AiResearchView />
+            )}
 
-          {currentTab === 'settings' && (
-            <SettingsView />
-          )}
+            {currentTab === 'analytics' && (
+              <CampaignAnalyticsView
+                onNavigateToCampaigns={() => setCurrentTab('campaigns')}
+              />
+            )}
+
+            {currentTab === 'optimization' && (
+              <CampaignOptimizationView
+                onNavigateToCampaigns={() => setCurrentTab('campaigns')}
+              />
+            )}
+
+            {currentTab === 'settings' && (
+              <SettingsView />
+            )}
+          </DashboardErrorBoundary>
         </main>
       </div>
 

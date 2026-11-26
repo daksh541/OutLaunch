@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   Briefcase,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Info
 } from 'lucide-react';
 import {
   searchProspects,

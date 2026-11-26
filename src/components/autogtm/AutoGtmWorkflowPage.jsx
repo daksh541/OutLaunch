@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigation } from '../../context/NavigationContext';
+import { ArrowRight } from 'lucide-react';
+import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import AutoGtmNavigation from './AutoGtmNavigation';
 import AutoGtmRail from './AutoGtmRail';
 import AgentActivityFeed from './AgentActivityFeed';
@@ -324,6 +325,21 @@ export default function AutoGtmWorkflowPage({ domain = 'keethub.lovable.app' }) 
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => {
+                localStorage.setItem('outlaunch_active_company_domain', domain);
+                const friendlyName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+                localStorage.setItem('outlaunch_active_company_name', friendlyName);
+                navigate(PRODUCT_ROUTES.DASHBOARD);
+              }}
+              className="text-[11px] px-3 py-1 rounded-md bg-[#0d1c15] hover:bg-[#162b21] text-white font-medium flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+              title="Go to OutLaunch Outreach Workspace"
+            >
+              <span>Connect to Workspace</span>
+              <ArrowRight className="w-3 h-3 text-[#00e599]" />
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsAutoPlay(!isAutoPlay)}
               className="text-[11px] px-2.5 py-1 rounded-md border border-black/10 bg-white text-gray-600 hover:text-gray-900 transition shadow-2xs cursor-pointer"
             >
@@ -375,10 +391,40 @@ export default function AutoGtmWorkflowPage({ domain = 'keethub.lovable.app' }) 
         <main className="flex-1 min-w-0 px-4 pb-24 flex flex-col justify-start">
           {/* Phase 1: research_company_loading */}
           {phase === 'research_company_loading' && (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[55vh] space-y-2 select-none animate-card-enter">
-              <div role={researchError ? 'alert' : 'status'} className="text-xs font-normal text-gray-400">{researchError ? researchError.message : 'Researching'}</div>
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[55vh] space-y-4 select-none animate-card-enter max-w-lg mx-auto text-center px-4">
+              <div role={researchError ? 'alert' : 'status'} className="text-xs font-normal text-gray-500">
+                {researchError ? researchError.message : 'Researching company details...'}
+              </div>
               <div className="max-w-full break-all text-center text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight font-mono">
                 {domain}
+              </div>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                {researchError && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhase('research_company_loading');
+                      setIsAutoPlay(true);
+                      retryResearch();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#0d9467] hover:bg-[#0a7854] text-white text-xs font-semibold cursor-pointer shadow-xs"
+                  >
+                    Retry Scan
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('outlaunch_active_company_domain', domain);
+                    const friendlyName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+                    localStorage.setItem('outlaunch_active_company_name', friendlyName);
+                    navigate(PRODUCT_ROUTES.DASHBOARD);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <span>Connect to Workspace</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#00e599]" />
+                </button>
               </div>
             </div>
           )}

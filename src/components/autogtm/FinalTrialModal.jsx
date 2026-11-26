@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 
 export default function FinalTrialModal({
   isOpen = true,
@@ -6,6 +7,7 @@ export default function FinalTrialModal({
   companyDomain = 'keethub.lovable.app',
   userEmail = 'gmalavaes@gmail.com',
 }) {
+  const { navigate } = useNavigation();
   const [agree, setAgree] = useState(true);
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -52,10 +54,18 @@ export default function FinalTrialModal({
             </p>
             <button
               type="button"
-              onClick={onClose}
-              className="mt-4 px-6 py-2.5 rounded-xl bg-[#0d9467] text-white font-semibold text-sm hover:bg-[#0a7854] transition shadow-xs"
+              onClick={() => {
+                if (companyDomain) {
+                  localStorage.setItem('outlaunch_active_company_domain', companyDomain);
+                  const friendlyName = companyDomain.split('.')[0].charAt(0).toUpperCase() + companyDomain.split('.')[0].slice(1);
+                  localStorage.setItem('outlaunch_active_company_name', friendlyName);
+                }
+                onClose();
+                navigate(PRODUCT_ROUTES.DASHBOARD);
+              }}
+              className="mt-4 px-6 py-2.5 rounded-xl bg-[#0d9467] text-white font-semibold text-sm hover:bg-[#0a7854] transition shadow-xs cursor-pointer"
             >
-              Go to project dashboard
+              Go to OutLaunch Workspace
             </button>
           </div>
         ) : (

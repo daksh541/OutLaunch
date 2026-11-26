@@ -10,6 +10,9 @@ import { InboundEmailService } from './inboundEmailService.mjs';
 import { LeadDiscoveryProvider } from './leadDiscoveryProvider.mjs';
 import { AnalyticsService } from './analyticsService.mjs';
 import { OptimizationService } from './optimizationService.mjs';
+import { CrmService } from './crmService.mjs';
+import { GoogleCalendarProvider } from './calendarProvider.mjs';
+import { MeetingService } from './meetingService.mjs';
 
 // Load environment variables from .env if present
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -83,7 +86,7 @@ function checkRateLimit(userId) {
 // Verify Supabase Auth token
 async function verifySupabaseToken(authHeader) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new Error('Missing or invalid Authorization header.');
+    throw new Error('Unauthorized: Missing or invalid Authorization header.');
   }
 
   const token = authHeader.replace('Bearer ', '').trim();
@@ -156,6 +159,19 @@ async function callOpenAI(messages, responseFormat = null) {
   const data = await res.json();
   return data.choices?.[0]?.message?.content?.trim() || '';
 }
+
+// AI Campaign Optimization & Recommendation Service
+const optimizationService = new OptimizationService(supabaseAdmin, analyticsService, {
+  callOpenAIFn: callOpenAI,
+});
+
+// Lead CRM & Sales Pipeline Management Service
+const crmService = new CrmService(supabaseAdmin, emailWorker, inboundService);
+
+// AI Meeting Booking & Calendar Scheduling Service
+const calendarProvider = new GoogleCalendarProvider();
+const meetingService = new MeetingService(supabaseAdmin, calendarProvider, crmService, emailWorker);
+crmService.meetingService = meetingService;
 
 // Parse request body safely (returns parsed JSON and rawBody buffer for signature verification)
 function parseJsonBody(req) {
@@ -1511,6 +1527,1236 @@ Generate JSON with these keys:
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, ...detailData }));
       }
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==========================================
+  // AI CAMPAIGN OPTIMIZATION & RECOMMENDATION ENGINE
+  // ==========================================
+
+  // 24. GET /api/optimization/overview: High-level optimization health & stats
+  if (req.method === 'GET' && pathname === '/api/optimization/overview') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const { campaigns } = await analyticsService.getCampaigns({ userId: user.id, limit: 100 });
+
+      const healthDistribution = {
+        excellent: 0,
+        healthy: 0,
+        needs_attention: 0,
+        critical: 0,
+        insufficient_data: 0,
+      };
+
+      for (const camp of campaigns) {
+        const health = optimizationService.calculateCampaignHealth(camp);
+        const catKey = health.status; // 'insufficient_data', 'critical', 'needs_attention', 'healthy', 'excellent'
+        if (healthDistribution[catKey] !== undefined) {
+          healthDistribution[catKey]++;
+        } else {
+          healthDistribution.healthy++;
+        }
+      }
+
+      // Aggregate recommendations
+      let allRecs = Array.from(optimizationService.memoryRecommendations.values())
+        .filter(r => r.user_id === user.id);
+
+      if (allRecs.length === 0 && supabaseAdmin) {
+        try {
+          const { data } = await supabaseAdmin
+            .from('campaign_optimization_recommendations')
+            .select('*')
+            .eq('user_id', user.id);
+          if (data && Array.isArray(data)) allRecs = data;
+        } catch {}
+      }
+
+      const activeRecs = allRecs.filter(r => r.status === 'new' || r.status === 'reviewed');
+      const appliedRecs = allRecs.filter(r => r.status === 'applied');
+
+      // Aggregate experiments
+      let allExps = Array.from(optimizationService.memoryExperiments.values())
+        .filter(e => e.user_id === user.id);
+      if (allExps.length === 0 && supabaseAdmin) {
+        try {
+          const { data } = await supabaseAdmin
+            .from('campaign_experiments')
+            .select('*')
+            .eq('user_id', user.id);
+          if (data && Array.isArray(data)) allExps = data;
+        } catch {}
+      }
+      const activeExps = allExps.filter(e => e.status === 'active');
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        campaigns_analyzed: campaigns.length,
+        health_distribution: healthDistribution,
+        active_recommendations_count: activeRecs.length,
+        applied_recommendations_count: appliedRecs.length,
+        active_experiments_count: activeExps.length,
+        campaigns_needing_attention: healthDistribution.needs_attention + healthDistribution.critical,
+        recent_recommendations: activeRecs.slice(0, 5),
+      }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 25. POST /api/optimization/campaigns/:campaignId/analyze: Run fresh health check & recommendations
+  const analyzeCampMatch = pathname.match(/^\/api\/optimization\/campaigns\/([a-zA-Z0-9_\-]+)\/analyze$/);
+  if (req.method === 'POST' && analyzeCampMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const campaignId = analyzeCampMatch[1];
+      const result = await optimizationService.analyzeCampaignAndGenerateRecommendations({
+        userId: user.id,
+        campaignId,
+        forceRefresh: true,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 26. GET /api/optimization/campaigns/:campaignId: Get campaign health & existing recommendations
+  const getOptCampMatch = pathname.match(/^\/api\/optimization\/campaigns\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getOptCampMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const campaignId = getOptCampMatch[1];
+
+      const detail = await analyticsService.getCampaignDetail({ userId: user.id, campaignId });
+      const sequenceRes = await analyticsService.getSequencePerformance({ userId: user.id, campaignId });
+      const health = optimizationService.calculateCampaignHealth(detail.metrics, sequenceRes.steps || []);
+
+      // Get recommendations for this campaign
+      let recs = Array.from(optimizationService.memoryRecommendations.values())
+        .filter(r => r.user_id === user.id && r.campaign_id === campaignId);
+
+      if (recs.length === 0 && supabaseAdmin) {
+        try {
+          const { data } = await supabaseAdmin
+            .from('campaign_optimization_recommendations')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('campaign_id', campaignId);
+          if (data && Array.isArray(data)) recs = data;
+        } catch {}
+      }
+
+      // If no recommendations exist yet and campaign has sufficient data, generate initial recommendations
+      if (recs.length === 0 && detail.metrics?.sent >= 10) {
+        const generated = await optimizationService.analyzeCampaignAndGenerateRecommendations({
+          userId: user.id,
+          campaignId,
+        });
+        recs = generated.recommendations || [];
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        campaign: detail.campaign,
+        health,
+        metrics: detail.metrics,
+        sequence_steps: sequenceRes.steps || [],
+        recommendations: recs,
+      }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 27. GET /api/optimization/recommendations: Fetch recommendations list
+  if (req.method === 'GET' && pathname === '/api/optimization/recommendations') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const campaignId = parsedUrl.searchParams.get('campaignId') || parsedUrl.searchParams.get('campaign_id');
+      const statusFilter = parsedUrl.searchParams.get('status') || 'all';
+      const categoryFilter = parsedUrl.searchParams.get('category') || 'all';
+
+      let recs = Array.from(optimizationService.memoryRecommendations.values())
+        .filter(r => r.user_id === user.id);
+
+      if (recs.length === 0 && supabaseAdmin) {
+        try {
+          let q = supabaseAdmin
+            .from('campaign_optimization_recommendations')
+            .select('*')
+            .eq('user_id', user.id);
+          if (campaignId) q = q.eq('campaign_id', campaignId);
+          if (statusFilter !== 'all') q = q.eq('status', statusFilter);
+          if (categoryFilter !== 'all') q = q.eq('category', categoryFilter);
+          const { data } = await q;
+          if (data && Array.isArray(data)) recs = data;
+        } catch {}
+      }
+
+      if (campaignId) recs = recs.filter(r => r.campaign_id === campaignId);
+      if (statusFilter !== 'all') recs = recs.filter(r => r.status === statusFilter);
+      if (categoryFilter !== 'all') recs = recs.filter(r => r.category === categoryFilter);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, recommendations: recs }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 28. POST /api/optimization/recommendations/:id/review
+  const reviewRecMatch = pathname.match(/^\/api\/optimization\/recommendations\/([a-zA-Z0-9_\-]+)\/review$/);
+  if (req.method === 'POST' && reviewRecMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const recommendationId = reviewRecMatch[1];
+      const updated = await optimizationService.reviewRecommendation({ userId: user.id, recommendationId });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, recommendation: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 29. POST /api/optimization/recommendations/:id/apply (Explicit user approval)
+  const applyRecMatch = pathname.match(/^\/api\/optimization\/recommendations\/([a-zA-Z0-9_\-]+)\/apply$/);
+  if (req.method === 'POST' && applyRecMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const recommendationId = applyRecMatch[1];
+      const result = await optimizationService.applyRecommendation({ userId: user.id, recommendationId });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 30. POST /api/optimization/recommendations/:id/dismiss
+  const dismissRecMatch = pathname.match(/^\/api\/optimization\/recommendations\/([a-zA-Z0-9_\-]+)\/dismiss$/);
+  if (req.method === 'POST' && dismissRecMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const recommendationId = dismissRecMatch[1];
+      const body = await parseJsonBody(req);
+      const result = await optimizationService.dismissRecommendation({
+        userId: user.id,
+        recommendationId,
+        reason: body.reason || 'User dismissed',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 31. POST /api/optimization/campaigns/:campaignId/variants: AI-generated variants (drafts only)
+  const variantsMatch = pathname.match(/^\/api\/optimization\/campaigns\/([a-zA-Z0-9_\-]+)\/variants$/);
+  if (req.method === 'POST' && variantsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const campaignId = variantsMatch[1];
+      const body = await parseJsonBody(req);
+      const { variantType = 'subject', prompt = '', context = {} } = body;
+
+      const result = await optimizationService.generateVariants({
+        userId: user.id,
+        campaignId,
+        variantType,
+        prompt,
+        context,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 32. POST /api/optimization/experiments: Create Controlled A/B Test
+  if (req.method === 'POST' && pathname === '/api/optimization/experiments') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const {
+        campaignId,
+        name,
+        experimentType = 'subject_line',
+        primaryMetric = 'positive_reply_rate',
+        trafficAllocation = 50.0,
+        stepNumber = 1,
+        variantA,
+        variantB,
+      } = body;
+
+      const result = await optimizationService.createExperiment({
+        userId: user.id,
+        campaignId,
+        name,
+        experimentType,
+        primaryMetric,
+        trafficAllocation,
+        stepNumber,
+        variantA,
+        variantB,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 33. GET /api/optimization/experiments: List experiments
+  if (req.method === 'GET' && pathname === '/api/optimization/experiments') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const campaignId = parsedUrl.searchParams.get('campaignId') || parsedUrl.searchParams.get('campaign_id');
+
+      let experiments = Array.from(optimizationService.memoryExperiments.values())
+        .filter(e => e.user_id === user.id);
+
+      if (experiments.length === 0 && supabaseAdmin) {
+        try {
+          let q = supabaseAdmin.from('campaign_experiments').select('*').eq('user_id', user.id);
+          if (campaignId) q = q.eq('campaign_id', campaignId);
+          const { data } = await q;
+          if (data && Array.isArray(data)) experiments = data;
+        } catch {}
+      }
+
+      if (campaignId) experiments = experiments.filter(e => e.campaign_id === campaignId);
+
+      // Hydrate with variants and statistical status
+      const results = [];
+      for (const exp of experiments) {
+        const full = await optimizationService.getExperiment(user.id, exp.id);
+        if (full) results.push(full);
+        else results.push({ experiment: exp });
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, experiments: results }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 34. GET /api/optimization/experiments/:experimentId
+  const getExpMatch = pathname.match(/^\/api\/optimization\/experiments\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getExpMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const experimentId = getExpMatch[1];
+      const result = await optimizationService.getExperiment(user.id, experimentId);
+      if (!result) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Experiment not found.' }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 35. POST /api/optimization/experiments/:experimentId/pause
+  const pauseExpMatch = pathname.match(/^\/api\/optimization\/experiments\/([a-zA-Z0-9_\-]+)\/pause$/);
+  if (req.method === 'POST' && pauseExpMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const experimentId = pauseExpMatch[1];
+      const updated = await optimizationService.pauseExperiment(user.id, experimentId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, experiment: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 36. POST /api/optimization/experiments/:experimentId/complete
+  const completeExpMatch = pathname.match(/^\/api\/optimization\/experiments\/([a-zA-Z0-9_\-]+)\/complete$/);
+  if (req.method === 'POST' && completeExpMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const experimentId = completeExpMatch[1];
+      const updated = await optimizationService.completeExperiment(user.id, experimentId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, experiment: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==========================================
+  // LEAD CRM & SALES PIPELINE MANAGEMENT
+  // ==========================================
+
+  // 37. GET /api/crm/overview: Pipeline summary, stage counts & conversion funnel
+  if (req.method === 'GET' && pathname === '/api/crm/overview') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const overview = await crmService.getOverview(user.id);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...overview }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 38. GET /api/crm/pipeline: Configured pipeline stages
+  if (req.method === 'GET' && pathname === '/api/crm/pipeline') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const stages = await crmService.getStages(user.id);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, stages }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 39. GET /api/crm/leads: Search, filter & paginate CRM leads
+  if (req.method === 'GET' && pathname === '/api/crm/leads') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const search = parsedUrl.searchParams.get('search') || '';
+      const stage = parsedUrl.searchParams.get('stage') || 'all';
+      const industry = parsedUrl.searchParams.get('industry') || 'all';
+      const source = parsedUrl.searchParams.get('source') || 'all';
+      const minScore = parsedUrl.searchParams.get('minScore');
+      const sortBy = parsedUrl.searchParams.get('sortBy') || 'last_activity_at';
+      const sortOrder = parsedUrl.searchParams.get('sortOrder') || 'desc';
+      const page = parsedUrl.searchParams.get('page') || 1;
+      const limit = parsedUrl.searchParams.get('limit') || 20;
+
+      const result = await crmService.getLeads({
+        userId: user.id,
+        search,
+        stage,
+        industry,
+        source,
+        minScore,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 40. PATCH /api/crm/leads/bulk-stage: Bulk stage transition
+  if (req.method === 'PATCH' && pathname === '/api/crm/leads/bulk-stage') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const { leadIds, newStage, notes } = body;
+
+      const result = await crmService.bulkUpdateLeadStage({
+        userId: user.id,
+        leadIds,
+        newStage,
+        notes,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Invalid') ? 400 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 41. PATCH /api/crm/leads/:leadId/stage: Single lead stage transition
+  const leadStageMatch = pathname.match(/^\/api\/crm\/leads\/([a-zA-Z0-9_\-]+)\/stage$/);
+  if (req.method === 'PATCH' && leadStageMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const leadId = leadStageMatch[1];
+      const body = await parseJsonBody(req);
+      const { newStage, notes } = body;
+
+      const result = await crmService.updateLeadStage({
+        userId: user.id,
+        leadId,
+        newStage,
+        notes,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Invalid') ? 400 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 42. GET /api/crm/leads/:leadId/activity: Unified chronological timeline
+  const leadActivityMatch = pathname.match(/^\/api\/crm\/leads\/([a-zA-Z0-9_\-]+)\/activity$/);
+  if (req.method === 'GET' && leadActivityMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const leadId = leadActivityMatch[1];
+      const lead = await crmService.getLeadById(user.id, leadId);
+      if (!lead) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Lead not found.' }));
+        return;
+      }
+
+      const tasks = await crmService.getTasks({ userId: user.id, leadId });
+      const notes = await crmService.getNotes({ userId: user.id, leadId });
+      const deals = await crmService.getDeals({ userId: user.id, leadId });
+      const timeline = await crmService.getActivityTimeline({
+        userId: user.id,
+        leadId,
+        lead,
+        tasks,
+        notes,
+        deals,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, timeline }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 43. GET /api/crm/leads/:leadId/notes & POST /api/crm/leads/:leadId/notes
+  const leadNotesMatch = pathname.match(/^\/api\/crm\/leads\/([a-zA-Z0-9_\-]+)\/notes$/);
+  if (leadNotesMatch) {
+    const leadId = leadNotesMatch[1];
+    if (req.method === 'GET') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const notes = await crmService.getNotes({ userId: user.id, leadId });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, notes }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const body = await parseJsonBody(req);
+        const { content, authorName, taskId } = body;
+        const note = await crmService.createNote({
+          userId: user.id,
+          leadId,
+          taskId,
+          content,
+          authorName: authorName || user.email?.split('@')[0] || 'Sales Rep',
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, note }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+  }
+
+  // 44. PATCH & DELETE /api/crm/notes/:noteId
+  const noteSingleMatch = pathname.match(/^\/api\/crm\/notes\/([a-zA-Z0-9_\-]+)$/);
+  if (noteSingleMatch) {
+    const noteId = noteSingleMatch[1];
+    if (req.method === 'PATCH') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const body = await parseJsonBody(req);
+        const note = await crmService.updateNote({ userId: user.id, noteId, content: body.content });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, note }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    } else if (req.method === 'DELETE') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        await crmService.deleteNote({ userId: user.id, noteId });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+  }
+
+  // 45. GET /api/crm/leads/:leadId: Full lead profile
+  const leadProfileMatch = pathname.match(/^\/api\/crm\/leads\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && leadProfileMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const leadId = leadProfileMatch[1];
+      const profile = await crmService.getLeadProfile({ userId: user.id, leadId });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, profile }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 46. GET & POST /api/crm/tasks
+  if (pathname === '/api/crm/tasks') {
+    if (req.method === 'GET') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const leadId = parsedUrl.searchParams.get('leadId') || parsedUrl.searchParams.get('lead_id');
+        const status = parsedUrl.searchParams.get('status') || 'all';
+
+        const result = await crmService.getTasks({ userId: user.id, leadId, status });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, ...result }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const body = await parseJsonBody(req);
+        const task = await crmService.createTask({
+          userId: user.id,
+          leadId: body.leadId,
+          title: body.title,
+          description: body.description,
+          taskType: body.taskType,
+          priority: body.priority,
+          dueDate: body.dueDate,
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, task }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+  }
+
+  // 47. PATCH /api/crm/tasks/:taskId
+  const taskSingleMatch = pathname.match(/^\/api\/crm\/tasks\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && taskSingleMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const taskId = taskSingleMatch[1];
+      const body = await parseJsonBody(req);
+      const updated = await crmService.updateTask({
+        userId: user.id,
+        taskId,
+        updates: body,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, task: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 48. GET & POST /api/crm/deals
+  if (pathname === '/api/crm/deals') {
+    if (req.method === 'GET') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const leadId = parsedUrl.searchParams.get('leadId') || parsedUrl.searchParams.get('lead_id');
+        const status = parsedUrl.searchParams.get('status') || 'all';
+
+        const deals = await crmService.getDeals({ userId: user.id, leadId, status });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, deals }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    } else if (req.method === 'POST') {
+      try {
+        const user = await verifySupabaseToken(req.headers.authorization);
+        const body = await parseJsonBody(req);
+        const deal = await crmService.createDeal({
+          userId: user.id,
+          leadId: body.leadId,
+          name: body.name,
+          value: body.value,
+          currency: body.currency,
+          stage: body.stage,
+          probability: body.probability,
+          expectedCloseDate: body.expectedCloseDate,
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, deal }));
+      } catch (err) {
+        const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+      return;
+    }
+  }
+
+  // 49. PATCH /api/crm/deals/:dealId
+  const dealSingleMatch = pathname.match(/^\/api\/crm\/deals\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && dealSingleMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const dealId = dealSingleMatch[1];
+      const body = await parseJsonBody(req);
+      const updated = await crmService.updateDeal({
+        userId: user.id,
+        dealId,
+        updates: body,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, deal: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // =========================================================================
+  // AI Meeting Booking & Calendar Scheduling API Endpoints
+  // =========================================================================
+
+  // 50. GET /api/meetings: List user's meetings with filtering, search, pagination
+  if (req.method === 'GET' && pathname === '/api/meetings') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const filter = parsedUrl.searchParams.get('filter') || 'upcoming';
+      const search = parsedUrl.searchParams.get('search') || '';
+      const page = parsedUrl.searchParams.get('page') || 1;
+      const limit = parsedUrl.searchParams.get('limit') || 20;
+
+      const result = await meetingService.getMeetings({
+        userId: user.id,
+        filter,
+        search,
+        page,
+        limit,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 51. POST /api/meetings: Create or book a meeting manually
+  if (req.method === 'POST' && pathname === '/api/meetings') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const pages = await meetingService.getBookingPages(user.id);
+      const slug = pages[0]?.slug || 'default';
+
+      const result = await meetingService.bookMeetingPublic({
+        bookingSlug: slug,
+        prospectName: body.prospectName || body.prospect_name,
+        prospectEmail: body.prospectEmail || body.prospect_email,
+        prospectCompany: body.prospectCompany || body.prospect_company,
+        prospectNotes: body.prospectNotes || body.prospect_notes,
+        startTime: body.startTime || body.start_time,
+        endTime: body.endTime || body.end_time,
+        prospectTimeZone: body.prospectTimeZone || body.time_zone || 'UTC',
+        idempotencyKey: body.idempotencyKey,
+        clientIp: req.socket.remoteAddress,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 400;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 52. POST /api/meetings/:meetingId/cancel
+  const cancelMeetingMatch = pathname.match(/^\/api\/meetings\/([a-zA-Z0-9_\-]+)\/cancel$/);
+  if (req.method === 'POST' && cancelMeetingMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const meetingId = cancelMeetingMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await meetingService.cancelMeeting({
+        userId: user.id,
+        meetingId,
+        reason: body.reason,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, meeting: result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 53. POST /api/meetings/:meetingId/reschedule
+  const rescheduleMeetingMatch = pathname.match(/^\/api\/meetings\/([a-zA-Z0-9_\-]+)\/reschedule$/);
+  if (req.method === 'POST' && rescheduleMeetingMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const meetingId = rescheduleMeetingMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await meetingService.rescheduleMeeting({
+        userId: user.id,
+        meetingId,
+        newStartTime: body.newStartTime || body.start_time,
+        newEndTime: body.newEndTime || body.end_time,
+        reason: body.reason,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, meeting: result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 400;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 54. POST /api/meetings/:meetingId/outcome
+  const outcomeMeetingMatch = pathname.match(/^\/api\/meetings\/([a-zA-Z0-9_\-]+)\/outcome$/);
+  if (req.method === 'POST' && outcomeMeetingMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const meetingId = outcomeMeetingMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await meetingService.recordMeetingOutcome({
+        userId: user.id,
+        meetingId,
+        outcome: body.outcome,
+        notes: body.notes,
+        nextAction: body.nextAction || body.next_action,
+        nextFollowupAt: body.nextFollowupAt || body.next_followup_at,
+        dealValue: body.dealValue || body.deal_value,
+        expectedCloseDate: body.expectedCloseDate || body.expected_close_date,
+        newStage: body.newStage || body.stage,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 400;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 55. GET /api/meetings/:meetingId
+  const getMeetingMatch = pathname.match(/^\/api\/meetings\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getMeetingMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const meetingId = getMeetingMatch[1];
+      const meeting = await meetingService.getMeetingById(user.id, meetingId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, meeting }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 404;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 56. GET /api/calendar/availability: User's conflict-free slots
+  if (req.method === 'GET' && pathname === '/api/calendar/availability') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const targetDate = parsedUrl.searchParams.get('date') || new Date().toISOString().split('T')[0];
+      const prospectTimeZone = parsedUrl.searchParams.get('timeZone') || 'UTC';
+      const durationMinutes = parsedUrl.searchParams.get('duration');
+
+      const result = await meetingService.calculateAvailability({
+        userId: user.id,
+        targetDate,
+        prospectTimeZone,
+        durationMinutes,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 57. GET /api/calendar/connections: List user's connected calendar accounts
+  if (req.method === 'GET' && pathname === '/api/calendar/connections') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const connections = await meetingService.getCalendarConnections(user.id);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        connections,
+        isDemoMode: calendarProvider.isDemoMode,
+      }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 58. POST /api/calendar/connect: Initiate OAuth or connect calendar
+  if (req.method === 'POST' && pathname === '/api/calendar/connect') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      if (body.code) {
+        // Exchange code for tokens
+        const tokens = await calendarProvider.exchangeCodeForTokens({
+          code: body.code,
+          redirectUri: body.redirectUri || 'http://localhost:3000/dashboard',
+          state: body.state,
+        });
+
+        const saved = await meetingService.saveCalendarConnection(user.id, tokens);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, connection: saved }));
+      } else {
+        // Generate authorization URL
+        const authUrlData = await calendarProvider.getAuthorizationUrl({
+          state: `user_${user.id}_${Date.now()}`,
+          redirectUri: body.redirectUri || 'http://localhost:3000/dashboard',
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, ...authUrlData }));
+      }
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 59. DELETE /api/calendar/connections/:connectionId
+  const deleteConnMatch = pathname.match(/^\/api\/calendar\/connections\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'DELETE' && deleteConnMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const connectionId = deleteConnMatch[1];
+      const result = await meetingService.disconnectCalendar(user.id, connectionId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 60. GET & PATCH /api/calendar/settings
+  if (pathname === '/api/calendar/settings') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+
+      if (req.method === 'GET') {
+        const rules = await meetingService.getAvailabilityRules(user.id);
+        const pages = await meetingService.getBookingPages(user.id);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, rules, bookingPages: pages }));
+        return;
+      }
+
+      if (req.method === 'PATCH') {
+        const body = await parseJsonBody(req);
+        const updated = await meetingService.updateAvailabilityRules(user.id, body);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, rules: updated }));
+        return;
+      }
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+      return;
+    }
+  }
+
+  // 61. POST /api/calendar/booking-page: Create or update booking page
+  if (req.method === 'POST' && pathname === '/api/calendar/booking-page') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const savedPage = await meetingService.createOrUpdateBookingPage(user.id, body);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, page: savedPage }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 62. PUBLIC: GET /api/booking/:bookingSlug: Public booking page metadata
+  const publicPageMatch = pathname.match(/^\/api\/booking\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && publicPageMatch) {
+    try {
+      const slug = publicPageMatch[1];
+      const page = await meetingService.getBookingPageBySlug(slug);
+      if (!page) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `Booking page "${slug}" not found.` }));
+        return;
+      }
+
+      // Return public info without exposing private host details
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        page: {
+          slug: page.slug,
+          title: page.title,
+          description: page.description,
+          duration_minutes: page.duration_minutes,
+          theme_color: page.theme_color,
+        },
+      }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 63. PUBLIC: GET /api/booking/:bookingSlug/availability: Public slots query
+  const publicAvailMatch = pathname.match(/^\/api\/booking\/([a-zA-Z0-9_\-]+)\/availability$/);
+  if (req.method === 'GET' && publicAvailMatch) {
+    try {
+      const slug = publicAvailMatch[1];
+      const page = await meetingService.getBookingPageBySlug(slug);
+      if (!page) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `Booking page "${slug}" not found.` }));
+        return;
+      }
+
+      const targetDate = parsedUrl.searchParams.get('date') || new Date().toISOString().split('T')[0];
+      const prospectTimeZone = parsedUrl.searchParams.get('timeZone') || 'UTC';
+
+      const result = await meetingService.calculateAvailability({
+        userId: page.user_id,
+        targetDate,
+        prospectTimeZone,
+        durationMinutes: page.duration_minutes,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, pageTitle: page.title, ...result }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 64. PUBLIC: POST /api/booking/:bookingSlug/book: Public meeting booking
+  const publicBookMatch = pathname.match(/^\/api\/booking\/([a-zA-Z0-9_\-]+)\/book$/);
+  if (req.method === 'POST' && publicBookMatch) {
+    try {
+      const slug = publicBookMatch[1];
+      const body = await parseJsonBody(req);
+
+      const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+      const result = await meetingService.bookMeetingPublic({
+        bookingSlug: slug,
+        prospectName: body.name || body.prospectName,
+        prospectEmail: body.email || body.prospectEmail,
+        prospectCompany: body.company || body.prospectCompany || '',
+        prospectNotes: body.notes || body.prospectNotes || '',
+        startTime: body.startTime || body.start_time,
+        endTime: body.endTime || body.end_time,
+        prospectTimeZone: body.timeZone || body.prospectTimeZone || 'UTC',
+        idempotencyKey: body.idempotencyKey,
+        clientIp,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      const statusCode = err.message.includes('Rate limit') ? 429 : 400;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 65. POST /api/meetings/ai-suggest-slots: AI Scheduling Assistant Slots
+  if (req.method === 'POST' && pathname === '/api/meetings/ai-suggest-slots') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const result = await meetingService.suggestSlotsForIntent({
+        userId: user.id,
+        targetDate: body.targetDate || body.date || new Date().toISOString().split('T')[0],
+        timeOfDay: body.timeOfDay || 'afternoon',
+        timeZone: body.timeZone || 'UTC',
+        durationMinutes: body.durationMinutes || 30,
+        prospectName: body.prospectName || 'Prospect',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 66. POST /api/meetings/ai-parse-intent: AI reply scheduling intent detection
+  if (req.method === 'POST' && pathname === '/api/meetings/ai-parse-intent') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const parsed = await meetingService.parseSchedulingIntent(body.replyText || body.text || '');
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, intent: parsed }));
     } catch (err) {
       const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
       res.writeHead(statusCode, { 'Content-Type': 'application/json' });

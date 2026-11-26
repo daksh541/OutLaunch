@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Gift } from 'lucide-react';
 import FlowCanvas from './FlowCanvas';
-import LogosCarousel from './LogosCarousel';
 import { useNavigation } from '../context/NavigationContext';
 import { normalizeWebsite } from '../lib/companyResearch';
 import useAuthSession from '../hooks/useAuthSession';
@@ -150,9 +149,6 @@ export default function HeroSection() {
             </p>
           </div>
         </div>
-
-        {/* Logos Carousel & Trust Ratings */}
-        <LogosCarousel />
       </div>
 
       {/* Dialog for "I don't have a website" */}

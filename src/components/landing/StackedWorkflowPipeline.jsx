@@ -23,14 +23,14 @@ export default function StackedWorkflowPipeline() {
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Sticky Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16 md:mb-20 sticky top-20 z-10 py-4 bg-[#f7f5f0]/95 backdrop-blur-sm">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+        <div className="text-center max-w-xl mx-auto mb-8 md:mb-10 sticky top-[68px] sm:top-[76px] z-10 py-2.5 px-4 bg-[#f7f5f0]/95 backdrop-blur-md rounded-2xl border border-[#0d1c15]/08 shadow-xs transition-all">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-[10px] font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-1">
             [ STAGE_01 — STAGE_05 ]
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.1]">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-[#0d1c15] tracking-tight leading-tight">
             We run the entire outreach pipeline
           </h2>
-          <p className="mt-3 text-base sm:text-lg text-[#4a5851] font-normal">
+          <p className="mt-1 text-xs sm:text-sm text-[#4a5851] font-normal">
             Every step is automated, verified, and orchestrated into one seamless flow.
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function StackedWorkflowPipeline() {
           {/* CARD 1: Find Prospects */}
           <div
             className="sticky transition-all duration-300"
-            style={{ top: '140px', zIndex: 1 }}
+            style={{ top: '165px', zIndex: 1 }}
           >
             <div className="bg-[#ffffff] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.08)] overflow-hidden">
               <div className="p-6 sm:p-8 md:p-10">
@@ -181,7 +181,7 @@ export default function StackedWorkflowPipeline() {
           {/* CARD 2: Research Companies */}
           <div
             className="sticky transition-all duration-300"
-            style={{ top: '160px', zIndex: 2 }}
+            style={{ top: '180px', zIndex: 2 }}
           >
             <div className="bg-[#ffffff] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.08)] overflow-hidden">
               <div className="p-6 sm:p-8 md:p-10">
@@ -257,7 +257,7 @@ export default function StackedWorkflowPipeline() {
           {/* CARD 3: Personalise Messages */}
           <div
             className="sticky transition-all duration-300"
-            style={{ top: '180px', zIndex: 3 }}
+            style={{ top: '195px', zIndex: 3 }}
           >
             <div className="bg-[#ffffff] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.08)] overflow-hidden">
               <div className="p-6 sm:p-8 md:p-10">
@@ -321,7 +321,7 @@ export default function StackedWorkflowPipeline() {
           {/* CARD 4: Reach Out Email + LinkedIn */}
           <div
             className="sticky transition-all duration-300"
-            style={{ top: '200px', zIndex: 4 }}
+            style={{ top: '210px', zIndex: 4 }}
           >
             <div className="bg-[#ffffff] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.08)] overflow-hidden">
               <div className="p-6 sm:p-8 md:p-10">
@@ -395,7 +395,7 @@ export default function StackedWorkflowPipeline() {
           {/* CARD 5: Track Replies and Meetings */}
           <div
             className="sticky transition-all duration-300"
-            style={{ top: '220px', zIndex: 5 }}
+            style={{ top: '225px', zIndex: 5 }}
           >
             <div className="bg-[#0f1714] text-white rounded-2xl md:rounded-3xl border border-[#1b2b25] shadow-[0_20px_60px_-15px_rgba(13,28,21,0.4)] overflow-hidden">
               <div className="p-6 sm:p-8 md:p-10">
