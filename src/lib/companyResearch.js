@@ -30,17 +30,32 @@ export function validateResearchResult(result, domain, jobId) {
 function getFallbackResearch(name, body) {
   let domain = 'company.com';
   try {
-    if (body?.website) domain = normalizeWebsite(body.website).domain;
-    else if (body?.domain) domain = normalizeWebsite(body.domain).domain;
-    else {
-      const q = requestedWebsite();
-      if (q) domain = normalizeWebsite(q).domain;
+    if (body?.website) {
+      domain = normalizeWebsite(body.website).domain;
+    } else if (body?.domain) {
+      domain = normalizeWebsite(body.domain).domain;
+    } else if (typeof window !== 'undefined') {
+      const pathMatch = window.location.pathname.match(/\/auto-gtm\/company\/([^/]+)/);
+      if (pathMatch) {
+        domain = normalizeWebsite(decodeURIComponent(pathMatch[1])).domain;
+      } else {
+        const q = requestedWebsite();
+        if (q) {
+          domain = normalizeWebsite(q).domain;
+        } else {
+          const stored = localStorage.getItem('outlaunch_active_company_domain') || sessionStorage.getItem('autogtm-pending-domain');
+          if (stored) domain = normalizeWebsite(stored).domain;
+        }
+      }
+    } else if (body?.job_id && typeof body.job_id === 'string' && body.job_id.startsWith('job-')) {
+      const candidate = body.job_id.replace(/^job-/, '');
+      if (candidate.includes('.')) domain = normalizeWebsite(candidate).domain;
     }
   } catch {}
 
   const companyName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
-  const jobId = body?.job_id || body?.request_id || `job-${domain}`;
-  const projectId = `proj-${domain}`;
+  const jobId = body?.job_id || body?.request_id || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('job') : null) || `job-${domain}`;
+  const projectId = body?.project_id || `proj-${domain}`;
 
   // Store in localStorage so workspace connects to it
   if (typeof window !== 'undefined') {

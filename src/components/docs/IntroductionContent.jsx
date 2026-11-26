@@ -85,18 +85,16 @@ export default function IntroductionContent() {
 
               <div className="flex items-center justify-end gap-1.5">
                 <a
-                  href="mailto:support@explee.com"
+                  href="mailto:support@outlaunch.com"
                   className="text-[#1b1b1b] flex items-center rounded-lg px-2 py-1 text-[13px] hover:bg-[#f8f8f8] no-underline transition-colors"
                 >
                   <MailIcon className="size-3 text-current mr-1.5" />
                   <span>OutLaunch Support</span>
                 </a>
                 <a
-                  href="https://explee.com"
-                  rel="noopener noreferrer"
-                  target="_blank"
+                  href="/"
                   className="text-[#1b1b1b] flex items-center justify-center rounded-lg p-1.5 hover:bg-[#f8f8f8] no-underline transition-colors"
-                  title="explee.com"
+                  title="OutLaunch Home"
                 >
                   <ExternalLinkIcon className="size-3 text-current" />
                 </a>
@@ -121,7 +119,7 @@ export default function IntroductionContent() {
                     {downloadHover && (
                       <div className="flex items-center gap-1 ml-1 animate-in fade-in duration-100">
                         <a
-                          href="https://api.explee.com/public/api/openapi.json"
+                          href="/public/api/openapi.json"
                           target="_blank"
                           rel="noreferrer"
                           className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#009485]"
@@ -129,7 +127,7 @@ export default function IntroductionContent() {
                           json
                         </a>
                         <a
-                          href="https://api.explee.com/public/api/openapi.json"
+                          href="/public/api/openapi.json"
                           download="openapi.yaml"
                           className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#009485]"
                         >
@@ -147,12 +145,12 @@ export default function IntroductionContent() {
                     <p>
                       <strong>Tip</strong>: This documentation is designed for humans. To integrate with AI agents, provide them with the OpenAPI schema at{' '}
                       <a
-                        href="https://api.explee.com/public/api/openapi.json"
+                        href="/public/api/openapi.json"
                         rel="nofollow"
                         target="_blank"
                         className="text-[#1b1b1b] underline hover:text-[#009485]"
                       >
-                        https://api.explee.com/public/api/openapi.json
+                        /public/api/openapi.json
                       </a>{' '}
                       instead.
                     </p>
@@ -187,16 +185,14 @@ export default function IntroductionContent() {
                   </div>
 
                   <div className="p-0 text-[13px] bg-white">
-                    {/* Row 0: Get your API key at API Keys */}
+                    {/* Row 0: Get your API key */}
                     <div className="px-3 py-2 border-b border-[rgba(0,0,0,0.1)] bg-white text-[12.5px] text-[#757575]">
-                      Get your API key at{' '}
+                      Generate your API key in your{' '}
                       <a
-                        href="https://app.explee.com/settings/api-keys"
-                        rel="nofollow"
-                        target="_blank"
+                        href="/dashboard"
                         className="text-[#009485] hover:underline font-medium"
                       >
-                        API Keys
+                        OutLaunch Workspace Settings
                       </a>
                     </div>
 

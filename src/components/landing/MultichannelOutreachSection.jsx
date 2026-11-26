@@ -1,110 +1,36 @@
 import React, { useState } from 'react';
-import { Mail, Linkedin, ArrowRight, ShieldCheck, Clock, CheckCircle2, RotateCw, Send, MessageSquare } from 'lucide-react';
-
-const EMAIL_SEQUENCE = [
-  {
-    step: 'STEP 1 · DAY 1',
-    time: '9:15 AM EST',
-    title: 'The Specific Research Hook',
-    description: 'Sent from your dedicated warmed secondary domain with verified SPF, DKIM, and DMARC headers.',
-    preview: '"Noticed your team is hiring 4 SDRs following your Series A announcement yesterday..."',
-    metric: '64.2% Open Rate',
-    badge: 'Email Dispatch #1',
-    accentColor: '#0d9467',
-    icon: Mail,
-  },
-  {
-    step: 'STEP 2 · DAY 4',
-    time: '11:30 AM EST',
-    title: 'Value-First Benchmark Follow-up',
-    description: 'Replies in the same email thread with relevant ICP teardowns and benchmarks without pushy attachments.',
-    preview: '"Sharing how similar B2B SaaS teams ramped outbound volume from 0 to 18 booked demos/month..."',
-    metric: '24.8% Direct Reply Rate',
-    badge: 'Threaded Bump #2',
-    accentColor: '#0d9467',
-    icon: Send,
-  },
-  {
-    step: 'STEP 3 · DAY 8',
-    time: '2:00 PM EST',
-    title: 'Frictionless Permission CTA',
-    description: 'A crisp 2-sentence closing note asking for permission to send a 2-minute video walkthrough.',
-    preview: '"Worth a quick 5-min look, or should I circle back next quarter once the new hires are in seat?"',
-    metric: '19.2% Cumulative Conversion',
-    badge: 'Short Closing Note #3',
-    accentColor: '#0d9467',
-    icon: Clock,
-  },
-];
-
-const LINKEDIN_SEQUENCE = [
-  {
-    step: 'STEP 1 · DAY 1',
-    time: '10:45 AM EST',
-    title: 'Context-Rich Connection Note',
-    description: 'Tailored invitation note (< 300 chars) referencing their recent post, keynote, or mutual connections.',
-    preview: '"Hi Sarah — loved your recent post on scaling outbound without burning domain rep. Would love to connect and follow along!"',
-    metric: '48.6% Acceptance Rate',
-    badge: 'Invitation Note #1',
-    accentColor: '#0077b5',
-    icon: Linkedin,
-  },
-  {
-    step: 'STEP 2 · DAY 3',
-    time: '3:15 PM EST',
-    title: 'Post-Acceptance Welcome DM',
-    description: 'Dispatched 24-48 hours after connection acceptance. Engages naturally on recent company milestones.',
-    preview: '"Thanks for connecting, Sarah! Congrats on Hyperflow\'s EMEA expansion. How is the outbound hiring pod shaping up?"',
-    metric: '36.2% Conversation Start Rate',
-    badge: 'Conversational DM #2',
-    accentColor: '#0077b5',
-    icon: MessageSquare,
-  },
-  {
-    step: 'STEP 3 · DAY 7',
-    time: '1:30 PM EST',
-    title: 'Value-Led Audio / Video Touch',
-    description: 'Shares an executive insight or personalized 60-second video without pitch-slapping in the DMs.',
-    preview: '"Put together a brief 60-second Loom showing how modern growth leads automate lead research. Drop a \'yes\' if you\'d like the link!"',
-    metric: '28.4% Qualified Reply Rate',
-    badge: 'Micro-Video Touch #3',
-    accentColor: '#0077b5',
-    icon: Clock,
-  },
-];
+import { Mail, Linkedin, ArrowRight, ShieldCheck, Clock, CheckCircle2, RotateCw, Send, MessageSquare, UserCheck, Shield, ExternalLink, Play } from 'lucide-react';
 
 export default function MultichannelOutreachSection() {
   const [activeTab, setActiveTab] = useState('email');
-  const activeSequence = activeTab === 'email' ? EMAIL_SEQUENCE : LINKEDIN_SEQUENCE;
 
   return (
-    <section className="py-20 md:py-28 bg-[#f7f5f0] relative">
+    <section className="py-20 md:py-28 bg-[#f7f5f0] border-t border-[#0d1c15]/08 relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
-        <div className="max-w-3xl mb-14 sm:mb-16">
+        <div className="max-w-3xl mb-12 sm:mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
             <Mail className="w-3.5 h-3.5" />
             <span>03 · MULTI-CHANNEL ORCHESTRATION</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            Synchronized Email and LinkedIn sequences
+            Coordinated Email and LinkedIn sequences
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
-            Reach prospects where they actually pay attention. Coordinate personalized cold emails with custom LinkedIn invitation notes and gentle follow-ups.
+            Reach prospects across channels without confusing them. Tailored cold emails and social touchpoints work together with smart reply collision defense.
           </p>
         </div>
 
-        {/* Multi-channel Interface Card */}
+        {/* Channel Mode Switcher */}
         <div className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-6 sm:p-8 md:p-10">
           
-          {/* Channel Selector Switcher */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-6 border-b border-[#0d1c15]/08">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-8 border-b border-[#0d1c15]/08">
             <div className="flex items-center gap-2 p-1 rounded-xl bg-[#edf2ec] border border-[#dbe5da]">
               <button
                 type="button"
                 onClick={() => setActiveTab('email')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === 'email'
                     ? 'bg-white text-[#0d1c15] shadow-xs'
                     : 'text-[#4a5851] hover:text-[#0d1c15]'
@@ -116,9 +42,9 @@ export default function MultichannelOutreachSection() {
               <button
                 type="button"
                 onClick={() => setActiveTab('linkedin')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === 'linkedin'
-                    ? 'bg-white text-[#0d1c15] shadow-xs'
+                    ? 'bg-white text-[#0077b5] shadow-xs'
                     : 'text-[#4a5851] hover:text-[#0d1c15]'
                 }`}
               >
@@ -131,62 +57,224 @@ export default function MultichannelOutreachSection() {
               <RotateCw className="w-3.5 h-3.5 text-[#0d9467]" />
               <span>
                 {activeTab === 'email'
-                  ? 'Smart collision defense: Auto-pauses email if reply received on LinkedIn'
-                  : 'Social safety compliance: Honors LinkedIn daily invitation and buffer limits'}
+                  ? 'Auto-pauses email thread if prospect responds on LinkedIn'
+                  : 'Social safety compliance: Honors LinkedIn daily rate limits'}
               </span>
             </div>
           </div>
 
-          {/* Sequence Steps Grid */}
-          <div key={activeTab} className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
-            {activeSequence.map((item) => {
-              const Icon = item.icon;
-              const isLinkedin = activeTab === 'linkedin';
+          {/* DIVERGENT PRESENTATION BY CHANNEL */}
 
-              return (
-                <div
-                  key={item.step}
-                  className="p-5 sm:p-6 rounded-2xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex flex-col justify-between hover:border-[#0d1c15]/15 transition-all shadow-2xs group"
-                >
+          {/* 1. COLD EMAIL SEQUENCE LAYOUT */}
+          {activeTab === 'email' && (
+            <div className="space-y-6 animate-fadeIn">
+              
+              {/* Delivery Health Ribbon */}
+              <div className="p-4 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-[#0d9467] font-semibold">
+                    <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
+                    SPF / DKIM / DMARC Aligned
+                  </span>
+                  <span className="text-[#0d1c15]/20">|</span>
+                  <span className="text-[#5a6962]">Sender: alex@growth-outlaunch.com (Secondary Domain)</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#0d9467] font-semibold">
+                  <span>99.2% Inbox Placement Rate</span>
+                </div>
+              </div>
+
+              {/* Threaded Email Steps */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Email Step 1 */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between text-xs font-mono text-[#73827a] pb-3 mb-3 border-b border-[#0d1c15]/06">
-                      <div className="flex items-center gap-1.5">
-                        <Icon className={`w-3.5 h-3.5 ${isLinkedin ? 'text-[#0077b5]' : 'text-[#0d9467]'}`} />
-                        <span>{item.step}</span>
-                      </div>
-                      <span className={`font-semibold ${isLinkedin ? 'text-[#0077b5]' : 'text-[#0d9467]'}`}>
-                        {item.time}
-                      </span>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0d9467]">STEP 1 · DAY 1</span>
+                      <span className="text-[#5a6962]">9:15 AM EST</span>
                     </div>
-
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-base font-bold text-[#0d1c15] group-hover:text-[#0d9467] transition-colors">
-                        {item.title}
-                      </h4>
+                    <div className="text-xs font-mono text-[#5a6962] mb-2">
+                      <span className="font-semibold text-[#0d1c15]">Subject:</span> Hyperflow's Series A &amp; outbound ramp
                     </div>
-
-                    <p className="text-xs text-[#5a6962] leading-relaxed mb-4">
-                      {item.description}
-                    </p>
-
-                    <div className="p-3.5 rounded-xl bg-white border border-[#0d1c15]/08 text-xs font-mono text-[#33413a] leading-relaxed shadow-2xs">
-                      {item.preview}
+                    <div className="p-4 rounded-xl bg-white border border-[#0d1c15]/08 text-xs text-[#22332a] leading-relaxed shadow-2xs font-sans space-y-2">
+                      <p>Hi Sarah,</p>
+                      <p>Congrats on the recent Series A round. Noticed your team is hiring 4 outbound SDRs this quarter.</p>
+                      <p>We built an AI research engine that feeds your reps verified prospect pain points so they don't spend 15 hrs/week digging through LinkedIn manually.</p>
+                      <p className="text-[#0d9467] font-medium">Worth a 5-minute look this Thursday?</p>
                     </div>
                   </div>
-
-                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 text-[11px] font-mono flex items-center justify-between">
-                    <span className={`flex items-center gap-1.5 font-semibold ${isLinkedin ? 'text-[#0077b5]' : 'text-[#0d9467]'}`}>
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{item.metric}</span>
-                    </span>
-                    <span className="text-[10px] text-[#73827a] bg-[#edf2ec] px-2 py-0.5 rounded-md font-mono">
-                      {item.badge}
-                    </span>
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0d9467] font-semibold">64.2% Open Rate</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Initial Dispatch</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Email Step 2 */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0d9467]">STEP 2 · DAY 4</span>
+                      <span className="text-[#5a6962]">11:30 AM EST</span>
+                    </div>
+                    <div className="text-xs font-mono text-[#5a6962] mb-2">
+                      <span className="font-semibold text-[#0d1c15]">Thread:</span> Re: Hyperflow's Series A &amp; outbound ramp
+                    </div>
+                    <div className="p-4 rounded-xl bg-white border border-[#0d1c15]/08 text-xs text-[#22332a] leading-relaxed shadow-2xs font-sans space-y-2">
+                      <p>Sarah — quick follow-up with concrete numbers.</p>
+                      <p>We recently helped another Series A SaaS team cut prospect research time by 72% while increasing booked discovery meetings from 6 to 19/month.</p>
+                      <p>Happy to share the teardown report if helpful for your new SDR hires.</p>
+                    </div>
+                  </div>
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0d9467] font-semibold">24.8% Direct Reply</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Threaded Bump</span>
+                  </div>
+                </div>
+
+                {/* Email Step 3 */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0d9467]">STEP 3 · DAY 8</span>
+                      <span className="text-[#5a6962]">2:00 PM EST</span>
+                    </div>
+                    <div className="text-xs font-mono text-[#5a6962] mb-2">
+                      <span className="font-semibold text-[#0d1c15]">Thread:</span> Re: Hyperflow's Series A &amp; outbound ramp
+                    </div>
+                    <div className="p-4 rounded-xl bg-white border border-[#0d1c15]/08 text-xs text-[#22332a] leading-relaxed shadow-2xs font-sans space-y-2">
+                      <p>Should I circle back next quarter once the new sales reps are onboarded, or is outbound pipeline still on your radar this month?</p>
+                      <p className="text-[#73827a] text-[11px]">Best,<br />Alex</p>
+                    </div>
+                  </div>
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0d9467] font-semibold">19.2% Conversion</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Permission CTA</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* 2. LINKEDIN TOUCHPOINTS LAYOUT */}
+          {activeTab === 'linkedin' && (
+            <div className="space-y-6 animate-fadeIn">
+              
+              {/* Safety & Compliance Ribbon */}
+              <div className="p-4 rounded-xl bg-[#f0f7fc] border border-[#0077b5]/20 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-[#0077b5] font-semibold">
+                    <ShieldCheck className="w-4 h-4 text-[#0077b5]" />
+                    Social Safety Engine: Active
+                  </span>
+                  <span className="text-[#0077b5]/30">|</span>
+                  <span className="text-[#4a5851]">Smart Daily Limit: 20 Connection Invites / Account</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#0077b5] font-semibold">
+                  <span>Zero Automation Risk Flags</span>
+                </div>
+              </div>
+
+              {/* LinkedIn Interaction Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* LinkedIn Step 1: Connection Request Note */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0077b5]/20 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0077b5]">TOUCH 1 · DAY 1</span>
+                      <span className="text-[#5a6962]">Profile Visit &amp; Invite</span>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-white border border-[#0077b5]/20 text-xs shadow-2xs font-sans space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#0d1c15]/06">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#0077b5] text-white flex items-center justify-center font-bold text-xs">
+                            IN
+                          </div>
+                          <span className="font-semibold text-[#0d1c15]">Connection Note</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-[#0077b5] font-semibold">274 / 300 chars</span>
+                      </div>
+                      <p className="text-[#22332a] leading-relaxed italic bg-[#fcfbf9] p-2.5 rounded-lg border border-[#0d1c15]/06">
+                        "Hi Sarah — loved your recent post on scaling outbound during Series A without sacrificing domain health. We built an AI workflow that researches tech stacks before drafting first lines. Thought it might free up your team's hours this month. Open to connecting?"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0077b5] font-semibold">48.6% Acceptance Rate</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Tailored Invitation</span>
+                  </div>
+                </div>
+
+                {/* LinkedIn Step 2: Post-Acceptance Conversational DM */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0077b5]/20 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0077b5]">TOUCH 2 · DAY 3</span>
+                      <span className="text-[#5a6962]">Direct Message</span>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-white border border-[#0077b5]/20 text-xs shadow-2xs font-sans space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#0d1c15]/06">
+                        <span className="font-semibold text-[#0d1c15] flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-[#0077b5]" />
+                          Conversational DM
+                        </span>
+                        <span className="text-[10px] text-[#73827a]">Delivered · 3:15 PM</span>
+                      </div>
+                      <div className="bg-[#f0f7fc] p-3 rounded-xl rounded-tr-none text-[#22332a] leading-relaxed space-y-1">
+                        <p>Thanks for connecting, Sarah!</p>
+                        <p>Saw Hyperflow is ramping its SDR pod for EMEA expansion. How has the outbound ramp time looked so far?</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0077b5] font-semibold">36.2% Conversation Rate</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Organic Welcome</span>
+                  </div>
+                </div>
+
+                {/* LinkedIn Step 3: Executive Micro-Teardown */}
+                <div className="p-6 rounded-2xl bg-[#fcfbf9] border border-[#0077b5]/20 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08 font-mono text-xs">
+                      <span className="font-bold text-[#0077b5]">TOUCH 3 · DAY 7</span>
+                      <span className="text-[#5a6962]">Value-Led Touch</span>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-white border border-[#0077b5]/20 text-xs shadow-2xs font-sans space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-[#0d1c15]/06">
+                        <span className="font-semibold text-[#0d1c15]">Executive Benchmark</span>
+                        <span className="text-[10px] text-[#0077b5] font-mono">60s Loom Link</span>
+                      </div>
+                      <div className="bg-[#fcfbf9] p-3 rounded-xl border border-[#0d1c15]/06 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[#0d1c15] text-[#00e599] flex items-center justify-center shrink-0">
+                          <Play className="w-4 h-4 fill-current ml-0.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[11px] text-[#0d1c15] truncate">Hyperflow Outbound Benchmark</div>
+                          <div className="text-[10px] text-[#5a6962]">60-second video walkthrough</div>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-[#5a6962]">
+                        "Put together a quick 60-second visual comparison. Drop a reply if you'd like me to send the clip!"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-[#0d1c15]/06 flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                    <span className="text-[#0077b5] font-semibold">28.4% Meeting Rate</span>
+                    <span className="px-2 py-0.5 rounded bg-[#edf2ec] text-[#182e24]">Micro-Video Touch</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
 
         </div>
 

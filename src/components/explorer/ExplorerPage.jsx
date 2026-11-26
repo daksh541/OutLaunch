@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
+import EditorialNavbar from '../landing/EditorialNavbar';
+import EditorialFooter from '../landing/EditorialFooter';
 import ProductsDropdown from '../navigation/ProductsDropdown';
 import {
   Sparkles,
@@ -8,7 +10,8 @@ import {
   MessageSquare,
   ArrowRight,
   ExternalLink,
-  Database
+  Database,
+  Compass
 } from 'lucide-react';
 import landingData from '../../data/explorer/landing_data.json';
 import aiMeetingData from '../../data/explorer/ai_meeting_data.json';
@@ -144,68 +147,9 @@ export default function ExplorerPage() {
   // ==========================================
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-[#090b0b] text-white flex flex-col font-sans selection:bg-[#10b981]/30">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-[#090b0b]/95 backdrop-blur border-b border-white/[0.06] transition-shadow duration-200">
-          <div className="container mx-auto max-w-[1200px] px-4">
-            <div className="flex h-16 items-center justify-between">
-              {/* Logo */}
-              <a
-                href="/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(PRODUCT_ROUTES.OUTREACH);
-                }}
-                className="flex items-center cursor-pointer"
-              >
-                <img
-                  src="/static/logo/explee/logo-dark.svg"
-                  alt="OutLaunch"
-                  className="h-7 w-auto"
-                />
-              </a>
-
-              {/* Navigation links */}
-              <div className="flex items-center gap-4 md:gap-7 text-sm">
-                <a
-                  href="/"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(PRODUCT_ROUTES.OUTREACH);
-                  }}
-                  className="hidden md:flex items-center gap-1.5 text-white/80 hover:text-white transition-colors duration-200 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-[#10b981]" />
-                  <span>Outreach Agent</span>
-                </a>
-
-                {/* GTM Tools Dropdown */}
-                <ProductsDropdown theme="dark" />
-
-                <a
-                  href="/pricing"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate('/#pricing');
-                  }}
-                  className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors duration-200 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-[#10b981]" />
-                  <span>Pricing</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => window.open('https://app.explee.com', '_blank')}
-                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors duration-200 cursor-pointer"
-                >
-                  <User className="w-4 h-4 hidden md:block" />
-                  <span>Sign in</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+      <div className="landing-editorial-root min-h-screen bg-[#f7f5f0] text-[#0d1c15] flex flex-col font-sans selection:bg-[#00e599]/30">
+        {/* Header (Unified OutLaunch Editorial Navbar) */}
+        <EditorialNavbar />
 
         {/* Main Content */}
         <main className="flex-1 py-10 md:py-14 px-4">
@@ -285,132 +229,8 @@ export default function ExplorerPage() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="text-[#9ca3af] text-sm border-t border-white/[0.06] bg-[#090b0b] mt-auto">
-          <div className="container mx-auto max-w-[1200px] px-4 pt-10 pb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-              {/* Col 1 */}
-              <div>
-                <h4 className="font-semibold text-white/70 mb-4">Products and GTM Tools</h4>
-                <ul className="space-y-2.5">
-                  {landingData.footer.products.map((item, i) => (
-                    <li key={i}>
-                      <a
-                        href={item.href}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(item.href);
-                        }}
-                        className="hover:text-white transition-colors flex items-center gap-2 text-sm"
-                      >
-                        <span>{item.title}</span>
-                        {item.badge && (
-                          <span className="bg-[#10b981]/20 text-[#10b981] text-[10px] px-1.5 py-0.5 rounded font-mono">
-                            {item.badge}
-                          </span>
-                        )}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 2 */}
-              <div>
-                <h4 className="font-semibold text-white/70 mb-4">B2B Databases</h4>
-                <ul className="space-y-2.5">
-                  {landingData.footer.databases1.map((item, i) => (
-                    <li key={i}>
-                      <a
-                        href={item.href}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(item.href);
-                        }}
-                        className="hover:text-white transition-colors text-sm"
-                      >
-                        {item.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 3 */}
-              <div>
-                <h4 className="font-semibold text-white/70 mb-4 invisible hidden lg:block">
-                  B2B Databases (Cont)
-                </h4>
-                <ul className="space-y-2.5">
-                  {landingData.footer.databases2.map((item, i) => (
-                    <li key={i}>
-                      <a
-                        href={item.href}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(item.href);
-                        }}
-                        className="hover:text-white transition-colors text-sm"
-                      >
-                        {item.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Col 4 */}
-              <div>
-                <h4 className="font-semibold text-white/70 mb-4">Resources</h4>
-                <ul className="space-y-2.5">
-                  {landingData.footer.resources.map((item, i) => (
-                    <li key={i}>
-                      {item.external ? (
-                        <a
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-white transition-colors text-sm inline-flex items-center gap-1.5"
-                        >
-                          <span>{item.title}</span>
-                          <ExternalLink className="w-3.5 h-3.5 text-white/40" />
-                        </a>
-                      ) : (
-                        <a
-                          href={item.href}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigate(item.href);
-                          }}
-                          className="hover:text-white transition-colors text-sm"
-                        >
-                          {item.title}
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Bottom Copyright & Legal */}
-            <div className="pt-6 border-t border-white/[0.06] flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-[#9ca3af]">
-              <p>{landingData.footer.copyright}</p>
-              <div className="flex items-center gap-3">
-                <a href="/terms-of-use" className="hover:underline">
-                  Terms of use
-                </a>
-                <span>|</span>
-                <a href="/privacy-policy" className="hover:underline">
-                  Privacy Policy
-                </a>
-              </div>
-            </div>
-            <p className="text-[11px] text-[#9ca3af]/60 text-center md:text-left mt-2">
-              {landingData.footer.companyInfo}
-            </p>
-          </div>
-        </footer>
+        {/* Footer (Unified OutLaunch Editorial Footer) */}
+        <EditorialFooter />
       </div>
     );
   }
@@ -429,13 +249,12 @@ export default function ExplorerPage() {
               e.preventDefault();
               handleClearSearch();
             }}
-            className="cursor-pointer shrink-0 flex items-center"
+            className="cursor-pointer shrink-0 flex items-center gap-1.5"
           >
-            <img
-              src="/static/logo/explee/logo-dark.svg"
-              alt="OutLaunch"
-              className="h-4 w-auto"
-            />
+            <div className="w-5 h-5 rounded-md bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-bold text-[10px] shadow-xs">
+              O
+            </div>
+            <span className="font-display font-bold text-xs text-white">OutLaunch</span>
           </a>
 
           <div className="relative w-64 md:w-72">
@@ -510,13 +329,12 @@ export default function ExplorerPage() {
             e.preventDefault();
             handleClearSearch();
           }}
-          className="cursor-pointer shrink-0 flex items-center"
+          className="cursor-pointer shrink-0 flex items-center gap-1.5"
         >
-          <img
-            src="/static/logo/explee/logo-dark.svg"
-            alt="OutLaunch"
-            className="h-4 w-auto"
-          />
+          <div className="w-5 h-5 rounded-md bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-bold text-[10px] shadow-xs">
+            O
+          </div>
+          <span className="font-display font-bold text-xs text-white">OutLaunch</span>
         </a>
 
         <div className="relative w-64 md:w-72">
@@ -867,14 +685,13 @@ export default function ExplorerPage() {
           <p className="text-xs text-[#9ca3af] py-3 leading-relaxed">
             Need help filtering specific company clusters or extracting decision-makers? Contact our GTM data specialists.
           </p>
-          <a
-            href="https://explee.link/db-demo?utm_content=explorer"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full block text-center py-2 bg-[#10b981] hover:bg-[#0d9467] text-black font-semibold rounded-xl text-xs transition-colors"
+          <button
+            type="button"
+            onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
+            className="w-full block text-center py-2 bg-[#00e599] hover:bg-[#00c985] text-[#0d1c15] font-semibold rounded-xl text-xs transition-colors cursor-pointer"
           >
-            Request a custom cluster slice
-          </a>
+            Request custom cluster slice
+          </button>
         </div>
       )}
     </div>

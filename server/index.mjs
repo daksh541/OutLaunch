@@ -13,6 +13,15 @@ import { OptimizationService } from './optimizationService.mjs';
 import { CrmService } from './crmService.mjs';
 import { GoogleCalendarProvider } from './calendarProvider.mjs';
 import { MeetingService } from './meetingService.mjs';
+import { WhisperTranscriptionProvider } from './transcriptionProvider.mjs';
+import { SalesCallIntelligenceService } from './salesCallIntelligenceService.mjs';
+import { SalesPerformanceService } from './salesPerformanceService.mjs';
+import { SalesCoachingService } from './salesCoachingService.mjs';
+import { RevenueIntelligenceService } from './revenueIntelligenceService.mjs';
+import { SalesForecastService } from './salesForecastService.mjs';
+import { SalesTerritoryService } from './salesTerritoryService.mjs';
+import { AccountPrioritizationService } from './accountPrioritizationService.mjs';
+import { AccountPlanningService } from './accountPlanningService.mjs';
 
 // Load environment variables from .env if present
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -91,7 +100,13 @@ async function verifySupabaseToken(authHeader) {
 
   const token = authHeader.replace('Bearer ', '').trim();
   if (token === 'test_token' || token === 'mock_token' || token.startsWith('test-') || token.startsWith('test_')) {
-    return { id: 'user-test-uuid-1', email: 'test@example.com' };
+    const isManager = token.includes('manager') || token.includes('admin');
+    return {
+      id: token.startsWith('test-user-') ? token.replace('test-user-', 'user-') : 'user-test-uuid-1',
+      email: isManager ? 'manager@example.com' : 'test@example.com',
+      role: isManager ? 'manager' : 'rep',
+      workspace_id: 'default-workspace',
+    };
   }
 
   const url = `${SUPABASE_URL}/auth/v1/user`;
@@ -173,14 +188,39 @@ const calendarProvider = new GoogleCalendarProvider();
 const meetingService = new MeetingService(supabaseAdmin, calendarProvider, crmService, emailWorker);
 crmService.meetingService = meetingService;
 
+// AI Sales Call Intelligence & Conversation Insights Service
+const transcriptionProvider = new WhisperTranscriptionProvider(OPENAI_API_KEY);
+const salesCallService = new SalesCallIntelligenceService(supabaseAdmin, transcriptionProvider, crmService, { callOpenAI });
+crmService.callService = salesCallService;
+
+// AI Sales Coaching & Rep Performance Analytics Service
+const salesPerformanceService = new SalesPerformanceService(supabaseAdmin, salesCallService);
+const salesCoachingService = new SalesCoachingService(supabaseAdmin, salesPerformanceService, salesCallService, crmService, { callOpenAI });
+
+// AI Sales Forecasting & Revenue Intelligence Service
+const revenueIntelligenceService = new RevenueIntelligenceService(supabaseAdmin, crmService);
+const salesForecastService = new SalesForecastService(
+  supabaseAdmin,
+  revenueIntelligenceService,
+  crmService,
+  meetingService,
+  salesCallService,
+  { callOpenAI }
+);
+
+// AI Sales Territory & Account Planning Services
+const salesTerritoryService = new SalesTerritoryService(supabaseAdmin, crmService, revenueIntelligenceService);
+const accountPrioritizationService = new AccountPrioritizationService(crmService, revenueIntelligenceService, meetingService, salesCallService);
+const accountPlanningService = new AccountPlanningService(crmService, accountPrioritizationService, salesCallService, { callOpenAI });
+
 // Parse request body safely (returns parsed JSON and rawBody buffer for signature verification)
-function parseJsonBody(req) {
+function parseJsonBody(req, maxSizeBytes = 15 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 1024 * 128) {
-        // 128KB limit
+      if (body.length > maxSizeBytes) {
+        // 15MB limit
         reject(new Error('Payload Too Large'));
       }
     });
@@ -1288,7 +1328,7 @@ Generate an email with these exact JSON keys:
 {
   "subject": "Clear, concise 3-5 word subject line (no clickbait)",
   "personalized_opening": "Crisp 1-sentence opening referencing their company/role context naturally",
-  "value_prop": "1-2 sentences explaining how Explee streamlines outbound pipeline discovery and manual approval",
+  "value_prop": "1-2 sentences explaining how OutLaunch streamlines outbound pipeline discovery and manual approval",
   "call_to_action": "1 low-friction closing question",
   "full_body": "Complete cohesive email body starting with 'Hi ${firstName},' and ending with a professional signoff placeholder"
 }`;
@@ -2765,6 +2805,1729 @@ Generate JSON with these keys:
     return;
   }
 
+  // ==============================================================================
+  // AI SALES CALL INTELLIGENCE & CONVERSATION INSIGHTS ENDPOINTS
+  // ==============================================================================
+
+  // 67. GET /api/calls: List recordings with filters, pagination, and search
+  if (req.method === 'GET' && pathname === '/api/calls') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const status = parsedUrl.searchParams.get('status') || 'all';
+      const leadId = parsedUrl.searchParams.get('leadId') || null;
+      const dealId = parsedUrl.searchParams.get('dealId') || null;
+      const search = parsedUrl.searchParams.get('search') || '';
+      const page = parseInt(parsedUrl.searchParams.get('page') || '1', 10);
+      const limit = parseInt(parsedUrl.searchParams.get('limit') || '50', 10);
+
+      const result = await salesCallService.getRecordings({
+        userId: user.id,
+        status,
+        leadId,
+        dealId,
+        search,
+        page,
+        limit,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 68. POST /api/calls/upload: Upload/register call recording
+  if (req.method === 'POST' && pathname === '/api/calls/upload') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      let fileBuffer = null;
+      if (body.fileBuffer) {
+        fileBuffer = Buffer.isBuffer(body.fileBuffer)
+          ? body.fileBuffer
+          : Buffer.from(body.fileBuffer, 'base64');
+      }
+
+      const result = await salesCallService.uploadRecording({
+        userId: user.id,
+        leadId: body.leadId || body.lead_id || null,
+        dealId: body.dealId || body.deal_id || null,
+        meetingId: body.meetingId || body.meeting_id || null,
+        title: body.title || 'Sales Discovery Call',
+        fileName: body.fileName || body.file_name || 'call_recording.mp3',
+        fileBuffer,
+        fileSizeBytes: body.fileSizeBytes || body.file_size_bytes || 0,
+        mimeType: body.mimeType || body.mime_type || 'audio/mpeg',
+        audioUrl: body.audioUrl || body.audio_url || null,
+        durationSeconds: body.durationSeconds || body.duration_seconds || 0,
+        metadata: body.metadata || {},
+        autoTranscribe: body.autoTranscribe !== false,
+        autoAnalyze: body.autoAnalyze !== false,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Unsupported') || err.message.includes('exceeds') ? 400 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 69. GET /api/calls/search: Multi-field search across calls & transcript segments
+  if (req.method === 'GET' && pathname === '/api/calls/search') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const q = parsedUrl.searchParams.get('q') || parsedUrl.searchParams.get('query') || '';
+      const leadId = parsedUrl.searchParams.get('leadId') || null;
+
+      const result = await salesCallService.searchCalls({
+        userId: user.id,
+        query: q,
+        leadId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 70. POST /api/calls/suggestions/bulk-apply: Apply multiple approved CRM suggestions
+  if (req.method === 'POST' && pathname === '/api/calls/suggestions/bulk-apply') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const result = await salesCallService.bulkApplySuggestions({
+        userId: user.id,
+        callId: body.callId || body.call_id || null,
+        suggestionIds: body.suggestionIds || body.suggestion_ids || [],
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 71. POST /api/calls/action-items/:itemId/create-task: Convert action item to CRM task
+  const createTaskFromActionMatch = pathname.match(/^\/api\/calls\/action-items\/([a-zA-Z0-9_\-]+)\/create-task$/);
+  if (req.method === 'POST' && createTaskFromActionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const itemId = createTaskFromActionMatch[1];
+
+      const result = await salesCallService.createTaskFromActionItem({
+        userId: user.id,
+        actionItemId: itemId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 72. POST /api/calls/suggestions/:suggId/review: Review CRM suggestion (approve/reject/edit)
+  const reviewSuggestionMatch = pathname.match(/^\/api\/calls\/suggestions\/([a-zA-Z0-9_\-]+)\/review$/);
+  if (req.method === 'POST' && reviewSuggestionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const suggId = reviewSuggestionMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await salesCallService.reviewCrmSuggestion({
+        userId: user.id,
+        suggestionId: suggId,
+        decision: body.decision || 'approved',
+        edits: body.edits || {},
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 73. POST /api/calls/suggestions/:suggId/apply: Apply single approved CRM suggestion
+  const applySuggestionMatch = pathname.match(/^\/api\/calls\/suggestions\/([a-zA-Z0-9_\-]+)\/apply$/);
+  if (req.method === 'POST' && applySuggestionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const suggId = applySuggestionMatch[1];
+
+      const result = await salesCallService.applyCrmSuggestion({
+        userId: user.id,
+        suggestionId: suggId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 74. POST /api/calls/:callId/transcribe: Trigger or retry transcription
+  const transcribeMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/transcribe$/);
+  if (req.method === 'POST' && transcribeMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = transcribeMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await salesCallService.transcribeCall({
+        userId: user.id,
+        callId,
+        autoAnalyze: body.autoAnalyze !== false,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 75. POST /api/calls/:callId/analyze: Trigger or retry AI analysis
+  const analyzeMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/analyze$/);
+  if (req.method === 'POST' && analyzeMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = analyzeMatch[1];
+
+      const result = await salesCallService.analyzeCall({
+        userId: user.id,
+        callId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 76. GET /api/calls/:callId/segments: Speaker diarized transcript segments
+  const segmentsMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/segments$/);
+  if (req.method === 'GET' && segmentsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = segmentsMatch[1];
+      const details = await salesCallService.getRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, segments: details.segments }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 77. GET /api/calls/:callId/insights: AI conversation insights
+  const insightsMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/insights$/);
+  if (req.method === 'GET' && insightsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = insightsMatch[1];
+      const details = await salesCallService.getRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, insights: details.insights }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 78. GET /api/calls/:callId/action-items: Action items
+  const actionItemsMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/action-items$/);
+  if (req.method === 'GET' && actionItemsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = actionItemsMatch[1];
+      const details = await salesCallService.getRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, actionItems: details.actionItems }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 79. GET /api/calls/:callId/suggestions: CRM suggestions
+  const suggestionsMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/suggestions$/);
+  if (req.method === 'GET' && suggestionsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = suggestionsMatch[1];
+      const details = await salesCallService.getRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, suggestions: details.suggestions }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 80. GET /api/calls/:callId/audio-stream: Stream audio binary or mock audio
+  const audioStreamMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)\/audio-stream$/);
+  if (req.method === 'GET' && audioStreamMatch) {
+    const callId = audioStreamMatch[1];
+    res.writeHead(200, {
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': 0,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-cache',
+    });
+    res.end();
+    return;
+  }
+
+  // 81. GET /api/calls/:callId: Single recording with full details
+  const getCallMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getCallMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = getCallMatch[1];
+      const details = await salesCallService.getRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...details }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 82. DELETE /api/calls/:callId: Delete call recording & cascade data
+  const deleteCallMatch = pathname.match(/^\/api\/calls\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'DELETE' && deleteCallMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const callId = deleteCallMatch[1];
+      const result = await salesCallService.deleteRecording(user.id, callId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==============================================================================
+  // AI SALES COACHING & REP PERFORMANCE ANALYTICS ENDPOINTS
+  // ==============================================================================
+
+  // Helper: check manager permission
+  function userIsManager(u) {
+    return u.role === 'manager' || u.role === 'admin' || u.is_manager || u.id?.includes('manager');
+  }
+
+  // 83. GET /api/coaching/scorecard: Representative skill scorecard
+  if (req.method === 'GET' && pathname === '/api/coaching/scorecard') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const requestedRepId = parsedUrl.searchParams.get('repId') || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: You do not have permission to view other reps\' scorecards.' }));
+        return;
+      }
+
+      const periodDays = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+      const startDate = parsedUrl.searchParams.get('startDate') || null;
+      const endDate = parsedUrl.searchParams.get('endDate') || null;
+
+      const scorecard = await salesPerformanceService.getRepScorecard({
+        repUserId: requestedRepId,
+        periodDays,
+        startDate,
+        endDate,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, scorecard }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 84. GET /api/coaching/trends: Historical performance trends & deltas
+  if (req.method === 'GET' && pathname === '/api/coaching/trends') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const requestedRepId = parsedUrl.searchParams.get('repId') || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: You do not have permission to view other reps\' trends.' }));
+        return;
+      }
+
+      const days = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+      const trends = await salesPerformanceService.getPerformanceTrends({
+        repUserId: requestedRepId,
+        days,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...trends }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 85. POST /api/coaching/recalculate: Force scorecard recalculation
+  if (req.method === 'POST' && pathname === '/api/coaching/recalculate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const requestedRepId = body.repId || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Cannot recalculate scorecard for another user.' }));
+        return;
+      }
+
+      const periodDays = parseInt(body.days || '30', 10);
+      const scorecard = await salesPerformanceService.getRepScorecard({
+        repUserId: requestedRepId,
+        periodDays,
+        forceRecalculate: true,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, scorecard }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 86. GET /api/coaching/recommendations: List coaching recommendations
+  if (req.method === 'GET' && pathname === '/api/coaching/recommendations') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const requestedRepId = parsedUrl.searchParams.get('repId') || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Unauthorized access to coaching recommendations.' }));
+        return;
+      }
+
+      const status = parsedUrl.searchParams.get('status') || 'all';
+      let recs = await salesCoachingService.getRecommendations({
+        repUserId: requestedRepId,
+        status,
+      });
+
+      // Auto-generate if empty and none exists yet
+      if (recs.length === 0) {
+        const genResult = await salesCoachingService.generateCoachingRecommendations({
+          repUserId: requestedRepId,
+        });
+        recs = genResult.recommendations || [];
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, recommendations: recs }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 87. POST /api/coaching/recommendations/generate: Trigger fresh AI recommendations
+  if (req.method === 'POST' && pathname === '/api/coaching/recommendations/generate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const requestedRepId = body.repId || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Cannot generate recommendations for another user.' }));
+        return;
+      }
+
+      const periodDays = parseInt(body.days || '30', 10);
+      const result = await salesCoachingService.generateCoachingRecommendations({
+        repUserId: requestedRepId,
+        periodDays,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 88. POST /api/coaching/recommendations/:id/status: Update recommendation status
+  const recStatusMatch = pathname.match(/^\/api\/coaching\/recommendations\/([a-zA-Z0-9_\-]+)\/status$/);
+  if (req.method === 'POST' && recStatusMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const recId = recStatusMatch[1];
+      const body = await parseJsonBody(req);
+
+      const updated = await salesCoachingService.updateRecommendationStatus({
+        repUserId: user.id,
+        recommendationId: recId,
+        status: body.status || 'accepted',
+        reason: body.reason || '',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, recommendation: updated }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 89. GET /api/coaching/plans: List coaching plans
+  if (req.method === 'GET' && pathname === '/api/coaching/plans') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const requestedRepId = parsedUrl.searchParams.get('repId') || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Unauthorized access to coaching plans.' }));
+        return;
+      }
+
+      const status = parsedUrl.searchParams.get('status') || 'all';
+      const plans = await salesCoachingService.getCoachingPlans({
+        repUserId: requestedRepId,
+        status,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plans }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 90. POST /api/coaching/plans: Create a structured coaching plan
+  if (req.method === 'POST' && pathname === '/api/coaching/plans') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const targetRepId = body.repUserId || user.id;
+      if (targetRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers can assign plans to other reps.' }));
+        return;
+      }
+
+      const result = await salesCoachingService.createCoachingPlan({
+        createdBy: user.id,
+        repUserId: targetRepId,
+        title: body.title,
+        description: body.description || '',
+        targetSkill: body.targetSkill || 'discovery',
+        baselineScore: body.baselineScore || 75,
+        targetScore: body.targetScore || 90,
+        targetDate: body.targetDate || null,
+        recommendationId: body.recommendationId || null,
+        actions: body.actions || [],
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 91. GET /api/coaching/plans/:planId: Single plan details
+  const getPlanMatch = pathname.match(/^\/api\/coaching\/plans\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getPlanMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const planId = getPlanMatch[1];
+
+      const plan = await salesCoachingService.getCoachingPlanById({
+        repUserId: user.id,
+        planId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plan }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 92. POST /api/coaching/plan-actions/:actionId/complete: Complete action step
+  const completeActionMatch = pathname.match(/^\/api\/coaching\/plan-actions\/([a-zA-Z0-9_\-]+)\/complete$/);
+  if (req.method === 'POST' && completeActionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const actionId = completeActionMatch[1];
+
+      const action = await salesCoachingService.updatePlanAction({
+        repUserId: user.id,
+        actionId,
+        status: 'completed',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, action }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 93. POST /api/coaching/plan-actions/:actionId/create-task: Convert coaching action to CRM task
+  const createActionTaskMatch = pathname.match(/^\/api\/coaching\/plan-actions\/([a-zA-Z0-9_\-]+)\/create-task$/);
+  if (req.method === 'POST' && createActionTaskMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const actionId = createActionTaskMatch[1];
+
+      const result = await salesCoachingService.createTaskFromPlanAction({
+        repUserId: user.id,
+        actionId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 94. GET /api/coaching/exercises: Practice exercises
+  if (req.method === 'GET' && pathname === '/api/coaching/exercises') {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const skillKey = parsedUrl.searchParams.get('skillKey') || null;
+      const exercises = salesCoachingService.getCoachingExercises(skillKey);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, exercises }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 95. GET /api/coaching/reviews: List coaching reviews
+  if (req.method === 'GET' && pathname === '/api/coaching/reviews') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const requestedRepId = parsedUrl.searchParams.get('repId') || user.id;
+
+      if (requestedRepId !== user.id && !userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Unauthorized access to coaching reviews.' }));
+        return;
+      }
+
+      const reviews = await salesCoachingService.getCoachingReviews({
+        repUserId: requestedRepId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, reviews }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 96. POST /api/coaching/reviews: Record manager review
+  if (req.method === 'POST' && pathname === '/api/coaching/reviews') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const review = await salesCoachingService.recordCoachingReview({
+        reviewerUserId: user.id,
+        repUserId: body.repUserId,
+        reviewType: body.reviewType || 'manager',
+        periodStart: body.periodStart,
+        periodEnd: body.periodEnd,
+        strengths: body.strengths || [],
+        improvementAreas: body.improvementAreas || [],
+        reviewNotes: body.reviewNotes || body.notes || '',
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, review }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 97. GET /api/coaching/team/overview: Manager team dashboard
+  if (req.method === 'GET' && pathname === '/api/coaching/team/overview') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const periodDays = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+
+      const overview = await salesCoachingService.getTeamOverview({
+        user,
+        periodDays,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...overview }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 403 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 98. GET /api/coaching/team/reps/:repId: Manager drilldown into rep
+  const teamRepMatch = pathname.match(/^\/api\/coaching\/team\/reps\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && teamRepMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Manager access required.' }));
+        return;
+      }
+
+      const repId = teamRepMatch[1];
+      const periodDays = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+
+      const scorecard = await salesPerformanceService.getRepScorecard({
+        repUserId: repId,
+        periodDays,
+      });
+      const trends = await salesPerformanceService.getPerformanceTrends({
+        repUserId: repId,
+        days: periodDays,
+      });
+      const plans = await salesCoachingService.getCoachingPlans({
+        repUserId: repId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, repId, scorecard, trends, plans }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==============================================================================
+  // AI SALES FORECASTING & REVENUE INTELLIGENCE ENDPOINTS
+  // ==============================================================================
+
+  // 99. GET /api/revenue/overview: Closed-Won, Open Pipeline, Weighted Pipeline, Win Rate, Coverage
+  if (req.method === 'GET' && pathname === '/api/revenue/overview') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const currency = parsedUrl.searchParams.get('currency') || 'USD';
+      const startDate = parsedUrl.searchParams.get('startDate') || null;
+      const endDate = parsedUrl.searchParams.get('endDate') || null;
+
+      const overview = await revenueIntelligenceService.getPipelineOverview({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+        currency,
+        startDate,
+        endDate,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...overview }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 100. GET /api/revenue/stages: Stage-by-stage pipeline breakdown
+  if (req.method === 'GET' && pathname === '/api/revenue/stages') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const stages = await revenueIntelligenceService.getStageBreakdown({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, stages }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 101. GET /api/revenue/velocity: Sales velocity calculation and deltas
+  if (req.method === 'GET' && pathname === '/api/revenue/velocity') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const days = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+
+      const velocity = await revenueIntelligenceService.getSalesVelocity({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+        days,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...velocity }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 102. GET /api/revenue/targets: Active revenue target configuration
+  if (req.method === 'GET' && pathname === '/api/revenue/targets') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const target = await revenueIntelligenceService.getActiveRevenueTarget(user.workspace_id || 'default-workspace');
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, target }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 103. POST /api/revenue/targets: Configure revenue targets (Manager only)
+  if (req.method === 'POST' && pathname === '/api/revenue/targets') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only workspace managers or admins can configure revenue targets.' }));
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const target = await revenueIntelligenceService.setRevenueTarget({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        periodType: body.periodType || 'monthly',
+        periodStart: body.periodStart,
+        periodEnd: body.periodEnd,
+        targetRevenue: body.targetRevenue,
+        currency: body.currency || 'USD',
+        targetPipelineCoverage: body.targetPipelineCoverage || 3.0,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, target }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 104. GET /api/revenue/attribution: Campaign and lead source revenue attribution
+  if (req.method === 'GET' && pathname === '/api/revenue/attribution') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const attribution = await revenueIntelligenceService.getRevenueAttribution({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...attribution }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 105. GET /api/forecast/current: Current forecast summary and projections
+  if (req.method === 'GET' && pathname === '/api/forecast/current') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const days = parseInt(parsedUrl.searchParams.get('days') || '30', 10);
+      const forecastType = parsedUrl.searchParams.get('forecastType') || 'weighted_pipeline';
+
+      const result = await salesForecastService.generateForecast({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+        days,
+        forecastType,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 106. POST /api/forecast/generate: Explicit snapshot generation
+  if (req.method === 'POST' && pathname === '/api/forecast/generate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const days = parseInt(body.days || '30', 10);
+      const forecastType = body.forecastType || 'ai_predicted';
+
+      const result = await salesForecastService.generateForecast({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+        days,
+        forecastType,
+        periodStart: body.periodStart,
+        periodEnd: body.periodEnd,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 107. GET /api/forecast/history: Historical forecast snapshots
+  if (req.method === 'GET' && pathname === '/api/forecast/history') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const days = parseInt(parsedUrl.searchParams.get('days') || '90', 10);
+
+      const snapshots = await salesForecastService.getForecastHistory({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        days,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, snapshots }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 108. GET /api/forecast/snapshots/:id: Single snapshot detail with predictions & adjustments
+  const getSnapshotMatch = pathname.match(/^\/api\/forecast\/snapshots\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getSnapshotMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const snapshotId = getSnapshotMatch[1];
+
+      const details = await salesForecastService.getForecastById({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        snapshotId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...details }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 109. POST /api/forecast/adjust: Audited manual forecast adjustment or category override
+  if (req.method === 'POST' && pathname === '/api/forecast/adjust') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only workspace managers or admins can adjust forecasts.' }));
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const result = await salesForecastService.adjustForecast({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        snapshotId: body.snapshotId,
+        dealId: body.dealId,
+        adjustmentType: body.adjustmentType || 'category_override',
+        originalValue: body.originalValue,
+        adjustedValue: body.adjustedValue,
+        reason: body.reason,
+        role: user.role,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Forbidden') ? 403 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 110. GET /api/forecast/deal-risks: Deal risk scores, factors, and slippage detection
+  if (req.method === 'GET' && pathname === '/api/forecast/deal-risks') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const risks = await salesForecastService.getDealRiskAnalysis({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...risks }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 111. GET /api/forecast/accuracy: Historical forecast accuracy vs Closed-Won revenue
+  if (req.method === 'GET' && pathname === '/api/forecast/accuracy') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const accuracy = await salesForecastService.getForecastAccuracy({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...accuracy }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 112. GET /api/forecast/insights: Actionable pipeline health insights
+  if (req.method === 'GET' && pathname === '/api/forecast/insights') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const insights = await salesForecastService.getPipelineHealthInsights({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, insights }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==============================================================================
+  // AI SALES TERRITORY & ACCOUNT PLANNING ENDPOINTS
+  // ==============================================================================
+
+  // 113. GET /api/territories/overlaps: Territory account overlap detection
+  if (req.method === 'GET' && pathname === '/api/territories/overlaps') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const overlaps = await salesTerritoryService.detectOverlaps({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...overlaps }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 114. GET /api/territories/balance: Territory balancing & capacity analysis
+  if (req.method === 'GET' && pathname === '/api/territories/balance') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const balance = await salesTerritoryService.getTerritoryBalancing({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...balance }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 115. GET /api/territories: List territories for workspace
+  if (req.method === 'GET' && pathname === '/api/territories') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const status = parsedUrl.searchParams.get('status') || 'active';
+
+      const territories = await salesTerritoryService.getTerritories({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role || 'rep',
+        status,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, territories }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 116. POST /api/territories: Create territory (Manager only)
+  if (req.method === 'POST' && pathname === '/api/territories') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can create territories.' }));
+        return;
+      }
+
+      const body = await parseJsonBody(req);
+      const territory = await salesTerritoryService.createTerritory({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        name: body.name,
+        description: body.description,
+        territoryType: body.territoryType || 'geographic',
+        territoryRules: body.territoryRules || {},
+        ownerUserId: body.ownerUserId || user.id,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, territory }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 117. GET /api/territories/:id: Single territory details
+  const getTerritoryMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getTerritoryMatch && !['overlaps', 'balance'].includes(getTerritoryMatch[1])) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const territoryId = getTerritoryMatch[1];
+
+      const territory = await salesTerritoryService.getTerritoryById({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, territory }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 118. PATCH /api/territories/:id: Update territory (Manager only)
+  const patchTerritoryMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && patchTerritoryMatch && !['overlaps', 'balance'].includes(patchTerritoryMatch[1])) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can update territories.' }));
+        return;
+      }
+
+      const territoryId = patchTerritoryMatch[1];
+      const body = await parseJsonBody(req);
+
+      const territory = await salesTerritoryService.updateTerritory({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+        ...body,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, territory }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 119. POST /api/territories/:id/archive: Archive territory (Manager only)
+  const archiveTerritoryMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/archive$/);
+  if (req.method === 'POST' && archiveTerritoryMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can archive territories.' }));
+        return;
+      }
+
+      const territoryId = archiveTerritoryMatch[1];
+      const territory = await salesTerritoryService.archiveTerritory({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, territory }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 120. GET /api/territories/:id/performance: Territory performance
+  const territoryPerfMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/performance$/);
+  if (req.method === 'GET' && territoryPerfMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const territoryId = territoryPerfMatch[1];
+
+      const perf = await salesTerritoryService.getTerritoryPerformance({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...perf }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 121. POST /api/territories/:id/assignment-preview: Preview rule-based matches
+  const previewAssignMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/assignment-preview$/);
+  if (req.method === 'POST' && previewAssignMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const territoryId = previewAssignMatch[1];
+
+      const preview = await salesTerritoryService.previewAssignments({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...preview }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 122. POST /api/territories/:id/assignments: Assign leads to territory (Manager only)
+  const assignMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/assignments$/);
+  if (req.method === 'POST' && assignMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can assign accounts to territories.' }));
+        return;
+      }
+
+      const territoryId = assignMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await salesTerritoryService.assignAccountsToTerritory({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+        leadIds: body.leadIds || [],
+        assignedTo: body.assignedTo,
+        assignmentMethod: body.assignmentMethod || 'rule_based',
+        reason: body.reason,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 123. PATCH /api/territories/:id/assignments/:assignmentId: Reassign account (Manager only)
+  const reassignMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/assignments\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && reassignMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can reassign accounts.' }));
+        return;
+      }
+
+      const assignmentId = reassignMatch[2];
+      const body = await parseJsonBody(req);
+
+      const result = await salesTerritoryService.reassignAccount({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role,
+        assignmentId,
+        newTerritoryId: body.newTerritoryId,
+        newAssignedTo: body.newAssignedTo,
+        reason: body.reason,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Forbidden') ? 403 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 124. GET /api/accounts/priorities: Calculate and list account priority scores
+  if (req.method === 'GET' && pathname === '/api/accounts/priorities') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const leads = await salesTerritoryService._fetchLeads();
+      const scored = accountPrioritizationService.scoreAccounts(leads);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, priorities: scored }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 125. GET /api/accounts/:id/priority: Single account priority score
+  const getAccountPriorityMatch = pathname.match(/^\/api\/accounts\/([a-zA-Z0-9_\-]+)\/priority$/);
+  if (req.method === 'GET' && getAccountPriorityMatch) {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const leadId = getAccountPriorityMatch[1];
+      const lead = crmService._getMemoryLead ? crmService._getMemoryLead(leadId) : { id: leadId };
+
+      const score = accountPrioritizationService.scoreAccount(lead);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, priority: score }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 126. POST /api/accounts/priorities/recalculate: Force recalculate priorities
+  if (req.method === 'POST' && pathname === '/api/accounts/priorities/recalculate') {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const leads = await salesTerritoryService._fetchLeads();
+      accountPrioritizationService.priorityCache.clear();
+      const scored = accountPrioritizationService.scoreAccounts(leads);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, count: scored.length, priorities: scored }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 127. GET /api/account-plans: List account plans
+  if (req.method === 'GET' && pathname === '/api/account-plans') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const territoryId = parsedUrl.searchParams.get('territoryId') || null;
+      const accountTier = parsedUrl.searchParams.get('tier') || null;
+
+      const plans = await salesTerritoryService.getAccountPlans({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        territoryId,
+        accountTier,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plans }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 128. POST /api/account-plans/generate: Generate AI account plan draft (No DB write until confirmed)
+  if (req.method === 'POST' && pathname === '/api/account-plans/generate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+      const leadId = body.leadId;
+
+      if (!leadId) {
+        res.writeHead(422, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'leadId is required.' }));
+        return;
+      }
+
+      const lead = crmService._getMemoryLead ? crmService._getMemoryLead(leadId) : { id: leadId, company: body.company };
+      const draft = await accountPlanningService.generateAccountPlanDraft(lead);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, draft }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 129. POST /api/account-plans: Create/save account plan
+  if (req.method === 'POST' && pathname === '/api/account-plans') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const body = await parseJsonBody(req);
+
+      const plan = await salesTerritoryService.createAccountPlan({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        leadId: body.leadId,
+        territoryId: body.territoryId,
+        accountOwnerId: body.accountOwnerId || user.id,
+        accountNameSnapshot: body.accountNameSnapshot || body.company || 'Enterprise Account',
+        accountTier: body.accountTier || 'tier_2',
+        accountStatus: body.accountStatus || 'active',
+        annualRevenueTarget: body.annualRevenueTarget || 0,
+        accountObjectives: body.accountObjectives || [],
+        accountStrategy: body.accountStrategy || '',
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plan }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 130. GET /api/account-plans/:id: Get single account plan with actions
+  const getAccountPlanMatch = pathname.match(/^\/api\/account-plans\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getAccountPlanMatch && getAccountPlanMatch[1] !== 'generate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const planId = getAccountPlanMatch[1];
+
+      const plan = await salesTerritoryService.getAccountPlanById({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        planId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plan }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 131. PATCH /api/account-plans/:id: Update account plan
+  const patchPlanMatch = pathname.match(/^\/api\/account-plans\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && patchPlanMatch && patchPlanMatch[1] !== 'generate') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const planId = patchPlanMatch[1];
+      const body = await parseJsonBody(req);
+
+      const plan = await salesTerritoryService.updateAccountPlan({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        planId,
+        ...body,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plan }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 132. POST /api/account-plans/:id/actions: Add action item to plan
+  const addActionMatch = pathname.match(/^\/api\/account-plans\/([a-zA-Z0-9_\-]+)\/actions$/);
+  if (req.method === 'POST' && addActionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const planId = addActionMatch[1];
+      const body = await parseJsonBody(req);
+
+      const action = await salesTerritoryService.addPlanAction({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        accountPlanId: planId,
+        title: body.title,
+        description: body.description,
+        actionType: body.actionType || 'outreach',
+        assignedTo: body.assignedTo || user.id,
+        dueDate: body.dueDate,
+        priority: body.priority || 'medium',
+        source: body.source || 'manual',
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, action }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 133. PATCH /api/account-plans/:id/actions/:actionId: Update action item
+  const patchActionMatch = pathname.match(/^\/api\/account-plans\/([a-zA-Z0-9_\-]+)\/actions\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && patchActionMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const actionId = patchActionMatch[2];
+      const body = await parseJsonBody(req);
+
+      const action = await salesTerritoryService.updatePlanAction({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        actionId,
+        ...body,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, action }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 134. GET /api/territories/:id/targets: Get territory targets
+  const getTerritoryTargetMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/targets$/);
+  if (req.method === 'GET' && getTerritoryTargetMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const territoryId = getTerritoryTargetMatch[1];
+
+      const targets = salesTerritoryService._getMemoryTargetsList().filter(t => t.territory_id === territoryId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, targets }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 135. POST /api/territories/:id/targets: Set territory targets (Manager only)
+  const postTerritoryTargetMatch = pathname.match(/^\/api\/territories\/([a-zA-Z0-9_\-]+)\/targets$/);
+  if (req.method === 'POST' && postTerritoryTargetMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      if (!userIsManager(user)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers or admins can set territory targets.' }));
+        return;
+      }
+
+      const territoryId = postTerritoryTargetMatch[1];
+      const body = await parseJsonBody(req);
+
+      const target = await salesTerritoryService.setTerritoryTarget({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        role: user.role,
+        territoryId,
+        periodType: body.periodType || 'quarterly',
+        revenueTarget: body.revenueTarget,
+        pipelineTarget: body.pipelineTarget,
+        newAccountsTarget: body.newAccountsTarget,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, target }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // Not found
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Endpoint not found.' }));
@@ -2778,3 +4541,20 @@ server.listen(PORT, '127.0.0.1', () => {
     console.log('[AI Backend] OPENAI_API_KEY is loaded.');
   }
 });
+
+export {
+  server,
+  salesTerritoryService,
+  accountPrioritizationService,
+  accountPlanningService,
+  revenueIntelligenceService,
+  salesForecastService,
+  salesPerformanceService,
+  salesCoachingService,
+  salesCallService,
+  transcriptionProvider,
+  meetingService,
+  crmService,
+  analyticsService,
+  optimizationService,
+};

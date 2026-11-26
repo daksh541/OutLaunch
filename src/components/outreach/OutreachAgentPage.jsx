@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EditorialNavbar from '../landing/EditorialNavbar';
 import EditorialHero from '../landing/EditorialHero';
-import StackedWorkflowPipeline from '../landing/StackedWorkflowPipeline';
+import WorkflowOverviewGrid from '../landing/WorkflowOverviewGrid';
 import HumanApprovalSection from '../landing/HumanApprovalSection';
 import LeadDiscoverySection from '../landing/LeadDiscoverySection';
 import PersonalisationSection from '../landing/PersonalisationSection';
 import MultichannelOutreachSection from '../landing/MultichannelOutreachSection';
 import CampaignManagementSection from '../landing/CampaignManagementSection';
 import TrustControlSection from '../landing/TrustControlSection';
-import EditorialCalculatorSection from '../landing/EditorialCalculatorSection';
+import OutboundSequenceSimulator from '../landing/OutboundSequenceSimulator';
 import EditorialFaqSection from '../landing/EditorialFaqSection';
 import EditorialFinalCta from '../landing/EditorialFinalCta';
 import EditorialFooter from '../landing/EditorialFooter';
@@ -56,10 +56,10 @@ export default function OutreachAgentPage() {
         {/* 2. Hero Section */}
         <EditorialHero />
 
-        {/* 3. Animated Outreach Workflow (OutLaunch Stacked Pipeline) */}
-        <StackedWorkflowPipeline />
+        {/* 3. Modular Outreach Workflow (OutLaunch Matrix) */}
+        <WorkflowOverviewGrid />
 
-        {/* 4. Product Explanation (Taskaway Human-in-the-Loop Review) */}
+        {/* 4. Product Explanation (Human-in-the-Loop Review) */}
         <HumanApprovalSection />
 
         {/* 5. Lead Discovery */}
@@ -77,8 +77,8 @@ export default function OutreachAgentPage() {
         {/* 9. Trust, Safety and Control */}
         <TrustControlSection />
 
-        {/* 10. Interactive Pricing Calculator */}
-        <EditorialCalculatorSection />
+        {/* 10. Interactive Cadence Simulator */}
+        <OutboundSequenceSimulator />
 
         {/* 11. FAQ */}
         <EditorialFaqSection />

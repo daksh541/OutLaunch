@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Mail, Linkedin, UserCheck, Search, CornerDownRight, X, ExternalLink } from 'lucide-react';
-import FlowCanvas from '../FlowCanvas';
+import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Mail, Linkedin, UserCheck, Search, CornerDownRight, X, ExternalLink, SlidersHorizontal, ArrowUpRight, Check, Play } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { normalizeWebsite } from '../../lib/companyResearch';
 import useAuthSession from '../../hooks/useAuthSession';
@@ -10,6 +9,7 @@ export default function EditorialHero() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState('');
   const [activeWorkflowTab, setActiveWorkflowTab] = useState('prospect');
+  const [isApproved, setIsApproved] = useState(false);
   const modalRef = useRef(null);
 
   const { navigate } = useNavigation();
@@ -34,18 +34,6 @@ export default function EditorialHero() {
     };
   }, [dialogOpen]);
 
-  // Tab auto-rotation in hero visual
-  useEffect(() => {
-    const tabs = ['prospect', 'research', 'email', 'linkedin'];
-    const timer = setInterval(() => {
-      setActiveWorkflowTab((prev) => {
-        const nextIdx = (tabs.indexOf(prev) + 1) % tabs.length;
-        return tabs[nextIdx];
-      });
-    }, 4500);
-    return () => clearInterval(timer);
-  }, []);
-
   const handleSubmit = (event) => {
     event.preventDefault();
     if (authLoading) return;
@@ -54,7 +42,7 @@ export default function EditorialHero() {
       const { domain, website } = normalizeWebsite(inputValue);
       sessionStorage.setItem('autogtm-pending-domain', website);
       if (!session) {
-        navigate('/sign-in');
+        navigate(PRODUCT_ROUTES.SIGN_IN);
         return;
       }
       navigate(`/auto-gtm/company/${encodeURIComponent(domain)}/explore?src=landing&phase=research_company_loading`);
@@ -64,141 +52,140 @@ export default function EditorialHero() {
   };
 
   return (
-    <section className="relative pt-6 sm:pt-12 pb-16 md:pb-24 overflow-hidden bg-[#f7f5f0]">
-      {/* Background Architectural Grid Lines */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(13,28,21,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,28,21,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+    <section className="relative pt-8 sm:pt-14 pb-16 md:pb-24 bg-[#f7f5f0] text-[#0d1c15] overflow-hidden">
+      {/* Subtle Architectural Grid Lines */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(13,28,21,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,28,21,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_15%,#000_70%,transparent_100%)] pointer-events-none" />
 
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
         
-        {/* Top Monospace Pill */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-[12px] sm:text-[13px] font-mono text-[#182e24] shadow-[0_1px_3px_rgba(13,28,21,0.04)]">
-            <span className="w-2 h-2 rounded-full bg-[#00e599] animate-pulse" />
-            <span className="font-semibold text-[#0d1c15]">122,044 hot leads</span>
-            <span className="text-[#5a6962]">researched across 10,980+ companies</span>
-          </div>
-        </div>
-
-        {/* Hero Editorial Headline */}
-        <div className="text-center max-w-[920px] mx-auto">
-          <h1 className="font-display font-bold text-4xl sm:text-6xl md:text-[68px] lg:text-[76px] tracking-[-0.03em] text-[#0d1c15] leading-[1.05] mb-5 sm:mb-6">
-            Find the right people.{' '}
-            <span className="text-[#0d9467] italic font-editorial font-normal">
-              Start better conversations.
-            </span>
-          </h1>
-
-          {/* Supporting Text */}
-          <p className="text-lg sm:text-xl md:text-[21px] text-[#4a5851] max-w-[680px] mx-auto leading-relaxed font-normal mb-8 sm:mb-10">
-            Research prospects, personalise your outreach, and manage email and LinkedIn conversations from one simple workspace.
-          </p>
-
-          {/* Input & Launch Form (Preserving OutLaunch input flow with Flow streams) */}
-          <div id="hero-cta" className="max-w-[540px] mx-auto mb-6 relative">
-            {/* Desktop Left/Right Flow Streams */}
-            <div className="hidden lg:block absolute -left-48 top-1/2 -translate-y-1/2 w-44 h-16 pointer-events-none opacity-60">
-              <FlowCanvas />
-            </div>
-            <div className="hidden lg:block absolute -right-48 top-1/2 -translate-y-1/2 w-44 h-16 pointer-events-none opacity-60 scale-x-[-1]">
-              <FlowCanvas isReversed={true} />
-            </div>
-
-            <form
-              onSubmit={handleSubmit}
-              className="relative flex items-center bg-white rounded-2xl p-1.5 sm:p-2 border border-[#0d1c15]/15 shadow-[0_4px_24px_rgba(13,28,21,0.08)] hover:border-[#0d9467]/40 focus-within:border-[#0d9467] focus-within:ring-3 focus-within:ring-[#0d9467]/15 transition-all"
-            >
-              <div className="pl-3.5 pr-2 text-[#73827a]">
-                <Search className="w-5 h-5 text-[#5a6962]" />
-              </div>
-
-              <input
-                id="hero-website-input"
-                type="text"
-                value={inputValue}
-                onChange={(e) => {
-                  setInputValue(e.target.value);
-                  if (error) setError('');
-                }}
-                placeholder="Enter your website (e.g. stripe.com)"
-                className="w-full bg-transparent text-[#0d1c15] placeholder-[#73827a] text-sm sm:text-base font-medium outline-none py-2 px-1"
-                autoComplete="off"
-              />
-
-              <button
-                type="submit"
-                disabled={authLoading}
-                aria-label="Launch project research"
-                className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer shrink-0 ${
-                  inputValue.trim().length > 0
-                    ? 'bg-[#0d1c15] hover:bg-[#162b21] text-white shadow-md'
-                    : 'bg-[#edf2ec] text-[#4a5851] hover:text-[#0d1c15]'
-                }`}
-              >
-                <span>Launch</span>
-                <ArrowRight className={`w-4 h-4 transition-transform duration-200 ${inputValue.trim().length > 0 ? 'text-[#00e599] translate-x-0.5' : ''}`} />
-              </button>
-            </form>
-
-            {error && (
-              <p role="alert" className="text-xs text-rose-600 mt-2 text-left px-2 font-medium">
-                {error}
-              </p>
-            )}
-
-            {/* Secondary Option: No Website */}
-            <div className="flex items-center justify-center gap-2 mt-3 text-xs text-[#5a6962]">
-              <span>Don't have a website yet?</span>
-              <button
-                type="button"
-                onClick={() => setDialogOpen(true)}
-                className="text-[#0d9467] hover:text-[#0a7854] font-medium underline underline-offset-2 cursor-pointer bg-transparent border-0 p-0"
-              >
-                I don't have a website
-              </button>
-            </div>
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs sm:text-sm text-[#4a5851] font-medium pt-2">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
-              No SDRs or email infra needed
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
-              $30 free credits on sign-up
-            </span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#0d9467]" />
-              Human review before sending
-            </span>
-          </div>
-        </div>
-
-        {/* Hero Interactive Outreach Workflow Visual (Realistic Product Mockup) */}
-        <div className="mt-12 sm:mt-16 max-w-[1080px] mx-auto">
-          <div className="bg-[#ffffff] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_25px_70px_-15px_rgba(13,28,21,0.12)] overflow-hidden text-[#0d1c15]">
+        {/* Split Hero Composition */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          
+          {/* Left Column: Positioning, Headline & Form (6 cols) */}
+          <div className="lg:col-span-6 flex flex-col items-start text-left">
             
-            {/* Top Window Bar */}
-            <div className="px-5 py-3.5 bg-[#fcfbf9] border-b border-[#0d1c15]/08 flex items-center justify-between">
+            {/* Category Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-[12px] font-mono text-[#182e24] shadow-xs mb-6">
+              <span className="w-2 h-2 rounded-full bg-[#00e599] animate-pulse" />
+              <span className="font-semibold text-[#0d1c15]">AUTONOMOUS OUTBOUND</span>
+              <span className="text-[#5a6962]">· v2.4 Engine</span>
+            </div>
+
+            {/* Clean Editorial Headline */}
+            <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-[56px] tracking-[-0.03em] text-[#0d1c15] leading-[1.08] mb-5">
+              Precision outbound infrastructure for{' '}
+              <span className="text-[#0d9467] italic font-editorial font-normal">
+                B2B revenue teams.
+              </span>
+            </h1>
+
+            {/* Concise Product Positioning */}
+            <p className="text-base sm:text-lg text-[#4a5851] leading-relaxed mb-8 max-w-xl">
+              Research verified accounts, generate hyper-tailored messaging from real buyer signals, and orchestrate email and LinkedIn sequences with human-in-the-loop safety.
+            </p>
+
+            {/* Direct Research Launch Form */}
+            <div className="w-full max-w-lg mb-6">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col sm:flex-row items-stretch gap-2.5 bg-white p-2 rounded-2xl border border-[#0d1c15]/15 shadow-[0_8px_24px_rgba(13,28,21,0.06)] focus-within:border-[#0d9467] transition-all"
+              >
+                <div className="flex-1 flex items-center pl-3 pr-2 text-[#73827a]">
+                  <Search className="w-4 h-4 text-[#0d9467] shrink-0 mr-2.5" />
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => {
+                      setInputValue(e.target.value);
+                      if (error) setError('');
+                    }}
+                    placeholder="Enter company website (e.g. stripe.com)"
+                    className="w-full bg-transparent text-[#0d1c15] placeholder-[#73827a] text-sm font-medium outline-none py-2"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] active:scale-[0.98] text-white font-semibold text-sm transition-all cursor-pointer shadow-xs shrink-0"
+                >
+                  <span>Launch Engine</span>
+                  <ArrowRight className="w-4 h-4 text-[#00e599]" />
+                </button>
+              </form>
+
+              {error && (
+                <p role="alert" className="text-xs text-rose-600 mt-2 text-left px-2 font-medium">
+                  {error}
+                </p>
+              )}
+
+              {/* Secondary Actions */}
+              <div className="flex items-center justify-between gap-4 mt-3 px-1 text-xs text-[#5a6962]">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(true)}
+                  className="hover:text-[#0d1c15] transition-colors underline underline-offset-2 cursor-pointer bg-transparent border-0 p-0 text-left"
+                >
+                  Don't have a website URL yet?
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
+                  className="inline-flex items-center gap-1 font-semibold text-[#0d9467] hover:text-[#0a7854] cursor-pointer"
+                >
+                  <span>Access Platform</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Verified Technical Capabilities */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full pt-4 border-t border-[#0d1c15]/08 text-xs font-mono text-[#4a5851]">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#ff5f56]/70" />
-                <span className="w-3 h-3 rounded-full bg-[#ffbd2e]/70" />
-                <span className="w-3 h-3 rounded-full bg-[#27c93f]/70" />
-                <span className="ml-3 font-mono text-xs text-[#5a6962] hidden sm:inline">
-                  workspace / active-pipeline / q4-growth
-                </span>
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467] shrink-0" />
+                <span>SPF / DKIM / DMARC</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467] shrink-0" />
+                <span>Human Approval Queue</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467] shrink-0" />
+                <span>Multi-Touch Sequences</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Column: Original OutLaunch Interface Preview (6 cols) */}
+          <div className="lg:col-span-6 w-full">
+            <div className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/12 shadow-[0_20px_50px_rgba(13,28,21,0.08)] overflow-hidden">
+              
+              {/* Product Header Bar */}
+              <div className="px-5 py-3.5 bg-[#fcfbf9] border-b border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#0d9467]" />
+                  <span className="font-mono text-xs font-semibold text-[#0d1c15]">
+                    pipeline / q4-growth-tier1
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#edf2ec] border border-[#dbe5da] text-[11px] font-mono text-[#0d9467] font-semibold">
+                  <span>OUTLAUNCH AGENT</span>
+                </div>
               </div>
 
-              {/* Workflow Phase Tabs */}
-              <div className="flex items-center gap-1 bg-[#edf2ec] p-1 rounded-xl border border-[#dbe5da] text-xs font-mono">
+              {/* Interactive Tabs */}
+              <div className="flex border-b border-[#0d1c15]/08 bg-[#f7f5f0]/50 p-1.5 gap-1 text-xs font-mono">
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('prospect')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'prospect'
-                      ? 'bg-[#0d1c15] text-[#00e599] font-semibold shadow-xs'
-                      : 'text-[#4a5851] hover:text-[#0d1c15]'
+                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
                   1. Discovery
@@ -206,198 +193,214 @@ export default function EditorialHero() {
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('research')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'research'
-                      ? 'bg-[#0d1c15] text-[#00e599] font-semibold shadow-xs'
-                      : 'text-[#4a5851] hover:text-[#0d1c15]'
+                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
-                  2. Deep Research
+                  2. Dossier
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('email')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'email'
-                      ? 'bg-[#0d1c15] text-[#00e599] font-semibold shadow-xs'
-                      : 'text-[#4a5851] hover:text-[#0d1c15]'
+                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
-                  3. Personalised Email
+                  3. Email Touch
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('linkedin')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'linkedin'
-                      ? 'bg-[#0d1c15] text-[#00e599] font-semibold shadow-xs'
-                      : 'text-[#4a5851] hover:text-[#0d1c15]'
+                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
-                  4. LinkedIn Touch
+                  4. LinkedIn
                 </button>
               </div>
-            </div>
 
-            {/* Main Stage Grid */}
-            <div className="p-4 sm:p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch bg-white">
-              
-              {/* Left Column: Live Prospect Card & Dossier (5 cols) */}
-              <div className="lg:col-span-5 flex flex-col justify-between bg-[#fcfbf9] rounded-2xl p-5 border border-[#0d1c15]/08 shadow-2xs">
-                <div>
-                  <div className="flex items-center justify-between pb-4 border-b border-[#0d1c15]/08">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-bold text-sm shadow-xs">
-                        SJ
+              {/* Panel Content Area */}
+              <div className="p-5 sm:p-6 bg-white min-h-[320px] flex flex-col justify-between">
+                
+                {activeWorkflowTab === 'prospect' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    <div className="flex items-start justify-between pb-3 border-b border-[#0d1c15]/08">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-bold text-base shadow-xs">
+                          SJ
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-base text-[#0d1c15]">Sarah Jenkins</h4>
+                          <p className="text-xs text-[#5a6962]">VP of Growth · Hyperflow AI</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-[#0d1c15] text-base leading-tight">Sarah Jenkins</h4>
-                        <p className="text-xs text-[#5a6962] leading-tight mt-0.5">VP of Growth @ Hyperflow AI</p>
-                      </div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full bg-[#00e599]/15 text-[#0d9467] font-mono text-[11px] font-bold border border-[#00e599]/30">
-                      98.4% FIT
-                    </span>
-                  </div>
-
-                  {/* Research Insights Tagged */}
-                  <div className="mt-4 space-y-2.5 text-xs">
-                    <div className="bg-white p-3 rounded-xl border border-[#0d1c15]/08 shadow-2xs">
-                      <div className="flex items-center gap-1.5 text-[#0d9467] font-mono text-[10px] uppercase font-bold">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Recent Company Signal</span>
-                      </div>
-                      <p className="text-[#33413a] mt-1 text-[12px] leading-relaxed">
-                        Hyperflow just raised $12M Series A; actively hiring 4 outbound SDRs and expanding into EMEA markets.
-                      </p>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-xl border border-[#0d1c15]/08 shadow-2xs">
-                      <div className="flex items-center gap-1.5 text-[#5a6962] font-mono text-[10px] uppercase font-bold">
-                        <Search className="w-3.5 h-3.5 text-[#0d9467]" />
-                        <span>Identified Pain Point</span>
-                      </div>
-                      <p className="text-[#33413a] mt-1 text-[12px] leading-relaxed">
-                        Manual LinkedIn prospecting is taking 15+ hours/week with low response rates (&lt;1.8%).
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Verified Data Coordinates */}
-                <div className="mt-5 pt-3.5 border-t border-[#0d1c15]/08 flex items-center justify-between text-xs font-mono">
-                  <div className="flex items-center gap-1.5 text-[#0d9467] font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0d9467]" />
-                    <span>sarah@hyperflow.ai</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[#0077b5] font-medium hover:underline cursor-pointer">
-                    <Linkedin className="w-3.5 h-3.5 text-[#0077b5]" />
-                    <span>in/sarah-jenkins-growth</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Generated Multi-Channel Message (7 cols) */}
-              <div className="lg:col-span-7 bg-[#fcfbf9] rounded-2xl p-5 border border-[#0d1c15]/08 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#0d9467]" />
-                      <span className="font-mono text-xs uppercase tracking-wider text-[#5a6962] font-semibold">
-                        {activeWorkflowTab === 'linkedin' ? 'Channel: LinkedIn Connection Note' : 'Channel: Direct Cold Email'}
+                      <span className="px-2.5 py-1 rounded-full bg-[#00e599]/15 text-[#0d9467] font-mono text-xs font-bold border border-[#00e599]/30">
+                        98.4% ICP Fit
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono text-[#0d9467] bg-[#00e599]/15 px-2.5 py-0.5 rounded-md font-bold border border-[#00e599]/30">
-                      Prepared · Ready for review
-                    </span>
-                  </div>
 
-                  {activeWorkflowTab === 'linkedin' ? (
-                    /* LinkedIn Preview */
-                    <div className="bg-white p-4.5 rounded-xl border border-[#0d1c15]/08 shadow-2xs">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#0d1c15] mb-2">
-                        <Linkedin className="w-4 h-4 text-[#0077b5]" />
-                        <span>Custom LinkedIn Invitation Note (274 / 300 chars)</span>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+                        <span className="text-[10px] font-mono uppercase text-[#73827a] block mb-1">Company Headcount</span>
+                        <span className="font-semibold text-[#0d1c15]">65 employees · Series A</span>
                       </div>
-                      <p className="text-xs sm:text-[13px] text-[#22332a] leading-relaxed font-sans">
-                        "Hi Sarah — loved your recent post on scaling outbound during Series A without burning domain rep. We built an AI workflow that researches prospect tech stacks before generating hyper-tailored 1st lines. Thought it might free up your team's hours this month. Open to connecting?"
+                      <div className="p-3 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+                        <span className="text-[10px] font-mono uppercase text-[#73827a] block mb-1">Location</span>
+                        <span className="font-semibold text-[#0d1c15]">New York, NY (US)</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#edf2ec]/60 border border-[#dbe5da] text-xs font-mono text-[#182e24] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
+                        <span>sarah@hyperflow.ai</span>
+                      </div>
+                      <span className="text-[#0d9467] font-semibold">VERIFIED SMTP</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeWorkflowTab === 'research' && (
+                  <div className="space-y-3 animate-fadeIn text-xs">
+                    <div className="p-3 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+                      <div className="flex items-center gap-1.5 text-[#0d9467] font-mono text-[10px] uppercase font-bold mb-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Funding Signal Detected</span>
+                      </div>
+                      <p className="text-[#33413a] leading-relaxed">
+                        Hyperflow announced a $12M Series A round led by Scale Ventures. Actively recruiting 4 enterprise SDRs.
                       </p>
                     </div>
-                  ) : (
-                    /* Email Preview */
-                    <div className="bg-white p-4.5 rounded-xl border border-[#0d1c15]/08 shadow-2xs">
-                      <div className="text-xs text-[#5a6962] font-mono mb-2 pb-2 border-b border-[#0d1c15]/08">
-                        <div className="text-[#0d1c15] font-semibold mb-0.5">
-                          Subject: Quick question about Hyperflow's EMEA expansion
-                        </div>
-                        <div>To: sarah@hyperflow.ai</div>
-                      </div>
-                      <div className="text-xs sm:text-[13px] text-[#22332a] leading-relaxed space-y-2 font-sans">
-                        <p>
-                          Hi Sarah, congrats on Hyperflow's Series A announcement yesterday.
-                        </p>
-                        <p>
-                          Noticed you're actively scaling your outbound sales pod. Most growth leads we chat with spend 12+ hours every week manually digging through prospects' tech stacks just to draft one authentic opening line.
-                        </p>
-                        <p>
-                          We built OutLaunch to automate that exact research layer — pulling recent company triggers and drafting tailored angles while leaving final approval in your team's hands.
-                        </p>
-                        <p className="text-[#0d9467] font-semibold">
-                          Would you be open to a 5-minute look at how this works for SaaS founders?
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
 
-                {/* Human Approval Bar */}
-                <div className="mt-4 pt-3.5 border-t border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-xs text-[#5a6962] font-medium">
+                    <div className="p-3 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+                      <div className="flex items-center gap-1.5 text-[#5a6962] font-mono text-[10px] uppercase font-bold mb-1">
+                        <Search className="w-3.5 h-3.5 text-[#0d9467]" />
+                        <span>Identified Tech Stack</span>
+                      </div>
+                      <p className="text-[#33413a] leading-relaxed">
+                        HubSpot CRM, Segment, Clearbit, Next.js, AWS.
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+                      <div className="flex items-center gap-1.5 text-[#5a6962] font-mono text-[10px] uppercase font-bold mb-1">
+                        <UserCheck className="w-3.5 h-3.5 text-[#0d9467]" />
+                        <span>Executive Pain Point</span>
+                      </div>
+                      <p className="text-[#33413a] leading-relaxed">
+                        SDR team spends 15+ hrs/week on manual research before sending first touches.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {activeWorkflowTab === 'email' && (
+                  <div className="space-y-3 animate-fadeIn">
+                    <div className="p-4 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 text-xs font-sans space-y-2">
+                      <div className="font-mono text-[11px] text-[#5a6962] pb-2 border-b border-[#0d1c15]/08">
+                        <span className="font-semibold text-[#0d1c15]">Subject:</span> Scaling outbound at Hyperflow without manual research
+                      </div>
+                      <p className="text-[#22332a] leading-relaxed">
+                        Hi Sarah — noticed Hyperflow's recent Series A and that you're actively scaling your outbound sales pod.
+                      </p>
+                      <p className="text-[#22332a] leading-relaxed">
+                        Most growth leads we talk to burn 15+ hours every week researching tech stacks and funding updates just to craft one relevant opening angle.
+                      </p>
+                      <p className="text-[#0d9467] font-medium leading-relaxed">
+                        Would you be open to seeing how our automated research dossiers can save your team 10+ hours a week?
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                      <span className="text-[#0d9467]">SPF/DKIM/DMARC: Aligned</span>
+                      <span>Spam Score: 0.1/10 (Safe)</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeWorkflowTab === 'linkedin' && (
+                  <div className="space-y-3 animate-fadeIn">
+                    <div className="p-4 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 text-xs font-sans space-y-2">
+                      <div className="flex items-center justify-between font-mono text-[11px] text-[#0077b5] pb-2 border-b border-[#0d1c15]/08">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Linkedin className="w-3.5 h-3.5" />
+                          LinkedIn Connection Invitation
+                        </span>
+                        <span className="text-[#5a6962]">274 / 300 chars</span>
+                      </div>
+                      <p className="text-[#22332a] leading-relaxed font-sans">
+                        "Hi Sarah — loved your recent insights on scaling outbound during Series A without sacrificing domain reputation. We automated the prospect research layer so SDRs get tailored angles instantly. Thought it might free up your team's hours this month. Open to connecting?"
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[#5a6962]">
+                      <span className="text-[#0077b5]">Safe Daily Limit: 20/day</span>
+                      <span>Target: Sarah Jenkins</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Human-in-the-Loop Approval Action Bar */}
+                <div className="mt-4 pt-3.5 border-t border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs text-[#5a6962] font-medium">
                     <UserCheck className="w-4 h-4 text-[#0d9467]" />
-                    <span>Human in the loop: Review before sending</span>
+                    <span>Human Approval Required</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => alert("Demo mode: You can edit the message anytime in your project dashboard.")}
-                      className="px-3 py-1.5 rounded-xl border border-[#0d1c15]/15 bg-white hover:bg-[#edf2ec] text-xs font-semibold text-[#0d1c15] transition-colors cursor-pointer shadow-2xs"
+                      onClick={() => alert("Edit mode: Modify any message line before sending.")}
+                      className="px-3 py-1.5 rounded-lg border border-[#0d1c15]/15 bg-white hover:bg-[#edf2ec] text-xs font-semibold text-[#0d1c15] transition-colors cursor-pointer"
                     >
-                      Edit Message
+                      Edit Copy
                     </button>
                     <button
                       type="button"
-                      onClick={() => alert("Message approved! Queued in your safe sending sequence.")}
-                      className="px-4 py-1.5 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-xs font-semibold text-white transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                      onClick={() => setIsApproved(!isApproved)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isApproved
+                          ? 'bg-[#0d9467] text-white shadow-xs'
+                          : 'bg-[#0d1c15] hover:bg-[#162b21] text-white shadow-xs'
+                      }`}
                     >
-                      <span>Approve &amp; Queue</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00e599]" />
+                      {isApproved ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#00e599]" />
+                          <span>Approved &amp; Scheduled</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Approve &amp; Queue</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#00e599]" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Bottom Status Ribbon */}
-            <div className="px-6 py-3 bg-[#fcfbf9] border-t border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-[#5a6962]">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5 text-[#0d9467] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0d9467]" />
-                  99.2% Inbox Placement
-                </span>
-                <span>Spam check score: 0.1/10 (Safe)</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span>Domain Warm-up: 100% Complete</span>
-                <span className="text-[#0d1c15]/20">|</span>
-                <span>Verified Leads In Queue: 48</span>
+
+              {/* Status Ribbon */}
+              <div className="px-5 py-2.5 bg-[#fcfbf9] border-t border-[#0d1c15]/08 flex items-center justify-between text-xs font-mono text-[#5a6962]">
+                <span className="text-[#0d9467] font-semibold">● 99.2% Inbox Placement</span>
+                <span>Secondary Domain Warm-up: 100%</span>
               </div>
+
             </div>
           </div>
+
         </div>
+
       </div>
 
-      {/* Accessible "I don't have a website" Modal with Light-Dismiss */}
+      {/* Accessible Modal for Users without a website */}
       {dialogOpen && (
         <div
           role="presentation"
@@ -408,7 +411,7 @@ export default function EditorialHero() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="no-website-title"
-            className="w-full max-w-[480px] bg-[#ffffff] rounded-2xl p-6 sm:p-7 border border-[#0d1c15]/10 shadow-[0_25px_60px_rgba(0,0,0,0.2)] text-[#0d1c15] relative animate-scaleUp"
+            className="w-full max-w-[480px] bg-white rounded-2xl p-6 sm:p-7 border border-[#0d1c15]/10 shadow-2xl text-[#0d1c15] relative animate-scaleUp"
           >
             <button
               type="button"
@@ -424,10 +427,10 @@ export default function EditorialHero() {
             </div>
 
             <h3 id="no-website-title" className="text-xl font-bold font-display text-[#0d1c15] mb-2">
-              No website yet?
+              No company website yet?
             </h3>
             <p className="text-sm text-[#4a5851] leading-relaxed mb-6">
-              You can still test and launch outreach campaigns. Enter your LinkedIn company page, a Notion product doc, or describe what you sell inside your account dashboard.
+              You can still test and launch outreach campaigns. Enter your LinkedIn profile, product documentation URL, or configure your value proposition in your OutLaunch dashboard.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-2.5">
@@ -435,11 +438,11 @@ export default function EditorialHero() {
                 type="button"
                 onClick={() => {
                   setDialogOpen(false);
-                  navigate(PRODUCT_ROUTES.REGISTER);
+                  navigate(PRODUCT_ROUTES.SIGN_IN);
                 }}
                 className="flex-1 py-2.5 px-4 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white font-semibold text-sm transition-colors cursor-pointer text-center"
               >
-                Continue to sign up
+                Continue to sign in
               </button>
               <button
                 type="button"

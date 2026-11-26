@@ -75,7 +75,7 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Glass window styles matching Explee's precision aesthetic */
+/* Glass window styles matching OutLaunch editorial precision aesthetic */
 .gm-dark .glass-window {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -134,3 +134,32 @@
 .gm-dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* Editorial Adaptation for Places/Locations Sections */
+.landing-editorial-root .bg-\[\#111414\] {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(13, 28, 21, 0.08) !important;
+  color: #0d1c15 !important;
+  box-shadow: 0 4px 20px rgba(13, 28, 21, 0.03);
+}
+
+.landing-editorial-root .bg-\[\#111414\] .text-white,
+.landing-editorial-root .bg-\[\#111414\] h3,
+.landing-editorial-root .bg-\[\#111414\] .font-bold {
+  color: #0d1c15 !important;
+}
+
+.landing-editorial-root .bg-\[\#111414\] .text-\[\#9ca3af\] {
+  color: #4a5851 !important;
+}
+
+.landing-editorial-root .border-white\/\[0\.08\],
+.landing-editorial-root .border-white\/\[0\.04\],
+.landing-editorial-root .border-white\/10 {
+  border-color: rgba(13, 28, 21, 0.08) !important;
+}
+
+.landing-editorial-root .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(13, 28, 21, 0.08) !important;
+}
+

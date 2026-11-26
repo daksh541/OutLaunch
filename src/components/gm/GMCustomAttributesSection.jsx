@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
+import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 
 const promptList = [
   'Open on Sundays in downtown Manhattan',
@@ -9,6 +10,7 @@ const promptList = [
 ];
 
 export default function GMCustomAttributesSection() {
+  const { navigate } = useNavigation();
   const [promptIndex, setPromptIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -42,53 +44,50 @@ export default function GMCustomAttributesSection() {
   }, [displayText, isDeleting, promptIndex]);
 
   return (
-    <section className="relative overflow-hidden py-16 md:py-24 my-12 border-y border-white/[0.04]">
-      {/* Decorative Geometric Floating Squares */}
-      {/* Left side squares */}
-      <div className="absolute left-6 md:left-24 top-1/4 w-24 h-24 md:w-32 md:h-32 bg-[#05ac82] rounded-none opacity-85 pointer-events-none" />
-      <div className="absolute left-2 md:left-12 top-1/2 w-20 h-20 md:w-28 md:h-28 bg-white/[0.85] rounded-none pointer-events-none" />
-      <div className="absolute left-10 md:left-32 bottom-12 w-16 h-16 md:w-24 md:h-24 bg-white/[0.85] rounded-none pointer-events-none" />
-
-      {/* Right side squares */}
-      <div className="absolute right-2 md:right-16 top-1/4 w-20 h-20 md:w-28 md:h-28 bg-white/[0.85] rounded-none pointer-events-none" />
-      <div className="absolute right-6 md:right-28 top-1/2 w-20 h-20 md:w-28 md:h-28 bg-white/[0.85] rounded-none pointer-events-none" />
-      <div className="absolute right-2 md:right-16 bottom-12 w-20 h-20 md:w-28 md:h-28 bg-white/[0.85] rounded-none pointer-events-none" />
+    <section className="relative overflow-hidden py-16 md:py-24 my-12 border-y border-[#0d1c15]/08 bg-[#edf2ec]/40">
+      {/* Decorative Geometric Floating Shapes */}
+      <div className="absolute left-6 md:left-24 top-1/4 w-24 h-24 md:w-32 md:h-32 bg-[#00e599]/10 rounded-2xl pointer-events-none" />
+      <div className="absolute left-2 md:left-12 top-1/2 w-20 h-20 md:w-28 md:h-28 bg-[#0d9467]/10 rounded-2xl pointer-events-none" />
+      <div className="absolute right-2 md:right-16 top-1/4 w-20 h-20 md:w-28 md:h-28 bg-[#00e599]/10 rounded-2xl pointer-events-none" />
+      <div className="absolute right-6 md:right-28 top-1/2 w-20 h-20 md:w-28 md:h-28 bg-[#0d9467]/10 rounded-2xl pointer-events-none" />
 
       {/* Center Content */}
-      <div className="relative z-10 px-8 max-w-3xl mx-auto text-center">
+      <div className="relative z-10 px-6 max-w-3xl mx-auto text-center">
         {/* Heading */}
-        <h2 className="text-xl md:text-2xl font-bold text-white mb-8">
+        <h2 className="text-xl md:text-2xl font-display font-bold text-[#0d1c15] mb-6">
           Need custom place attributes?
         </h2>
 
         {/* Sparkle Icon */}
         <div className="flex justify-center mb-6">
-          <Sparkles className="w-10 h-10 text-[#05ac82]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#edf2ec] text-[#0d9467] flex items-center justify-center border border-[#dbe5da]">
+            <Sparkles className="w-6 h-6" />
+          </div>
         </div>
 
         {/* Animated Typewriter Prompt Field */}
-        <div className="bg-[#111414] rounded-xl shadow-[0_8px_30px_rgba(34,197,94,0.15)] px-6 py-4 mb-8 max-w-xl mx-auto flex items-center border border-[#10b981]/30 hover:shadow-[0_10px_40px_rgba(34,197,94,0.25)] transition-shadow">
-          <span className="text-[#9ca3af] text-base font-normal">
+        <div className="bg-white rounded-xl shadow-md px-6 py-4 mb-8 max-w-xl mx-auto flex items-center border border-[#0d1c15]/10">
+          <span className="text-[#0d1c15] text-sm sm:text-base font-mono">
             {displayText}
           </span>
-          <span className="inline-block w-0.5 h-5 bg-[#10b981] ml-0.5 animate-pulse align-middle" />
+          <span className="inline-block w-0.5 h-5 bg-[#0d9467] ml-1 animate-pulse align-middle" />
         </div>
 
-        {/* Subtitle with gradient */}
-        <p className="text-2xl md:text-3xl font-medium mb-8 leading-tight gm-text-gradient">
-          Let's talk — we can build custom enrichment for you
+        {/* Subtitle */}
+        <p className="text-2xl md:text-3xl font-display font-bold text-[#0d1c15] mb-8 leading-tight">
+          We can synthesize bespoke POI criteria for your target markets.
         </p>
 
         {/* Request Demo Button */}
         <div>
-          <a
-            href="https://explee.link/db-demo?utm_content=gm-gm-dataset"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="gtm-demo-cta inline-flex items-center justify-center gap-2 bg-[#10b981] hover:bg-[#0d9467] text-black font-semibold px-6 py-3 rounded-xl transition-colors cursor-pointer"
+          <button
+            type="button"
+            onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
+            className="inline-flex items-center justify-center gap-2 bg-[#0d1c15] hover:bg-[#162b21] text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all cursor-pointer shadow-md"
           >
-            Request a demo
-          </a>
+            <span>Request Custom Places Enrichment</span>
+            <ArrowRight className="w-4 h-4 text-[#00e599]" />
+          </button>
         </div>
       </div>
     </section>

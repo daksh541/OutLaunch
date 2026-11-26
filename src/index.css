@@ -46,6 +46,23 @@ body {
   letter-spacing: -0.011em;
 }
 
+/* OutLaunch High-Contrast Guarantees */
+.bg-\[\#0d1c15\],
+.bg-\[\#14221c\],
+.bg-\[\#182a22\],
+.bg-\[\#162b21\],
+.bg-\[\#0f1714\],
+.bg-\[\#090b0b\] {
+  color: #ffffff;
+}
+
+button.bg-\[\#0d1c15\],
+a.bg-\[\#0d1c15\],
+button.bg-\[\#162b21\],
+a.bg-\[\#162b21\] {
+  color: #ffffff !important;
+}
+
 /* Landing Specific Styles */
 .landing-light {
   --background: #f7f5f0;

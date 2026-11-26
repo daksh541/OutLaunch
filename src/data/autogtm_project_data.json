@@ -23,7 +23,7 @@
     "competitors": "[{\"domain\": \"langly.es\"}, {\"domain\": \"playdiom.com\"}, {\"domain\": \"wonderlang.net\"}, {\"domain\": \"the-conversationalists.com\"}, {\"domain\": \"revisionenglish.com\"}, {\"domain\": \"immersive-english.com\"}, {\"domain\": \"englishgeeks.com.br\"}, {\"domain\": \"oxford-gear-kids.com\"}, {\"domain\": \"ellinglish.com\"}, {\"domain\": \"cookieplay.kr\"}, {\"domain\": \"aslan.games\"}, {\"domain\": \"playeng.ru\"}, {\"domain\": \"letsgoreading.com\"}, {\"domain\": \"ei-den.com\"}]",
     "created_at": "2026-09-29T19:07:25.793399+00:00",
     "updated_at": "2026-09-29T19:07:44.479225+00:00",
-    "explee_id": null,
+    "outlaunch_id": null,
     "domains_json": [
       {
         "domain": "getprimkeet.io",

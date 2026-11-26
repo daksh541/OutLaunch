@@ -26,8 +26,8 @@ const products = [
   },
   {
     id: 'gm',
-    label: 'Google Maps Dataset',
-    description: '218M+ local businesses from Google Maps',
+    label: 'Global Places Dataset',
+    description: '200M+ local businesses, stores & commercial venues',
     path: PRODUCT_ROUTES.GM,
     icon: MapPin,
   },

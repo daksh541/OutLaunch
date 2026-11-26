@@ -1214,6 +1214,1133 @@ export async function updateCrmDeal(dealId, updates) {
   return data.deal;
 }
 
+// ==========================================
+// AI MEETING BOOKING & CALENDAR SCHEDULING
+// ==========================================
+
+export async function fetchMeetings({ filter = 'upcoming', search = '', page = 1, limit = 20 } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ filter, search, page, limit });
+  const res = await fetch(`/api/meetings?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load meetings');
+  return data;
+}
+
+export async function fetchMeetingDetail(meetingId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/meetings/${meetingId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load meeting detail');
+  return data.meeting;
+}
+
+export async function createMeeting(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/meetings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to book meeting');
+  return data;
+}
+
+export async function cancelMeeting(meetingId, reason = '') {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/meetings/${meetingId}/cancel`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to cancel meeting');
+  return data.meeting;
+}
+
+export async function rescheduleMeeting(meetingId, { newStartTime, newEndTime, reason = '' }) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/meetings/${meetingId}/reschedule`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ newStartTime, newEndTime, reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to reschedule meeting');
+  return data.meeting;
+}
+
+export async function recordMeetingOutcome(meetingId, outcomeData) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/meetings/${meetingId}/outcome`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(outcomeData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to record meeting outcome');
+  return data;
+}
+
+export async function fetchCalendarAvailability({ date, timeZone = 'UTC', duration = 30 } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({
+    date: date || new Date().toISOString().split('T')[0],
+    timeZone,
+    duration,
+  });
+  const res = await fetch(`/api/calendar/availability?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to query calendar availability');
+  return data;
+}
+
+export async function fetchCalendarConnections() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calendar/connections', {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load calendar connections');
+  return data;
+}
+
+export async function connectCalendar(payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calendar/connect', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to connect calendar');
+  return data;
+}
+
+export async function disconnectCalendar(connectionId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calendar/connections/${connectionId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to disconnect calendar');
+  return data;
+}
+
+export async function fetchCalendarSettings() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calendar/settings', {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load calendar settings');
+  return data;
+}
+
+export async function updateCalendarSettings(rules) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calendar/settings', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(rules),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update calendar settings');
+  return data.rules;
+}
+
+export async function saveBookingPage(pageData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calendar/booking-page', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(pageData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to save booking page');
+  return data.page;
+}
+
+// Public endpoints (No auth header required)
+export async function fetchPublicBookingPage(slug) {
+  const res = await fetch(`/api/booking/${slug}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load booking page');
+  return data.page;
+}
+
+export async function fetchPublicAvailability(slug, { date, timeZone = 'UTC' } = {}) {
+  const params = new URLSearchParams({
+    date: date || new Date().toISOString().split('T')[0],
+    timeZone,
+  });
+  const res = await fetch(`/api/booking/${slug}/availability?${params.toString()}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch available slots');
+  return data;
+}
+
+export async function bookMeetingPublic(slug, bookingPayload) {
+  const res = await fetch(`/api/booking/${slug}/book`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bookingPayload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Booking could not be confirmed');
+  return data;
+}
+
+export async function aiSuggestMeetingSlots(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/meetings/ai-suggest-slots', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate AI slot suggestions');
+  return data;
+}
+
+export async function aiParseSchedulingIntent(replyText) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/meetings/ai-parse-intent', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ replyText }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to parse reply scheduling intent');
+  return data.intent;
+}
+
+// ==========================================
+// AI SALES CALL INTELLIGENCE & CONVERSATION INSIGHTS
+// ==========================================
+
+export async function fetchSalesCalls(filters = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.leadId) params.set('leadId', filters.leadId);
+  if (filters.dealId) params.set('dealId', filters.dealId);
+  if (filters.search) params.set('search', filters.search);
+  if (filters.page) params.set('page', filters.page);
+  if (filters.limit) params.set('limit', filters.limit);
+
+  const res = await fetch(`/api/calls?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch sales calls');
+  return data;
+}
+
+export async function fetchSalesCall(callId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/${callId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch sales call details');
+  return data;
+}
+
+export async function uploadSalesCall(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calls/upload', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to upload call recording');
+  return data;
+}
+
+export async function deleteSalesCall(callId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/${callId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to delete call recording');
+  return data;
+}
+
+export async function transcribeSalesCall(callId, options = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/${callId}/transcribe`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(options),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to transcribe call');
+  return data;
+}
+
+export async function analyzeSalesCall(callId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/${callId}/analyze`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to analyze call');
+  return data;
+}
+
+export async function searchSalesCalls(queryOrFilters) {
+  const token = await getAuthToken();
+  const q = typeof queryOrFilters === 'string' ? queryOrFilters : queryOrFilters.query || '';
+  const leadId = typeof queryOrFilters === 'object' ? queryOrFilters.leadId || '' : '';
+  const params = new URLSearchParams({ q });
+  if (leadId) params.set('leadId', leadId);
+
+  const res = await fetch(`/api/calls/search?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to search calls');
+  return data;
+}
+
+export async function createTaskFromCallActionItem(itemId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/action-items/${itemId}/create-task`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to convert action item to CRM task');
+  return data;
+}
+
+export async function reviewCallCrmSuggestion(suggestionId, { decision = 'approved', edits = {} } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/suggestions/${suggestionId}/review`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ decision, edits }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to review CRM suggestion');
+  return data;
+}
+
+export async function applyCallCrmSuggestion(suggestionId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/calls/suggestions/${suggestionId}/apply`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to apply CRM suggestion');
+  return data;
+}
+
+export async function bulkApplyCallCrmSuggestions({ callId = null, suggestionIds = [] } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/calls/suggestions/bulk-apply', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ callId, suggestionIds }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to bulk apply CRM suggestions');
+  return data;
+}
+
+// ==========================================
+// AI SALES COACHING & REP PERFORMANCE ANALYTICS
+// ==========================================
+
+export async function fetchRepScorecard({ repId = null, days = 30, startDate = null, endDate = null } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ days: String(days) });
+  if (repId) params.set('repId', repId);
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+
+  const res = await fetch(`/api/coaching/scorecard?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load sales scorecard');
+  return data.scorecard;
+}
+
+export async function fetchPerformanceTrends({ repId = null, days = 30 } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ days: String(days) });
+  if (repId) params.set('repId', repId);
+
+  const res = await fetch(`/api/coaching/trends?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load performance trends');
+  return data;
+}
+
+export async function recalculateRepScorecard({ repId = null, days = 30 } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/coaching/recalculate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ repId, days }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to recalculate scorecard');
+  return data.scorecard;
+}
+
+export async function fetchCoachingRecommendations({ repId = null, status = 'all' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ status });
+  if (repId) params.set('repId', repId);
+
+  const res = await fetch(`/api/coaching/recommendations?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch coaching recommendations');
+  return data.recommendations || [];
+}
+
+export async function generateCoachingRecommendations({ repId = null, days = 30 } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/coaching/recommendations/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ repId, days }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate coaching recommendations');
+  return data;
+}
+
+export async function updateCoachingRecommendationStatus(recommendationId, { status = 'accepted', reason = '' } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/coaching/recommendations/${recommendationId}/status`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ status, reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update recommendation status');
+  return data.recommendation;
+}
+
+export async function fetchCoachingPlans({ repId = null, status = 'all' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ status });
+  if (repId) params.set('repId', repId);
+
+  const res = await fetch(`/api/coaching/plans?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch coaching plans');
+  return data.plans || [];
+}
+
+export async function createCoachingPlan(planData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/coaching/plans', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(planData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create coaching plan');
+  return data;
+}
+
+export async function fetchCoachingPlan(planId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/coaching/plans/${planId}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch coaching plan');
+  return data.plan;
+}
+
+export async function completeCoachingPlanAction(actionId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/coaching/plan-actions/${actionId}/complete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to complete coaching action');
+  return data.action;
+}
+
+export async function createTaskFromCoachingAction(actionId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/coaching/plan-actions/${actionId}/create-task`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({}),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to convert coaching action to task');
+  return data;
+}
+
+export async function fetchCoachingExercises(skillKey = null) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (skillKey) params.set('skillKey', skillKey);
+
+  const res = await fetch(`/api/coaching/exercises?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load coaching exercises');
+  return data.exercises || [];
+}
+
+export async function fetchCoachingReviews({ repId = null } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (repId) params.set('repId', repId);
+
+  const res = await fetch(`/api/coaching/reviews?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load coaching reviews');
+  return data.reviews || [];
+}
+
+export async function recordCoachingReview(reviewData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/coaching/reviews', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(reviewData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to record coaching review');
+  return data.review;
+}
+
+export async function fetchTeamCoachingOverview({ days = 30 } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ days: String(days) });
+
+  const res = await fetch(`/api/coaching/team/overview?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load team coaching overview');
+  return data;
+}
+
+export async function fetchTeamRepDrilldown(repId, { days = 30 } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ days: String(days) });
+
+  const res = await fetch(`/api/coaching/team/reps/${repId}?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to load rep performance drilldown');
+  return data;
+}
+
+// ==============================================================================
+// AI SALES FORECASTING & REVENUE INTELLIGENCE CLIENT SDK
+// ==============================================================================
+
+export async function fetchRevenueOverview({ currency = 'USD', startDate, endDate } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ currency });
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+
+  const res = await fetch(`/api/revenue/overview?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch revenue overview');
+  return data;
+}
+
+export async function fetchStageBreakdown() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/revenue/stages', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch pipeline stages');
+  return data.stages || [];
+}
+
+export async function fetchSalesVelocity({ days = 30 } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/revenue/velocity?days=${days}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch sales velocity');
+  return data;
+}
+
+export async function fetchRevenueTargets() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/revenue/targets', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch revenue targets');
+  return data.target;
+}
+
+export async function setRevenueTarget(targetData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/revenue/targets', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(targetData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to set revenue target');
+  return data.target;
+}
+
+export async function fetchRevenueAttribution() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/revenue/attribution', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch revenue attribution');
+  return data;
+}
+
+export async function fetchCurrentForecast({ days = 30, forecastType = 'weighted_pipeline' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ days: String(days), forecastType });
+  const res = await fetch(`/api/forecast/current?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch current forecast');
+  return data;
+}
+
+export async function generateForecastSnapshot({ days = 30, forecastType = 'ai_predicted', periodStart, periodEnd } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/forecast/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ days, forecastType, periodStart, periodEnd }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate forecast snapshot');
+  return data;
+}
+
+export async function fetchForecastHistory({ days = 90 } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/forecast/history?days=${days}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch forecast history');
+  return data.snapshots || [];
+}
+
+export async function fetchForecastSnapshotById(snapshotId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/forecast/snapshots/${snapshotId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch forecast snapshot');
+  return data;
+}
+
+export async function adjustForecast(adjustmentData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/forecast/adjust', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(adjustmentData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to adjust forecast');
+  return data;
+}
+
+export async function fetchDealRiskAnalysis() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/forecast/deal-risks', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch deal risk analysis');
+  return data;
+}
+
+export async function fetchForecastAccuracy() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/forecast/accuracy', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch forecast accuracy');
+  return data;
+}
+
+export async function fetchPipelineHealthInsights() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/forecast/insights', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch pipeline health insights');
+  return data.insights || [];
+}
+
+// ==============================================================================
+// AI SALES TERRITORY & ACCOUNT PLANNING CLIENT SDK
+// ==============================================================================
+
+export async function fetchTerritories({ status = 'active' } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories?status=${status}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territories');
+  return data.territories || [];
+}
+
+export async function fetchTerritoryById(territoryId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territory');
+  return data.territory;
+}
+
+export async function createTerritory(territoryData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/territories', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(territoryData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create territory');
+  return data.territory;
+}
+
+export async function updateTerritory(territoryId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update territory');
+  return data.territory;
+}
+
+export async function archiveTerritory(territoryId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/archive`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to archive territory');
+  return data.territory;
+}
+
+export async function fetchTerritoryPerformance(territoryId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/performance`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territory performance');
+  return data;
+}
+
+export async function fetchTerritoryOverlaps() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/territories/overlaps', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territory overlaps');
+  return data;
+}
+
+export async function fetchTerritoryBalancing() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/territories/balance', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territory balance');
+  return data;
+}
+
+export async function previewTerritoryAssignments(territoryId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/assignment-preview`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to preview territory assignments');
+  return data;
+}
+
+export async function assignAccountsToTerritory(territoryId, { leadIds = [], assignedTo, assignmentMethod = 'rule_based', reason } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/assignments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ leadIds, assignedTo, assignmentMethod, reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to assign accounts');
+  return data;
+}
+
+export async function reassignAccount(territoryId, assignmentId, { newTerritoryId, newAssignedTo, reason } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/assignments/${assignmentId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ newTerritoryId, newAssignedTo, reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to reassign account');
+  return data;
+}
+
+export async function fetchAccountPriorities() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/accounts/priorities', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch account priorities');
+  return data.priorities || [];
+}
+
+export async function fetchAccountPriority(leadId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/accounts/${leadId}/priority`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch account priority');
+  return data.priority;
+}
+
+export async function recalculateAccountPriorities() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/accounts/priorities/recalculate', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to recalculate priorities');
+  return data.priorities || [];
+}
+
+export async function fetchAccountPlans({ territoryId, tier } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (territoryId) params.append('territoryId', territoryId);
+  if (tier) params.append('tier', tier);
+
+  const res = await fetch(`/api/account-plans?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch account plans');
+  return data.plans || [];
+}
+
+export async function fetchAccountPlanById(planId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/account-plans/${planId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch account plan');
+  return data.plan;
+}
+
+export async function generateAccountPlanDraft({ leadId, company } = {}) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/account-plans/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ leadId, company }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate account plan draft');
+  return data.draft;
+}
+
+export async function createAccountPlan(planData) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/account-plans', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(planData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to save account plan');
+  return data.plan;
+}
+
+export async function updateAccountPlan(planId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/account-plans/${planId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update account plan');
+  return data.plan;
+}
+
+export async function addPlanAction(planId, actionData) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/account-plans/${planId}/actions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(actionData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to add plan action');
+  return data.action;
+}
+
+export async function updatePlanAction(planId, actionId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/account-plans/${planId}/actions/${actionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update plan action');
+  return data.action;
+}
+
+export async function fetchTerritoryTargets(territoryId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/targets`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch territory targets');
+  return data.targets || [];
+}
+
+export async function setTerritoryTarget(territoryId, targetData) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/territories/${territoryId}/targets`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(targetData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to set territory target');
+  return data.target;
+}
+
+// Aliases for SalesTerritoryView and test convenience
+export {
+  fetchTerritoryBalancing as fetchTerritoryBalance,
+  archiveTerritory as deleteTerritory,
+  createAccountPlan as saveAccountPlan,
+  fetchAccountPlanById as fetchAccountPlan,
+  addPlanAction as addAccountPlanAction,
+  updatePlanAction as updateAccountPlanAction
+};
+
 
 
 

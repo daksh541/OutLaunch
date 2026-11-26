@@ -736,6 +736,24 @@ export class CrmService {
       } catch {}
     }
 
+    // 9. Sales Calls & Conversation Intelligence
+    if (this.callService) {
+      try {
+        const calls = this.callService._getMemoryRecordingsList().filter(c => c.lead_id === leadId && c.user_id === userId);
+        for (const c of calls) {
+          const insight = this.callService.memoryInsights?.get(c.id);
+          events.push({
+            id: `tl_call_${c.id}`,
+            type: 'call_recorded',
+            title: `Sales Call: ${c.title || c.file_name}`,
+            description: `Duration: ${Math.floor((c.duration_seconds || 0) / 60)}m ${(c.duration_seconds || 0) % 60}s • Status: ${c.status}${insight ? ` • Deal Risk: ${insight.deal_risk_score}/100 (${insight.deal_risk_level})` : ''}`,
+            timestamp: c.created_at,
+            icon: 'PhoneCall',
+          });
+        }
+      } catch {}
+    }
+
     // Sort descending (most recent first)
     events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 

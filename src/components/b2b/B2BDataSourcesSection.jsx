@@ -1,56 +1,48 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { Globe2, Users, MapPin, Building2, Sparkles, ArrowRight } from 'lucide-react';
+import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 
 const sources = [
   {
     icon: (
-      <div className="p-2 bg-blue-500 rounded-full flex items-center justify-center">
-        <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-        </svg>
+      <div className="p-2.5 bg-[#edf2ec] text-[#0d9467] rounded-xl flex items-center justify-center">
+        <Globe2 className="h-6 w-6" />
       </div>
     ),
-    value: "310M",
-    label: "company websites",
+    value: "310M+",
+    label: "active business websites",
   },
   {
     icon: (
-      <div className="h-10 w-[42px] overflow-hidden flex-shrink-0">
-        <img
-          src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg"
-          alt="LinkedIn"
-          className="h-10 w-auto min-w-[48px]"
-        />
+      <div className="p-2.5 bg-[#edf2ec] text-[#0d9467] rounded-xl flex items-center justify-center">
+        <Users className="h-6 w-6" />
       </div>
     ),
-    value: "74M",
-    label: "LinkedIn company profiles",
+    value: "74M+",
+    label: "professional social profiles",
   },
   {
     icon: (
-      <img
-        src="https://www.gstatic.com/images/branding/product/2x/maps_96dp.png"
-        alt="Google Maps"
-        className="w-10 h-10"
-      />
+      <div className="p-2.5 bg-[#edf2ec] text-[#0d9467] rounded-xl flex items-center justify-center">
+        <MapPin className="h-6 w-6" />
+      </div>
     ),
-    value: "210M",
-    label: "Google Maps places",
+    value: "200M+",
+    label: "verified commercial locations",
   },
   {
     icon: (
-      <div className="p-2 bg-gray-500 rounded-full flex items-center justify-center">
-        <svg className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v1h20V7L12 2zM4 10v10h3V10H4zm6 0v10h4V10h-4zm7 0v10h3V10h-3zM2 22h20v-2H2v2z" />
-        </svg>
+      <div className="p-2.5 bg-[#edf2ec] text-[#0d9467] rounded-xl flex items-center justify-center">
+        <Building2 className="h-6 w-6" />
       </div>
     ),
     value: "100M+",
-    label: "registry records",
+    label: "official registry records",
   },
 ];
 
 export default function B2BDataSourcesSection() {
+  const { navigate } = useNavigation();
   const sectionRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -75,7 +67,7 @@ export default function B2BDataSourcesSection() {
   return (
     <section
       ref={sectionRef}
-      className="bg-[#090B0B]"
+      className="bg-[#f7f5f0]"
       style={{ height: '160vh' }}
     >
       <div className="sticky top-0 min-h-screen flex flex-col justify-center pt-16 pb-16">
@@ -123,8 +115,8 @@ export default function B2BDataSourcesSection() {
                       <div className="w-11 h-11 mx-auto mb-3 flex items-center justify-center">
                         {item.icon}
                       </div>
-                      <div className="text-2xl font-bold text-white">{item.value}</div>
-                      <div className="text-sm text-muted-foreground">{item.label}</div>
+                      <div className="text-2xl font-bold text-[#0d1c15]">{item.value}</div>
+                      <div className="text-sm text-[#4a5851] font-medium">{item.label}</div>
                     </div>
                   </div>
                 );
@@ -137,55 +129,39 @@ export default function B2BDataSourcesSection() {
                 const m = scrollProgress;
                 const s = Math.max(0, (m - 0.42) / 0.58);
                 const ultimateStyle = {
-                  transform: `translateY(${-(100 * s)}px) scale(${Math.min(1.1, 0.85 + 0.25 * s)})`,
-                  opacity: Math.min(1, 0.2 + 0.8 * s),
-                  boxShadow: `0 ${10 + 25 * s}px ${40 + 50 * s}px rgba(34, 197, 94, ${0.4 * s})`,
-                  transition: 'transform 0.15s ease-out, opacity 0.15s ease-out, box-shadow 0.2s ease-out',
+                  transform: `translateY(${-(100 * s)}px) scale(${Math.min(1.05, 0.95 + 0.1 * s)})`,
+                  opacity: 1,
+                  boxShadow: `0 12px 40px rgba(13, 28, 21, 0.08)`,
+                  transition: 'transform 0.15s ease-out, box-shadow 0.2s ease-out',
                   zIndex: 10,
                   position: 'relative',
                 };
 
                 return (
                   <div
-                    className="max-w-[600px] text-center glass-window glass-window--inset"
+                    className="max-w-[620px] w-full text-center bg-white rounded-2xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-8 sm:p-10"
                     style={ultimateStyle}
                   >
-                    <div className="glass-window-inner p-8">
-                      <h3 className="text-xl md:text-2xl font-bold mb-4 text-white">
-                        ✨ Ultimate Business Profile
+                    <div>
+                      <h3 className="text-xl md:text-2xl font-bold mb-4 text-[#0d1c15] tracking-tight">
+                        ✨ Comprehensive OutLaunch Account Profile
                       </h3>
-                      <p className="leading-relaxed mb-6 text-muted-foreground">
+                      <p className="leading-relaxed mb-6 text-[#4a5851] text-sm sm:text-base">
                         Reveals what{' '}
-                        <span className="text-brand-400 font-medium">the company truly does</span>{' '}
+                        <span className="text-[#0d9467] font-semibold">each company truly does and who to contact</span>{' '}
                         — generated by
                         <br className="hidden md:block" />
-                        deep-research AI agent analyzing at least 5 web pages,
+                        OutLaunch AI synthesizing digital footprints, executive hiring signals,
                         <br className="hidden md:block" />
-                        LinkedIn, Google Maps, and government registries data.
+                        verified locations, and corporate filings.
                       </p>
-                      <a
-                        className="gtm-demo-cta inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors duration-200 text-black hover:shadow-[0_6px_16px_-6px_rgba(0,255,194,0.4)]"
-                        href="https://explee.link/db-demo?utm_content=global"
-                        rel="noopener noreferrer"
-                        target="_blank"
+                      <button
+                        onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
+                        className="gtm-demo-cta inline-flex items-center gap-2 bg-[#0d1c15] hover:bg-[#162b21] text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-200 text-white shadow-md cursor-pointer hover:shadow-lg"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                          <line x1="8" x2="16" y1="13" y2="13" />
-                          <line x1="8" x2="16" y1="17" y2="17" />
-                          <line x1="8" x2="10" y1="9" y2="9" />
-                        </svg>
-                        Request Data Sample
-                      </a>
+                        <Sparkles className="w-4 h-4 text-[#00e599]" />
+                        <span>Explore Company Graph</span>
+                      </button>
                     </div>
                   </div>
                 );

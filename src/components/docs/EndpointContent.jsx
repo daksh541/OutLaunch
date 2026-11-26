@@ -404,7 +404,7 @@ const updateCampaignDefinitionResponses = {
             type: 'integer',
             required: false,
             nullable: true,
-            description: 'Days between touches. null = Explee default.'
+            description: 'Days between touches. null = OutLaunch default.'
           }
         ]
       },
@@ -444,7 +444,7 @@ const updateCampaignDefinitionResponses = {
             name: 'use_system_schedule',
             type: 'boolean',
             required: true,
-            description: 'True while the days are Explee-managed; any edit of days hands ownership to you.'
+            description: 'True while the days are OutLaunch-managed; any edit of days hands ownership to you.'
           },
           {
             name: 'days',
@@ -525,7 +525,7 @@ const updateCampaignDefinitionResponses = {
         required: false,
         nullable: true,
         copyLinkText: 'Copy link to keywords',
-        description: 'Comma-separated search keywords. Read-only: derived by Explee from the fields above.'
+        description: 'Comma-separated search keywords. Read-only: derived by OutLaunch from the fields above.'
       },
       {
         name: 'name',
@@ -1519,7 +1519,7 @@ const tasksExample = {
     {
       task_id: "550e8400-e29b-41d4-a716-446655440000",
       status: "pending",
-      result_url: "https://api.explee.com/public/api/v1/enrich/email/batch/550e8400-e29b-41d4-a716-446655440000",
+      result_url: "https://api.outlaunch.com/public/api/v1/enrich/email/batch/550e8400-e29b-41d4-a716-446655440000",
       credits_charged: 1,
       created_at: "2026-09-29T03:11:16.765Z"
     }
@@ -1650,7 +1650,7 @@ const startAgentRunExample = {
   run_id: "string"
 };
 
-const runExpleeAgentResponses = {
+const runOutLaunchAgentResponses = {
   200: {
     description: 'Successful Response',
     modelName: 'StartAgentRunResponse',
@@ -1674,7 +1674,7 @@ const runExpleeAgentResponses = {
   504: companiesListsResponses[504]
 };
 
-const runExpleeAgentExample = {
+const runOutLaunchAgentExample = {
   run_id: "string"
 };
 
@@ -2972,15 +2972,15 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
   const isListAsyncTasks = endpoint.path === '/public/api/v1/tasks' && endpoint.method === 'GET';
   const isGetAgentRunStatus = endpoint.path === '/public/api/v1/agents/runs/{run_id}' && endpoint.method === 'GET';
   const isRunCustomAgent = endpoint.path === '/public/api/v1/agents/runs' && endpoint.method === 'POST';
-  const isRunExpleeAgent = endpoint.path === '/public/api/v1/agents/{agent_id}/runs' && endpoint.method === 'POST';
-  const isListExpleeAgents = endpoint.path === '/public/api/v1/agents' && endpoint.method === 'GET';
+  const isRunOutLaunchAgent = endpoint.path === '/public/api/v1/agents/{agent_id}/runs' && endpoint.method === 'POST';
+  const isListOutLaunchAgents = endpoint.path === '/public/api/v1/agents' && endpoint.method === 'GET';
   const isFindAndEnrichStatus = endpoint.path === '/public/api/v1/find-and-enrich/{task_id}' && endpoint.method === 'GET';
   const isFindAndEnrichAsync = endpoint.path === '/public/api/v1/find-and-enrich' && endpoint.method === 'POST';
   const isBatchEmailResults = endpoint.path === '/public/api/v1/enrich/email/batch/{task_id}' && endpoint.method === 'GET';
   const isBatchEmailCreate = endpoint.path === '/public/api/v1/enrich/email/batch' && endpoint.method === 'POST';
   const isEnrichPhone = endpoint.path === '/public/api/v1/enrich/phone' && endpoint.method === 'POST';
   const isNlToFilters = endpoint.path === '/public/api/v1/search/nl-to-filters' && endpoint.method === 'POST';
-  const isCustomPythonRoute = isAutoGtmProjects || isAutoGtmCampaigns || isGetCampaignDefinition || isUpdateCampaignDefinition || isDeleteCompaniesList || isDeletePeopleList || isGetPeopleList || isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunExpleeAgent || isListExpleeAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters;
+  const isCustomPythonRoute = isAutoGtmProjects || isAutoGtmCampaigns || isGetCampaignDefinition || isUpdateCampaignDefinition || isDeleteCompaniesList || isDeletePeopleList || isGetPeopleList || isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunOutLaunchAgent || isListOutLaunchAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters;
 
   const [selectedStatus, setSelectedStatus] = useState(200);
   const [copied, setCopied] = useState(false);
@@ -2988,7 +2988,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
 
   // Parent responses accordion state: status -> boolean
   const [expandedResponses, setExpandedResponses] = useState(() => {
-    if (isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isDeletePeopleList || isGetPeopleList || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunExpleeAgent || isListExpleeAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters) {
+    if (isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isDeletePeopleList || isGetPeopleList || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunOutLaunchAgent || isListOutLaunchAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters) {
       return {};
     }
     if (isAutoGtmProjects || isAutoGtmCampaigns || isDeleteCompaniesList) {
@@ -3008,7 +3008,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
   // Reset accordion states when route changes
   useEffect(() => {
     setSelectedStatus(200);
-    if (isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isDeletePeopleList || isGetPeopleList || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunExpleeAgent || isListExpleeAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters) {
+    if (isGetCompaniesList || isCreateCompaniesList || isCreatePeopleList || isCompaniesLists || isPeopleLists || isDeletePeopleList || isGetPeopleList || isFeedback || isGetBalance || isListAsyncTasks || isGetAgentRunStatus || isRunCustomAgent || isRunOutLaunchAgent || isListOutLaunchAgents || isFindAndEnrichStatus || isFindAndEnrichAsync || isBatchEmailResults || isBatchEmailCreate || isEnrichPhone || isNlToFilters) {
       setExpandedResponses({});
     } else if (isDeleteCompaniesList) {
       setExpandedResponses({ 200: true });
@@ -3045,9 +3045,9 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     ? [200, 401, 402, 422, 429, 500, 504]
     : isFindAndEnrichStatus
     ? [200, 401, 402, 404, 422, 429, 500, 504]
-    : isListExpleeAgents
+    : isListOutLaunchAgents
     ? [200, 401, 402, 422, 429, 500, 504]
-    : isRunExpleeAgent
+    : isRunOutLaunchAgent
     ? [200, 401, 402, 404, 422, 429, 500, 504]
     : isRunCustomAgent
     ? [200, 401, 402, 422, 429, 500, 504]
@@ -3108,11 +3108,11 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     if (isFindAndEnrichStatus && findAndEnrichStatusResponses[status]) {
       return findAndEnrichStatusResponses[status].description;
     }
-    if (isListExpleeAgents && listAgentsResponses[status]) {
+    if (isListOutLaunchAgents && listAgentsResponses[status]) {
       return listAgentsResponses[status].description;
     }
-    if (isRunExpleeAgent && runExpleeAgentResponses[status]) {
-      return runExpleeAgentResponses[status].description;
+    if (isRunOutLaunchAgent && runOutLaunchAgentResponses[status]) {
+      return runOutLaunchAgentResponses[status].description;
     }
     if (isRunCustomAgent && startAgentRunResponses[status]) {
       return startAgentRunResponses[status].description;
@@ -3188,11 +3188,11 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     if (isFindAndEnrichStatus && findAndEnrichStatusResponses[status]) {
       return findAndEnrichStatusResponses[status];
     }
-    if (isListExpleeAgents && listAgentsResponses[status]) {
+    if (isListOutLaunchAgents && listAgentsResponses[status]) {
       return listAgentsResponses[status];
     }
-    if (isRunExpleeAgent && runExpleeAgentResponses[status]) {
-      return runExpleeAgentResponses[status];
+    if (isRunOutLaunchAgent && runOutLaunchAgentResponses[status]) {
+      return runOutLaunchAgentResponses[status];
     }
     if (isRunCustomAgent && startAgentRunResponses[status]) {
       return startAgentRunResponses[status];
@@ -3262,10 +3262,10 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     ? findAndEnrichCreateExample
     : isFindAndEnrichStatus
     ? findAndEnrichStatusExample
-    : isListExpleeAgents
+    : isListOutLaunchAgents
     ? listAgentsExample
-    : isRunExpleeAgent
-    ? runExpleeAgentExample
+    : isRunOutLaunchAgent
+    ? runOutLaunchAgentExample
     : isRunCustomAgent
     ? startAgentRunExample
     : isGetAgentRunStatus
@@ -3860,7 +3860,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     { num: 44, content: <><span><span className="text-[#f4f4f5]">conn.close()</span></span></> },
   ];
 
-  const runExpleeAgentPythonLines = [
+  const runOutLaunchAgentPythonLines = [
     { num: 1, content: <><span><span className="text-[#c084fc]">import</span> <span className="text-[#f4f4f5]">http.client</span></span></> },
     { num: 2, content: <><span><span className="text-[#c084fc]">import</span> <span className="text-[#f4f4f5]">json</span></span></> },
     { num: 3, content: <span>&nbsp;</span> },
@@ -4081,10 +4081,10 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
     ? findAndEnrichCreatePythonLines
     : isFindAndEnrichStatus
     ? findAndEnrichStatusPythonLines
-    : isListExpleeAgents
+    : isListOutLaunchAgents
     ? listAgentsPythonLines
-    : isRunExpleeAgent
-    ? runExpleeAgentPythonLines
+    : isRunOutLaunchAgent
+    ? runOutLaunchAgentPythonLines
     : isRunCustomAgent
     ? runCustomAgentPythonLines
     : isGetAgentRunStatus
@@ -4121,14 +4121,14 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
 
   const displayMethod = (endpoint.method === 'DEL' || endpoint.method === 'DELETE') ? 'DELETE' : endpoint.method;
 
-  const curlCodeRaw = endpoint.curlCode || endpoint.curlCommand || `curl "https://api.explee.com${endpoint.path}" \\\n  -H "X-API-Key: $EXPLEE_API_KEY"`;
+  const curlCodeRaw = endpoint.curlCode || endpoint.curlCommand || `curl "https://api.outlaunch.com${endpoint.path}" \\\n  -H "X-API-Key: $OUTLAUNCH_API_KEY"`;
   const curlLines = curlCodeRaw.trim().split('\n');
 
   return (
-    <div className={`section-container w-full pl-[90px] pr-[40px] font-['Inter',sans-serif] text-[#1b1b1b] ${isChild ? 'pt-[50px] pb-[60px] border-t border-[rgba(0,0,0,0.08)]' : ''}`}>
-      <section className={`section w-[1112px] ${isChild ? 'pt-0 pb-0' : 'pt-[121px] pb-[90px]'}`}>
-        {/* Top Header Grid: 500px + 48px gap + 564px */}
-        <div className="grid grid-cols-[500px_564px] gap-[48px] items-center mb-6">
+    <div className={`section-container w-full pl-6 md:pl-10 pr-6 md:pr-8 font-['Inter',sans-serif] text-[#1b1b1b] ${isChild ? 'pt-[50px] pb-[60px] border-t border-[rgba(0,0,0,0.08)]' : ''}`}>
+      <section className={`section max-w-[1060px] w-full ${isChild ? 'pt-0 pb-0' : 'pt-8 pb-16'}`}>
+        {/* Top Header Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,500px)] gap-8 items-center mb-6">
           <div>
             <h1 className="text-[26px] font-semibold text-[#1b1b1b] leading-[34px] tracking-tight m-0">
               {endpoint.label}
@@ -4154,10 +4154,10 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
           </div>
         </div>
 
-        {/* 2 Columns: 500px left, 564px right with 48px gap */}
-        <div className="grid grid-cols-[500px_564px] gap-[48px] items-start">
-          {/* Left Column (500px): Details & Parameters */}
-          <div className="w-[500px] space-y-4">
+        {/* 2 Columns: Left content, Right code */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,500px)] gap-8 items-start">
+          {/* Left Column: Details & Parameters */}
+          <div className="w-full min-w-0 space-y-4">
             {/* Intro Paragraphs */}
             {isNlToFilters ? (
               <div className="text-[14px] leading-[22px] text-[#1b1b1b] space-y-4">
@@ -4495,7 +4495,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
                 <div className="pt-2 space-y-4">
                   {pathParams.length > 0 && (
                     <div>
-                      <h3 className={`text-[16px] font-semibold text-[#1b1b1b] mb-3 ${(isGetAgentRunStatus || isRunExpleeAgent || isFindAndEnrichStatus || isBatchEmailResults) ? 'border-b border-[rgba(0,0,0,0.08)] pb-2' : ''}`}>
+                      <h3 className={`text-[16px] font-semibold text-[#1b1b1b] mb-3 ${(isGetAgentRunStatus || isRunOutLaunchAgent || isFindAndEnrichStatus || isBatchEmailResults) ? 'border-b border-[rgba(0,0,0,0.08)] pb-2' : ''}`}>
                         Path Parameters
                       </h3>
                       <div className="space-y-3">
@@ -4936,12 +4936,12 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
                                         {renderTextWithCode(prop.description)}
                                       </div>
                                     )}
-                                    {(isListAsyncTasks || isGetAgentRunStatus || isListExpleeAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.propertiesCount && (
+                                    {(isListAsyncTasks || isGetAgentRunStatus || isListOutLaunchAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.propertiesCount && (
                                       <div className={`${hasNested ? 'pl-5' : 'pl-0'} text-[12px] text-[#757575] font-normal mt-1`}>
                                         Properties: {prop.propertiesCount}
                                       </div>
                                     )}
-                                    {(isListAsyncTasks || isGetAgentRunStatus || isListExpleeAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.childModelDescription && (
+                                    {(isListAsyncTasks || isGetAgentRunStatus || isListOutLaunchAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.childModelDescription && (
                                       <div className={`${hasNested ? 'pl-5' : 'pl-0'} text-[13px] text-[#757575] leading-relaxed mt-0.5`}>
                                         {renderTextWithCode(prop.childModelDescription)}
                                       </div>
@@ -4962,7 +4962,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
                                           </div>
                                         ) : (
                                           <>
-                                            {!(isListAsyncTasks || isGetAgentRunStatus || isListExpleeAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.propertiesCount && (
+                                            {!(isListAsyncTasks || isGetAgentRunStatus || isListOutLaunchAgents || isFindAndEnrichStatus || isBatchEmailResults || isNlToFilters) && prop.propertiesCount && (
                                               <div className="text-[12px] text-[#757575] font-normal">
                                                 Properties: {prop.propertiesCount}
                                               </div>
@@ -5084,8 +5084,8 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
             </div>
           </div>
 
-          {/* Right Column (564px): Request & Response Cards */}
-          <div className="w-[564px] sticky top-6 space-y-4">
+          {/* Right Column: Request & Response Cards */}
+          <div className="w-full min-w-0 sticky top-6 space-y-4">
             {/* Card 1: Request Code Panel */}
             <div className="rounded-lg border border-[#2e3240] bg-[#1e2029] overflow-hidden shadow-2xs">
               <div className="bg-[#171922] px-3.5 py-2.5 flex items-center justify-between border-b border-[#2e3240]">

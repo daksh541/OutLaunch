@@ -62,7 +62,7 @@
       ],
       "total": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/projects\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/projects\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -144,7 +144,7 @@
       ],
       "total": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -223,7 +223,7 @@
       "status": "active",
       "targeting_editable": true
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -238,13 +238,13 @@
     "method": "PATCH",
     "path": "/public/api/v1/autogtm/campaigns/{campaign_id}",
     "hash": "#tag/autogtm/PATCH/public/api/v1/autogtm/campaigns/{campaign_id}",
-    "description": "Correct a campaign's definition — send only the fields you are changing. An omitted field keeps its value; an empty string, empty list or null clears it — except name, which a campaign always has, so clearing it is a 422. An unknown field name is rejected with 422 rather than silently ignored, so a typo can never look like a successful write. Returns the full definition as it now stands. Re-aiming costs leads. Changing target_role, target_geography, target_company_size, positive_criteria or negative_criteria is a retarget, exactly as in the app: the leads this campaign has not contacted yet are dropped and Explee searches again against the new targeting. Editing the offer or the email briefs does not — it only changes what is written to the leads still to come. Emails already sent are never affected. The rule for this endpoint: anything a person can edit on the campaign in the app, you can edit here — with the exceptions below, each of which exists because the app validates it in a second step this endpoint cannot reproduce. Read-only here: instructions and followup_instructions (the copy briefs — the app moderates them right after saving and shows you the verdict; this endpoint has no preview to show, and an unmoderated brief only fails later, at send time), target_url and reply_instructions (their own two-step save), keywords (Explee derives it; read-only in the app too) and followups (a project-level setting shared by every campaign of the project: sending the current values back is accepted, different ones are a 422). Budget has PATCH /public/api/v1/autogtm/campaigns/{campaign_id}/budget, status has start / stop. You can still SET the briefs when you create a campaign — POST /public/api/v1/autogtm/campaigns/import takes instructions, followup_instructions and language.",
+    "description": "Correct a campaign's definition — send only the fields you are changing. An omitted field keeps its value; an empty string, empty list or null clears it — except name, which a campaign always has, so clearing it is a 422. An unknown field name is rejected with 422 rather than silently ignored, so a typo can never look like a successful write. Returns the full definition as it now stands. Re-aiming costs leads. Changing target_role, target_geography, target_company_size, positive_criteria or negative_criteria is a retarget, exactly as in the app: the leads this campaign has not contacted yet are dropped and OutLaunch searches again against the new targeting. Editing the offer or the email briefs does not — it only changes what is written to the leads still to come. Emails already sent are never affected. The rule for this endpoint: anything a person can edit on the campaign in the app, you can edit here — with the exceptions below, each of which exists because the app validates it in a second step this endpoint cannot reproduce. Read-only here: instructions and followup_instructions (the copy briefs — the app moderates them right after saving and shows you the verdict; this endpoint has no preview to show, and an unmoderated brief only fails later, at send time), target_url and reply_instructions (their own two-step save), keywords (OutLaunch derives it; read-only in the app too) and followups (a project-level setting shared by every campaign of the project: sending the current values back is accepted, different ones are a 422). Budget has PATCH /public/api/v1/autogtm/campaigns/{campaign_id}/budget, status has start / stop. You can still SET the briefs when you create a campaign — POST /public/api/v1/autogtm/campaigns/import takes instructions, followup_instructions and language.",
     "introParagraphs": [
       "Correct a campaign's definition — send only the fields you are changing.",
       "An omitted field keeps its value; an empty string, empty list or null clears it — except name, which a campaign always has, so clearing it is a 422. An unknown field name is rejected with 422 rather than silently ignored, so a typo can never look like a successful write. Returns the full definition as it now stands.",
-      "Re-aiming costs leads. Changing target_role, target_geography, target_company_size, positive_criteria or negative_criteria is a retarget, exactly as in the app: the leads this campaign has not contacted yet are dropped and Explee searches again against the new targeting. Editing the offer or the email briefs does not — it only changes what is written to the leads still to come. Emails already sent are never affected.",
+      "Re-aiming costs leads. Changing target_role, target_geography, target_company_size, positive_criteria or negative_criteria is a retarget, exactly as in the app: the leads this campaign has not contacted yet are dropped and OutLaunch searches again against the new targeting. Editing the offer or the email briefs does not — it only changes what is written to the leads still to come. Emails already sent are never affected.",
       "The rule for this endpoint: anything a person can edit on the campaign in the app, you can edit here — with the exceptions below, each of which exists because the app validates it in a second step this endpoint cannot reproduce.",
-      "Read-only here: instructions and followup_instructions (the copy briefs — the app moderates them right after saving and shows you the verdict; this endpoint has no preview to show, and an unmoderated brief only fails later, at send time), target_url and reply_instructions (their own two-step save), keywords (Explee derives it; read-only in the app too) and followups (a project-level setting shared by every campaign of the project: sending the current values back is accepted, different ones are a 422). Budget has PATCH /public/api/v1/autogtm/campaigns/{campaign_id}/budget, status has start / stop. You can still SET the briefs when you create a campaign — POST /public/api/v1/autogtm/campaigns/import takes instructions, followup_instructions and language."
+      "Read-only here: instructions and followup_instructions (the copy briefs — the app moderates them right after saving and shows you the verdict; this endpoint has no preview to show, and an unmoderated brief only fails later, at send time), target_url and reply_instructions (their own two-step save), keywords (OutLaunch derives it; read-only in the app too) and followups (a project-level setting shared by every campaign of the project: sending the current values back is accepted, different ones are a 422). Budget has PATCH /public/api/v1/autogtm/campaigns/{campaign_id}/budget, status has start / stop. You can still SET the briefs when you create a campaign — POST /public/api/v1/autogtm/campaigns/import takes instructions, followup_instructions and language."
     ],
     "bulletItems": [],
     "outroParagraphs": [],
@@ -410,7 +410,7 @@
           "name": "target_geography",
           "type": "string · max length: 2000 · nullable",
           "required": false,
-          "description": "Target geographies, free text (e.g. \"Spain, Portugal\"). Re-aims the campaign: changing it drops the leads it has not contacted yet and makes Explee search again against the new targeting."
+          "description": "Target geographies, free text (e.g. \"Spain, Portugal\"). Re-aims the campaign: changing it drops the leads it has not contacted yet and makes OutLaunch search again against the new targeting."
         },
         {
           "name": "target_role",
@@ -432,13 +432,13 @@
     "method": "POST",
     "path": "/public/api/v1/autogtm/campaigns/import",
     "hash": "#tag/autogtm/POST/public/api/v1/autogtm/campaigns/import",
-    "description": "Create a new campaign from your own lead list (async). Each call creates a new campaign in the given project — the campaign is built for your leads only (no agent lead discovery) and starts sending automatically once live, within your project budget. How it works: Submit project_id, a campaign name, and up to 30,000 leads Receive a task_id immediately Poll GET /public/api/v1/autogtm/campaigns/import/{task_id} until completed result.campaign_id is your new campaign — it appears in the campaigns list Per lead — mandatory: email, first_name, last_name, company_domain, job_title; recommended: linkedin_url (enriches the lead from Explee's contact base for a richer email). Leads missing mandatory fields are skipped (reported in the result), never a request-level error. Duplicates of leads already contacted in the project and do-not-contact entries are dropped. Your copy brief — optional instructions (first email), followup_instructions (all follow-ups) and language: the same brief you would type in the app's email editor, set here at import time so no manual step is needed. Omit them and the campaign is briefed from your project description alone. Pricing: the import itself is free. Emails are verified at send time at Explee's cost; sending is billed as usual.",
+    "description": "Create a new campaign from your own lead list (async). Each call creates a new campaign in the given project — the campaign is built for your leads only (no agent lead discovery) and starts sending automatically once live, within your project budget. How it works: Submit project_id, a campaign name, and up to 30,000 leads Receive a task_id immediately Poll GET /public/api/v1/autogtm/campaigns/import/{task_id} until completed result.campaign_id is your new campaign — it appears in the campaigns list Per lead — mandatory: email, first_name, last_name, company_domain, job_title; recommended: linkedin_url (enriches the lead from OutLaunch's contact base for a richer email). Leads missing mandatory fields are skipped (reported in the result), never a request-level error. Duplicates of leads already contacted in the project and do-not-contact entries are dropped. Your copy brief — optional instructions (first email), followup_instructions (all follow-ups) and language: the same brief you would type in the app's email editor, set here at import time so no manual step is needed. Omit them and the campaign is briefed from your project description alone. Pricing: the import itself is free. Emails are verified at send time at OutLaunch's cost; sending is billed as usual.",
     "introParagraphs": [
       "Create a new campaign from your own lead list (async).",
       "Each call creates a new campaign in the given project — the campaign is built for your leads only (no agent lead discovery) and starts sending automatically once live, within your project budget."
     ],
     "bulletItems": [
-      ": the import itself is free. Emails are verified at send time at Explee's cost; sending is billed as usual."
+      ": the import itself is free. Emails are verified at send time at OutLaunch's cost; sending is billed as usual."
     ],
     "outroParagraphs": [],
     "parameters": [],
@@ -537,9 +537,9 @@
       },
       {
         "paragraphs": [
-          "Per lead — mandatory: email, first_name, last_name, company_domain, job_title; recommended: linkedin_url (enriches the lead from Explee's contact base for a richer email). Leads missing mandatory fields are skipped (reported in the result), never a request-level error. Duplicates of leads already contacted in the project and do-not-contact entries are dropped.",
+          "Per lead — mandatory: email, first_name, last_name, company_domain, job_title; recommended: linkedin_url (enriches the lead from OutLaunch's contact base for a richer email). Leads missing mandatory fields are skipped (reported in the result), never a request-level error. Duplicates of leads already contacted in the project and do-not-contact entries are dropped.",
           "Your copy brief — optional instructions (first email), followup_instructions (all follow-ups) and language: the same brief you would type in the app's email editor, set here at import time so no manual step is needed. Omit them and the campaign is briefed from your project description alone.",
-          "Pricing: the import itself is free. Emails are verified at send time at Explee's cost; sending is billed as usual."
+          "Pricing: the import itself is free. Emails are verified at send time at OutLaunch's cost; sending is billed as usual."
         ]
       }
     ]
@@ -610,7 +610,7 @@
       "valid_leads": 242,
       "rejected_count": 8
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/import/{task_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/import/{task_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -706,7 +706,7 @@
       ],
       "total": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/hot-leads\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/hot-leads\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -799,14 +799,14 @@
         {
           "thread_id": "th_01",
           "person_id": "p_88192",
-          "subject": "Re: Explee Demo",
+          "subject": "Re: OutLaunch Demo",
           "unread": true,
           "last_message_at": "2026-09-28T18:04:12Z"
         }
       ],
       "total": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/inbox\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/inbox\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -881,20 +881,20 @@
       "name": "Alex Rivera",
       "messages": [
         {
-          "from": "me@explee.com",
+          "from": "me@outlaunch.app",
           "to": "alex@cloudscale.io",
           "content": "Hi Alex, saw your recent expansion...",
           "sent_at": "2026-09-28T10:00:00Z"
         },
         {
           "from": "alex@cloudscale.io",
-          "to": "me@explee.com",
+          "to": "me@outlaunch.app",
           "content": "Interested in learning more.",
           "sent_at": "2026-09-28T14:22:00Z"
         }
       ]
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -989,7 +989,7 @@
       "message_id": "msg_99182",
       "sent_at": "2026-09-28T15:30:00Z"
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/reply\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/reply\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1061,7 +1061,7 @@
     "exampleResponse": {
       "note": "Follow up next Tuesday after product webinar"
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/note\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/note\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1148,7 +1148,7 @@
     "exampleResponse": {
       "note": "Follow up next Tuesday after product webinar"
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/note\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/inbox/{person_id}/note\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1217,7 +1217,7 @@
       "daily_budget_usd": 50,
       "currency": "USD"
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/projects/{project_id}/budget\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/projects/{project_id}/budget\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1300,7 +1300,7 @@
       "daily_budget_usd": 50,
       "currency": "USD"
     },
-    "curlCommand": "curl -X PATCH \"https://api.explee.com/public/api/v1/autogtm/projects/{project_id}/budget\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X PATCH \"https://api.outlaunch.app/public/api/v1/autogtm/projects/{project_id}/budget\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1382,7 +1382,7 @@
       "daily_limit_usd": 30,
       "currency": "USD"
     },
-    "curlCommand": "curl -X PATCH \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/budget\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X PATCH \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/budget\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1450,7 +1450,7 @@
       "campaign_id": 17518,
       "status": "stopped"
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/stop\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/stop\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1465,11 +1465,11 @@
     "method": "POST",
     "path": "/public/api/v1/autogtm/campaigns/{campaign_id}/start",
     "hash": "#tag/autogtm/POST/public/api/v1/autogtm/campaigns/{campaign_id}/start",
-    "description": "Re-enable a stopped campaign — the status-aware inverse of stop: stopped while sending → resumes sending (requires an affordable balance); stopped in review → un-freezes the review countdown; stopped during lead search → re-runs the search. Already-running or archived campaigns are a no-op. Returns 409 while Auto-manage campaigns is enabled for the project — Explee decides when campaigns start. Exception: a campaign you parked yourself (stopped, or restored from archive) can always be started again, in either mode. Turn Autopilot off (PATCH …/projects/{project_id}/autopilot) to start any other campaign yourself.",
+    "description": "Re-enable a stopped campaign — the status-aware inverse of stop: stopped while sending → resumes sending (requires an affordable balance); stopped in review → un-freezes the review countdown; stopped during lead search → re-runs the search. Already-running or archived campaigns are a no-op. Returns 409 while Auto-manage campaigns is enabled for the project — OutLaunch decides when campaigns start. Exception: a campaign you parked yourself (stopped, or restored from archive) can always be started again, in either mode. Turn Autopilot off (PATCH …/projects/{project_id}/autopilot) to start any other campaign yourself.",
     "introParagraphs": [
       "Re-enable a stopped campaign — the status-aware inverse of stop:",
       "Already-running or archived campaigns are a no-op.",
-      "Returns 409 while Auto-manage campaigns is enabled for the project — Explee decides when campaigns start. Exception: a campaign you parked yourself (stopped, or restored from archive) can always be started again, in either mode. Turn Autopilot off (PATCH …/projects/{project_id}/autopilot) to start any other campaign yourself."
+      "Returns 409 while Auto-manage campaigns is enabled for the project — OutLaunch decides when campaigns start. Exception: a campaign you parked yourself (stopped, or restored from archive) can always be started again, in either mode. Turn Autopilot off (PATCH …/projects/{project_id}/autopilot) to start any other campaign yourself."
     ],
     "bulletItems": [],
     "outroParagraphs": [],
@@ -1500,7 +1500,7 @@
       },
       {
         "status": 409,
-        "description": "Auto-manage campaigns is ON for the project — Explee decides when campaigns start."
+        "description": "Auto-manage campaigns is ON for the project — OutLaunch decides when campaigns start."
       },
       {
         "status": 422,
@@ -1523,7 +1523,7 @@
       "campaign_id": 17518,
       "status": "active"
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/start\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/start\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"example\": \"value\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1599,7 +1599,7 @@
       "replied": 118,
       "meetings_booked": 24
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/campaigns/{campaign_id}/analytics\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/campaigns/{campaign_id}/analytics\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1674,7 +1674,7 @@
       "total_replied": 428,
       "total_meetings": 86
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/projects/{project_id}/analytics\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/projects/{project_id}/analytics\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1735,7 +1735,7 @@
         }
       ]
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/people\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/people\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1897,7 +1897,7 @@
       ],
       "total": 2
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/people/{list_name}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/people/{list_name}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -1968,7 +1968,7 @@
       ],
       "total": 2
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/people/{list_name}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/people/{list_name}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -2029,7 +2029,7 @@
         }
       ]
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/companies\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/companies\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -2192,7 +2192,7 @@
       ],
       "total": 2
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/companies/{list_name}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/companies/{list_name}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -2263,7 +2263,7 @@
       ],
       "total": 2
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/suppress-list/companies/{list_name}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/suppress-list/companies/{list_name}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -2331,7 +2331,7 @@
       "auto_reply_enabled": true,
       "daily_max_new_leads": 100
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/autogtm/projects/{project_id}/autopilot\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/autogtm/projects/{project_id}/autopilot\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -3304,7 +3304,7 @@
         ]
       }
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/search/nl-to-filters\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"query\": \"SaaS companies using Stripe\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/search/nl-to-filters\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"query\": \"SaaS companies using Stripe\"\n}'",
     "curlCode": null,
     "bodySchema": {
       "name": "NLToFiltersPayload",
@@ -3417,7 +3417,7 @@
       "confidence_score": 98,
       "provider": "Google Workspace"
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/enrich/email\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"first_name\": \"Sarah\",\n  \"last_name\": \"Connor\",\n  \"company_domain\": \"cyberdyne.com\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/enrich/email\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"first_name\": \"Sarah\",\n  \"last_name\": \"Connor\",\n  \"company_domain\": \"cyberdyne.com\"\n}'",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -3476,7 +3476,7 @@
         "remaining_balance": 950
       }
     },
-    "curlCommand": "curl -X POST \"https://api.explee.com/public/api/v1/enrich/phone\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"linkedin_url\": \"https://www.linkedin.com/in/satyanadella/\",\n  \"preset\": \"basic_new\"\n}'",
+    "curlCommand": "curl -X POST \"https://api.outlaunch.app/public/api/v1/enrich/phone\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n  \"linkedin_url\": \"https://www.linkedin.com/in/satyanadella/\",\n  \"preset\": \"basic_new\"\n}'",
     "curlCode": null,
     "bodySchema": {
       "name": "EnrichPhonePayload",
@@ -4415,14 +4415,14 @@
     "tagIndex": 0,
     "globalIndex": 40,
     "routeIndex": 46,
-    "label": "List Explee agents",
+    "label": "List OutLaunch agents",
     "tag": "agents",
     "method": "GET",
     "path": "/public/api/v1/agents",
     "hash": "#tag/agents/GET/public/api/v1/agents",
-    "description": "Returns all pre-built Explee agents. Each agent has a fixed system prompt, input/output schema, and search strategy. Use the agent id with the \"Run Explee agent\" endpoint.",
+    "description": "Returns all pre-built OutLaunch agents. Each agent has a fixed system prompt, input/output schema, and search strategy. Use the agent id with the \"Run OutLaunch agent\" endpoint.",
     "introParagraphs": [
-      "Returns all pre-built Explee agents. Each agent has a fixed system prompt, input/output schema, and search strategy. Use the agent id with the \"Run Explee agent\" endpoint."
+      "Returns all pre-built OutLaunch agents. Each agent has a fixed system prompt, input/output schema, and search strategy. Use the agent id with the \"Run OutLaunch agent\" endpoint."
     ],
     "bulletItems": [],
     "outroParagraphs": [],
@@ -4499,14 +4499,14 @@
     "tagIndex": 1,
     "globalIndex": 41,
     "routeIndex": 47,
-    "label": "Run Explee agent",
+    "label": "Run OutLaunch agent",
     "tag": "agents",
     "method": "POST",
     "path": "/public/api/v1/agents/{agent_id}/runs",
     "hash": "#tag/agents/POST/public/api/v1/agents/{agent_id}/runs",
-    "description": "Run a pre-built Explee agent by its ID. Explee agents come with a tuned system prompt, search strategy, and output schema — you only provide the input data. Use GET /public/api/v1/agents to browse available agents and their expected input schemas. Cost: 1 credit per run.",
+    "description": "Run a pre-built OutLaunch agent by its ID. OutLaunch agents come with a tuned system prompt, search strategy, and output schema — you only provide the input data. Use GET /public/api/v1/agents to browse available agents and their expected input schemas. Cost: 1 credit per run.",
     "introParagraphs": [
-      "Run a pre-built Explee agent by its ID. Explee agents come with a tuned system prompt, search strategy, and output schema — you only provide the input data.",
+      "Run a pre-built OutLaunch agent by its ID. OutLaunch agents come with a tuned system prompt, search strategy, and output schema — you only provide the input data.",
       "Use GET /public/api/v1/agents to browse available agents and their expected input schemas.",
       "Cost: 1 credit per run."
     ],
@@ -4584,10 +4584,10 @@
     "method": "POST",
     "path": "/public/api/v1/agents/runs",
     "hash": "#tag/agents/POST/public/api/v1/agents/runs",
-    "description": "Run a fully custom agent — you provide the system prompt, input/output schemas, and input data. Use this when Explee's pre-built agents don't fit your use case. The agent will execute asynchronously; poll GET /agents/runs/{job_id} for results. Cost: 1 credit per run.",
+    "description": "Run a fully custom agent — you provide the system prompt, input/output schemas, and input data. Use this when OutLaunch's pre-built agents don't fit your use case. The agent will execute asynchronously; poll GET /agents/runs/{job_id} for results. Cost: 1 credit per run.",
     "introParagraphs": [
       "Run a fully custom agent — you provide the system prompt, input/output schemas, and input data.",
-      "Use this when Explee's pre-built agents don't fit your use case. The agent will execute asynchronously; poll GET /agents/runs/{job_id} for results.",
+      "Use this when OutLaunch's pre-built agents don't fit your use case. The agent will execute asynchronously; poll GET /agents/runs/{job_id} for results.",
       "Cost: 1 credit per run."
     ],
     "bulletItems": [],
@@ -4734,7 +4734,7 @@
         "duration_ms": 1
       }
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/agents/runs/{run_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/agents/runs/{run_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -4790,14 +4790,14 @@
         {
           "task_id": "550e8400-e29b-41d4-a716-446655440000",
           "status": "pending",
-          "result_url": "https://api.explee.com/public/api/v1/enrich/email/batch/550e8400-e29b-41d4-a716-446655440000",
+          "result_url": "https://api.outlaunch.app/public/api/v1/enrich/email/batch/550e8400-e29b-41d4-a716-446655440000",
           "credits_charged": 1,
           "created_at": "2026-09-29T03:11:16.765Z"
         }
       ],
       "total": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/tasks?limit=20&offset=0\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/tasks?limit=20&offset=0\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -4812,10 +4812,10 @@
     "method": "GET",
     "path": "/public/api/v1/billing/balance",
     "hash": "#tag/billing/GET/public/api/v1/billing/balance",
-    "description": "Return your organization's net credit balance — the same number shown on the Explee dashboard. Poll this to decide when to top up — when remain drops below the threshold you need for upcoming requests, add credits on your billing page (https://explee.com/app-auto-gtm/billing). Response { \"remain\": 4200 } remain is the net balance in credits (1 credit = $0.01): prepaid funds minus any active postpaid (AutoGTM) usage that hasn't been collected yet. It can be negative if the org is carrying postpaid debt.",
+    "description": "Return your organization's net credit balance — the same number shown on the OutLaunch dashboard. Poll this to decide when to top up — when remain drops below the threshold you need for upcoming requests, add credits on your billing page (https://outlaunch.app/app-auto-gtm/billing). Response { \"remain\": 4200 } remain is the net balance in credits (1 credit = $0.01): prepaid funds minus any active postpaid (AutoGTM) usage that hasn't been collected yet. It can be negative if the org is carrying postpaid debt.",
     "introParagraphs": [
-      "Return your organization's net credit balance — the same number shown on the Explee dashboard.",
-      "Poll this to decide when to top up — when `remain` drops below the threshold you need for upcoming requests, add credits on your billing page (https://explee.com/app-auto-gtm/billing)."
+      "Return your organization's net credit balance — the same number shown on the OutLaunch dashboard.",
+      "Poll this to decide when to top up — when `remain` drops below the threshold you need for upcoming requests, add credits on your billing page (https://outlaunch.app/app-auto-gtm/billing)."
     ],
     "bulletItems": [],
     "outroParagraphs": [],
@@ -4853,7 +4853,7 @@
     "exampleResponse": {
       "remain": 1
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/billing/balance\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/billing/balance\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -4868,10 +4868,10 @@
     "method": "POST",
     "path": "/public/api/v1/feedback",
     "hash": "#tag/feedback/POST/public/api/v1/feedback",
-    "description": "Send us freeform feedback about the API: request a feature, report a problem, tell us data is missing or wrong — anything, in your own words. The message lands directly with the Explee team. We read everything, though we don't guarantee an individual reply. No credits are charged.",
+    "description": "Send us freeform feedback about the API: request a feature, report a problem, tell us data is missing or wrong — anything, in your own words. The message lands directly with the OutLaunch team. We read everything, though we don't guarantee an individual reply. No credits are charged.",
     "introParagraphs": [
       "Send us freeform feedback about the API: request a feature, report a problem, tell us data is missing or wrong — anything, in your own words.",
-      "The message lands directly with the Explee team. We read everything, though we don't guarantee an individual reply. No credits are charged."
+      "The message lands directly with the OutLaunch team. We read everything, though we don't guarantee an individual reply. No credits are charged."
     ],
     "bulletItems": [],
     "outroParagraphs": [],
@@ -4978,7 +4978,7 @@
         }
       ]
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/dedup/people\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/dedup/people\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -5168,7 +5168,7 @@
       ],
       "created_at": "string"
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/dedup/people/{list_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/dedup/people/{list_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -5297,7 +5297,7 @@
         }
       ]
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/dedup/companies\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/dedup/companies\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null
@@ -5452,7 +5452,7 @@
       ],
       "created_at": "string"
     },
-    "curlCommand": "curl \"https://api.explee.com/public/api/v1/dedup/companies/{list_id}\" \\\n  -H \"X-API-Key: $EXPLEE_API_KEY\"",
+    "curlCommand": "curl \"https://api.outlaunch.app/public/api/v1/dedup/companies/{list_id}\" \\\n  -H \"X-API-Key: $OUTLAUNCH_API_KEY\"",
     "curlCode": null,
     "bodySchema": null,
     "sections": null

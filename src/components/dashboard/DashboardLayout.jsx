@@ -25,7 +25,12 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Zap,
-  Briefcase
+  Briefcase,
+  Calendar,
+  Mic,
+  Award,
+  TrendingUp,
+  MapPin
 } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -58,6 +63,11 @@ import AnalyticsView from './AnalyticsView';
 import CampaignAnalyticsView from './CampaignAnalyticsView';
 import CampaignOptimizationView from './CampaignOptimizationView';
 import LeadCRMView from './LeadCRMView';
+import MeetingSchedulerView from './MeetingSchedulerView';
+import CallIntelligenceView from './CallIntelligenceView';
+import SalesCoachingView from './SalesCoachingView';
+import RevenueIntelligenceView from './RevenueIntelligenceView';
+import SalesTerritoryView from './SalesTerritoryView';
 import SettingsView from './SettingsView';
 import FindLeadsView from './FindLeadsView';
 import AiPersonalizationModal from './AiPersonalizationModal';
@@ -316,6 +326,11 @@ export default function DashboardLayout() {
     { id: 'find-leads', label: 'Find Leads', icon: Search, badge: 'New', highlight: true },
     { id: 'leads', label: 'Prospects', icon: Users, badge: prospects.length.toString() },
     { id: 'crm', label: 'CRM & Pipeline', icon: Briefcase, badge: 'Deals' },
+    { id: 'meetings', label: 'Meetings', icon: Calendar, badge: 'Calendar' },
+    { id: 'calls', label: 'Call Intelligence', icon: Mic, badge: 'AI' },
+    { id: 'coaching', label: 'Sales Coaching', icon: Award, badge: 'AI' },
+    { id: 'revenue', label: 'Revenue Intelligence', icon: TrendingUp, badge: 'AI' },
+    { id: 'territories', label: 'Territory & Accounts', icon: MapPin, badge: 'AI' },
     { id: 'campaigns', label: 'Campaigns', icon: Send, badge: `${activeCampaignsCount} Active` },
     { id: 'sequences', label: 'Sequences', icon: Mail },
     { id: 'tasks', label: 'LinkedIn Tasks', icon: Linkedin, badge: '3 Review' },
@@ -803,6 +818,40 @@ export default function DashboardLayout() {
             {currentTab === 'crm' && (
               <LeadCRMView
                 onNavigateToLeads={() => setCurrentTab('leads')}
+              />
+            )}
+
+            {currentTab === 'meetings' && (
+              <MeetingSchedulerView
+                onNavigateToCrm={() => setCurrentTab('crm')}
+              />
+            )}
+
+            {currentTab === 'calls' && (
+              <CallIntelligenceView
+                onNavigateToCrm={() => setCurrentTab('crm')}
+                onNavigateToLeads={() => setCurrentTab('leads')}
+              />
+            )}
+
+            {currentTab === 'coaching' && (
+              <SalesCoachingView
+                onNavigateToCalls={() => setCurrentTab('calls')}
+                onNavigateToCrm={() => setCurrentTab('crm')}
+              />
+            )}
+
+            {currentTab === 'revenue' && (
+              <RevenueIntelligenceView
+                onNavigateToCrm={() => setCurrentTab('crm')}
+                onNavigateToCampaigns={() => setCurrentTab('campaigns')}
+              />
+            )}
+
+            {currentTab === 'territories' && (
+              <SalesTerritoryView
+                onNavigateToLeads={() => setCurrentTab('leads')}
+                onNavigateToCrm={() => setCurrentTab('crm')}
               />
             )}
 

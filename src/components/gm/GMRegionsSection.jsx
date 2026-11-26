@@ -10,9 +10,11 @@ export default function GMRegionsSection() {
     <section className="mb-24">
       <div className="container mx-auto max-w-[1200px] px-4">
         {/* Section Heading */}
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 text-center">
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-[#0d1c15] mb-8 text-center">
           Explore 218M+ locations across{' '}
-          <span className="gm-text-gradient">all geographic regions</span>
+          <span className="text-[#0d9467] italic font-editorial font-normal">
+            all geographic regions
+          </span>
         </h2>
 
         {/* 9 Region Cards Grid */}
@@ -25,12 +27,12 @@ export default function GMRegionsSection() {
                 e.preventDefault();
                 navigate(region.href);
               }}
-              className="group relative bg-[#111414] rounded-2xl p-6 border border-white/[0.08] hover:shadow-[0_10px_40px_rgba(34,197,94,0.15)] hover:border-[#7cd9ba] transition-all duration-300 overflow-hidden cursor-pointer"
+              className="group relative bg-white rounded-2xl p-6 border border-[#0d1c15]/10 hover:border-[#0d9467]/40 hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer block"
             >
               {/* Silhouette SVG map in background */}
               {region.svgHtml && (
                 <div
-                  className="absolute -right-6 top-1/2 -translate-y-1/2 w-56 h-56 text-[#9ca3af]/20 group-hover:text-[#abe7d3] transition-colors opacity-70 pointer-events-none"
+                  className="absolute -right-6 top-1/2 -translate-y-1/2 w-56 h-56 text-[#0d1c15]/10 group-hover:text-[#0d9467]/20 transition-colors opacity-70 pointer-events-none"
                   dangerouslySetInnerHTML={{ __html: region.svgHtml }}
                 />
               )}
@@ -38,14 +40,18 @@ export default function GMRegionsSection() {
               {/* Card Foreground Content */}
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white group-hover:text-[#10b981] transition-colors">
+                  <h3 className="text-xl font-semibold text-[#0d1c15] group-hover:text-[#0d9467] transition-colors">
                     {region.name}
                   </h3>
-                  <ArrowRight className="h-5 w-5 text-[#9ca3af] group-hover:text-[#10b981] group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="h-5 w-5 text-[#0d9467] group-hover:translate-x-1 transition-transform" />
                 </div>
-                <div className="flex gap-6 text-sm text-[#9ca3af]">
-                  <span>{region.countries}</span>
-                  <span>{region.locations}</span>
+                <div className="flex gap-4 text-xs sm:text-sm font-mono text-[#5a6962]">
+                  <span className="px-2 py-0.5 rounded bg-[#edf2ec] border border-[#dbe5da] text-[#182e24]">
+                    {region.countries}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#edf2ec] border border-[#dbe5da] text-[#0d9467] font-semibold">
+                    {region.locations}
+                  </span>
                 </div>
               </div>
             </a>

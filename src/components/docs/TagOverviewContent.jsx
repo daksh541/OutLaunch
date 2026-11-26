@@ -9,7 +9,7 @@ const tagDescriptions = {
   contact: '',
   agents: '',
   tasks: '',
-  billing: 'Check how many credits your organization has left, so your agent can see when it is running low. Credits are priced at 1 credit = $0.01; add more on your billing page at https://explee.com/app-auto-gtm/billing.',
+  billing: 'Check how many credits your organization has left, so your agent can see when it is running low. Credits are priced at 1 credit = $0.01; add more on your workspace billing page.',
   feedback: 'Send us freeform feedback — feature requests, problem reports, missing data, anything. It goes straight to the team; we read everything. Free of charge.',
   deduplication: '',
 };

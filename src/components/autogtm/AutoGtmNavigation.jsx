@@ -32,11 +32,16 @@ export default function AutoGtmNavigation(props) {
   return (
     <>
       <header className="flex h-14 w-full shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-4 md:hidden">
-        <a href={PRODUCT_ROUTES.AUTO_GTM} aria-label="OutLaunch home" onClick={(event) => {
+        <a href={PRODUCT_ROUTES.AUTO_GTM} aria-label="OutLaunch home" className="inline-flex items-center gap-2.5" onClick={(event) => {
           event.preventDefault();
           restart();
         }}>
-          <img src="/assets/logo-light.svg" alt="OutLaunch" width="100" height="28" className="h-7 w-auto" />
+          <div className="w-7 h-7 rounded-xl bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+            O
+          </div>
+          <span className="font-display font-bold tracking-tight text-lg text-[#0d1c15]">
+            OutLaunch
+          </span>
         </a>
         <button
           type="button"

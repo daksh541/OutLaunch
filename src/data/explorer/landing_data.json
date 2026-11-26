@@ -133,7 +133,7 @@
       },
       {
         "title": "API documentation",
-        "href": "https://api.explee.com/public/api/docs",
+        "href": "https://api.outlaunch.app/public/api/docs",
         "external": true
       },
       {
@@ -141,7 +141,7 @@
         "href": "/compliance-faq"
       }
     ],
-    "copyright": "© 2026 Explee LTD — made with 🦎 in London",
+    "copyright": "© 2026 OutLaunch Inc. — made with 🦎 in London",
     "legal": [
       {
         "title": "Terms of use",

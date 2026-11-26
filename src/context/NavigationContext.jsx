@@ -37,6 +37,17 @@ export function resolveProductFromLocation() {
     };
   }
 
+  // 00a. Public Meeting Booking (/book/:bookingSlug)
+  const bookingMatch = pathname.match(/^\/book\/([a-zA-Z0-9_\-]+)/) || hash.match(/#\/?book\/([a-zA-Z0-9_\-]+)/);
+  if (bookingMatch || pathname === '/book' || pathname === '/book/') {
+    const slug = bookingMatch ? bookingMatch[1] : 'demo';
+    return {
+      product: 'booking',
+      bookingSlug: slug,
+      canonicalPath: `/book/${slug}`,
+    };
+  }
+
   // 0a. Verification code (/register/verification-code, /verification-code, /verify-email)
   if (
     pathname.includes('/verification-code') ||
@@ -112,10 +123,10 @@ export function resolveProductFromLocation() {
     return { product: 'database', canonicalPath: PRODUCT_ROUTES.DATABASE };
   }
 
-  // 2a. Locations (/gm-dataset/locations/{slug}) - Check Region first, then Country
+  // 2a. Locations & Regions (/gm-dataset/locations/{slug} or /gm-dataset/regions/{slug}) - Check Region first, then Country
   const locationMatch =
-    pathname.match(/\/gm-dataset\/locations\/([a-z0-9-]+)/) ||
-    hash.match(/locations\/([a-z0-9-]+)/);
+    pathname.match(/\/gm-dataset\/(?:locations|regions)\/([a-z0-9-]+)/) ||
+    hash.match(/(?:locations|regions)\/([a-z0-9-]+)/);
   if (locationMatch) {
     const slug = locationMatch[1];
     
@@ -147,8 +158,16 @@ export function resolveProductFromLocation() {
     };
   }
 
-  // 2b. Google Maps Dataset (/gm-dataset, #gm)
-  if (pathname.includes('/gm-dataset') || hash.includes('gm-dataset') || hash.includes('gm')) {
+  // 2b. Global Places Dataset (/gm-dataset, /gm, /google-maps, /places, #gm)
+  if (
+    pathname.includes('/gm-dataset') ||
+    pathname === '/gm' ||
+    pathname.startsWith('/gm/') ||
+    pathname.includes('/google-maps') ||
+    pathname.includes('/places') ||
+    hash.includes('gm-dataset') ||
+    hash.includes('gm')
+  ) {
     return { product: 'gm', canonicalPath: PRODUCT_ROUTES.GM };
   }
 
@@ -224,6 +243,26 @@ export function NavigationProvider({ children }) {
       }
     }
 
+    // Handle root anchor navigation from other routes (e.g. /#workflow)
+    if (targetPath.startsWith('/#')) {
+      const hash = targetPath.substring(1);
+      if (window.location.pathname === '/' || window.location.pathname === '') {
+        const el = document.querySelector(hash);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState({}, '', targetPath);
+          return;
+        }
+      }
+      window.history.pushState({}, '', targetPath);
+      setRouteState(resolveProductFromLocation());
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      return;
+    }
+
     // Update browser history
     const currentFull = window.location.pathname + window.location.search + window.location.hash;
     if (currentFull !== targetPath && window.location.pathname !== targetPath) {
@@ -243,6 +282,7 @@ export function NavigationProvider({ children }) {
         countrySlug: routeState.countrySlug,
         regionSlug: routeState.regionSlug,
         domain: routeState.domain || '',
+        bookingSlug: routeState.bookingSlug || 'demo',
         navigate,
       }}
     >

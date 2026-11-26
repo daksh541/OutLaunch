@@ -427,7 +427,7 @@
         "name": "Extended Google Maps Data",
         "fillRate": 26.4,
         "description": "50+ additional fields from Google Maps including photos, opening hours, price level, business status, and more.",
-        "link": "https://docs.explee.com/google-maps-fields",
+        "link": "https://docs.outlaunch.app/google-maps-fields",
         "linkText": "See full schema"
       }
     ]

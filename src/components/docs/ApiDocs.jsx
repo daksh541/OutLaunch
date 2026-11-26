@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import EditorialNavbar from '../landing/EditorialNavbar';
 import DocsSidebar from './DocsSidebar';
 import IntroductionContent from './IntroductionContent';
 import TagOverviewContent from './TagOverviewContent';
@@ -68,39 +69,45 @@ export default function ApiDocs({ onBackToLanding }) {
   const nextEndpoint = currentIndex >= 0 && currentIndex < endpointsData.length - 1 ? endpointsData[currentIndex + 1] : null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white text-[#1b1b1b] font-['Inter',sans-serif] antialiased">
-      {/* Sidebar: exactly 288px */}
-      <DocsSidebar
-        activeRoute={activeRoute}
-        onSelectRoute={handleSelectRoute}
-        onBackToLanding={onBackToLanding}
-      />
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-white text-[#1b1b1b] font-['Inter',sans-serif] antialiased">
+      {/* Universal OutLaunch Editorial Navbar */}
+      <EditorialNavbar />
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-white custom-scrollbar">
-        {activeRoute === 'introduction' ? (
-          <IntroductionContent />
-        ) : activeRoute.startsWith('tag-') ? (
-          <TagOverviewContent tagKey={activeRoute.replace('tag-', '')} />
-        ) : currentEndpoint ? (
-          <EndpointContent endpoint={currentEndpoint} nextEndpoint={nextEndpoint} />
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-[#757575]">
-            <h2 className="text-xl font-semibold text-[#1b1b1b] mb-2 capitalize">
-              {activeRoute.replace(/-/g, ' ')}
-            </h2>
-            <p className="text-sm max-w-md">
-              Endpoint documentation view. Select "Introduction" from the sidebar to view the cloned Introduction page.
-            </p>
-            <button
-              onClick={() => handleSelectRoute('introduction')}
-              className="mt-4 px-4 py-2 bg-[#009485] text-white text-xs font-semibold rounded-lg hover:bg-[#007f72] transition-colors cursor-pointer"
-            >
-              Return to Introduction
-            </button>
-          </div>
-        )}
-      </main>
+      {/* Main Documentation Area (Sidebar + API Content) */}
+      <div className="flex flex-1 min-h-0 w-full overflow-hidden">
+        {/* Sidebar: exactly 288px */}
+        <DocsSidebar
+          activeRoute={activeRoute}
+          onSelectRoute={handleSelectRoute}
+          onBackToLanding={onBackToLanding}
+        />
+
+        {/* Main Content Area */}
+        <main className="flex-1 flex flex-col h-full overflow-y-auto bg-white custom-scrollbar">
+          {activeRoute === 'introduction' ? (
+            <IntroductionContent />
+          ) : activeRoute.startsWith('tag-') ? (
+            <TagOverviewContent tagKey={activeRoute.replace('tag-', '')} />
+          ) : currentEndpoint ? (
+            <EndpointContent endpoint={currentEndpoint} nextEndpoint={nextEndpoint} />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-[#757575]">
+              <h2 className="text-xl font-semibold text-[#1b1b1b] mb-2 capitalize">
+                {activeRoute.replace(/-/g, ' ')}
+              </h2>
+              <p className="text-sm max-w-md">
+                Endpoint documentation view. Select "Introduction" from the sidebar to view the API introduction.
+              </p>
+              <button
+                onClick={() => handleSelectRoute('introduction')}
+                className="mt-4 px-4 py-2 bg-[#009485] text-white text-xs font-semibold rounded-lg hover:bg-[#007f72] transition-colors cursor-pointer"
+              >
+                Return to Introduction
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

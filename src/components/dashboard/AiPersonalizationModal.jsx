@@ -440,7 +440,7 @@ export default function AiPersonalizationModal({ lead, userId, onClose }) {
                   <div className="p-4 rounded-2xl bg-[#edf2ec]/50 border border-[#dbe5da] space-y-3">
                     <div>
                       <span className="text-[11px] font-mono uppercase text-[#0d9467] font-bold block mb-1">
-                        Relevance to Explee Outreach
+                        Relevance to OutLaunch Outreach
                       </span>
                       <ul className="space-y-1">
                         {(researchData.relevance_reasons || []).map((reason, idx) => (

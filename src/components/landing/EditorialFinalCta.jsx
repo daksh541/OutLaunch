@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Search, Sparkles, CheckCircle2 } from 'lucide-react';
-import FlowCanvas from '../FlowCanvas';
+import { ArrowRight, Search, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { normalizeWebsite } from '../../lib/companyResearch';
 import useAuthSession from '../../hooks/useAuthSession';
@@ -14,10 +13,10 @@ export default function EditorialFinalCta() {
   const { session, loading: authLoading } = useAuthSession();
 
   const PHRASES = [
-    "Find the right people.",
-    "Start better conversations.",
-    "Book qualified demos.",
-    "Grow without hiring an SDR army."
+    "Find high-intent accounts.",
+    "Start authentic conversations.",
+    "Book qualified sales meetings.",
+    "Scale outbound without burnout."
   ];
 
   useEffect(() => {
@@ -45,21 +44,19 @@ export default function EditorialFinalCta() {
   };
 
   return (
-    <section className="py-24 md:py-32 bg-[#0f1714] text-white relative overflow-hidden">
-      {/* Subtle organic particles background */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <FlowCanvas />
-      </div>
+    <section className="py-24 md:py-32 bg-[#0d1c15] text-white relative overflow-hidden">
+      {/* Clean OutLaunch Geometric Grid Accent */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,229,153,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,229,153,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10 text-center">
         
         {/* Monospace Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#182a22] border border-[#233f33] text-xs font-mono text-[#00e599] font-semibold uppercase tracking-wider mb-6">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>START YOUR OUTREACH IN 2 MINUTES</span>
+          <span>INSTANT PIPELINE SETUP</span>
         </div>
 
-        {/* Animated Rotating Headline */}
+        {/* Dynamic Rotating Headline */}
         <div className="max-w-3xl mx-auto min-h-[140px] flex flex-col items-center justify-center">
           <h2 className="text-3xl sm:text-5xl md:text-6xl font-display font-bold tracking-tight leading-[1.1] text-white">
             Ready to{' '}
@@ -68,7 +65,7 @@ export default function EditorialFinalCta() {
             </span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#8ba096] max-w-xl mx-auto leading-relaxed">
-            Enter your website to generate your first research dossiers, tailored messages, and verified decision-makers free.
+            Enter your company domain to generate your first research dossiers, tailored opening angles, and verified buyers in minutes.
           </p>
         </div>
 
@@ -98,25 +95,26 @@ export default function EditorialFinalCta() {
               disabled={authLoading}
               className="flex items-center justify-center gap-1.5 px-5 py-2.5 sm:py-3 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-[#0d1c15] font-bold text-sm transition-all cursor-pointer shrink-0 shadow-sm"
             >
-              <span>Get Leads</span>
+              <span>Launch</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
           {error && (
-            <p role="alert" className="text-xs text-rose-400 mt-2 text-left px-2 font-medium">
+            <p role="alert" className="text-xs text-rose-400 mt-2 text-center font-medium">
               {error}
             </p>
           )}
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-mono text-[#8ba096] mt-4">
+          {/* Micro Trust Points */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-6 text-xs text-[#8ba096] font-mono">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#00e599]" />
-              $30 free trial credits included
+              $30 Free Starter Credits
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#00e599]" />
-              No credit card required
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00e599]" />
+              Human-in-the-Loop Safe
             </span>
           </div>
         </div>

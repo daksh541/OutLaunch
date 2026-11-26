@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import B2BHeader from './B2BHeader';
+import EditorialNavbar from '../landing/EditorialNavbar';
+import EditorialFooter from '../landing/EditorialFooter';
 import B2BHeroSection from './B2BHeroSection';
 import B2BDataSourcesSection from './B2BDataSourcesSection';
 import B2BRegionsSection from './B2BRegionsSection';
@@ -8,52 +9,48 @@ import B2BCountriesSection from './B2BCountriesSection';
 import B2BDataCategoriesSection from './B2BDataCategoriesSection';
 import B2BRevenueDriverSection from './B2BRevenueDriverSection';
 import B2BCalendlySection from './B2BCalendlySection';
-import B2BFooter from './B2BFooter';
-import B2BWordmarkAnimation from './B2BWordmarkAnimation';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, X } from 'lucide-react';
+import '../../b2b.css';
 
 export default function B2BPage() {
   const [chatOpen, setChatOpen] = useState(false);
 
   return (
-    <div className="b2b-dark min-h-screen flex flex-col bg-[#090B0B] text-foreground relative z-50">
-      <div className="landing-scroll-content flex flex-col flex-1">
-        {/* Sticky Header */}
-        <B2BHeader />
+    <div className="landing-editorial-root min-h-screen flex flex-col bg-[#f7f5f0] text-[#0d1c15] antialiased selection:bg-[#00e599]/30 selection:text-[#0d1c15] relative z-10">
+      {/* 1. Header (Unified OutLaunch Editorial Navbar) */}
+      <EditorialNavbar />
 
-        {/* Hero Section */}
+      <main className="flex-1 flex flex-col">
+        {/* 2. Hero Section */}
         <B2BHeroSection />
 
-        {/* All-in-one & Ultimate Business Profile (sticky scroll) */}
+        {/* 3. Data Sources & AI Synthesis */}
         <B2BDataSourcesSection />
 
         {/* Main Sections Container */}
         <div className="max-w-[1200px] mx-auto px-4 w-full">
-          {/* 1. Geographic Regions */}
+          {/* 4. Geographic Regions */}
           <B2BRegionsSection />
 
-          {/* 2. NACE Industry Sectors */}
+          {/* 5. NACE Industry Sectors */}
           <B2BIndustriesSection />
 
-          {/* 3. 238 Countries */}
+          {/* 6. 238 Countries Directory */}
           <B2BCountriesSection />
 
-          {/* 4. What's Inside Our Database / Data Categories Explorer */}
+          {/* 7. What's Inside Our Database / Data Categories Explorer */}
           <B2BDataCategoriesSection />
 
-          {/* 5. Revenue Driver */}
+          {/* 8. Revenue Driver */}
           <B2BRevenueDriverSection />
 
-          {/* 6. Demo Booking with Calendly */}
+          {/* 9. OutLaunch Dataset Consultation & Walkthrough */}
           <B2BCalendlySection />
         </div>
+      </main>
 
-        {/* Footer */}
-        <B2BFooter />
-      </div>
-
-      {/* Wordmark Footer Reveal Animation */}
-      <B2BWordmarkAnimation />
+      {/* 10. Footer (Unified OutLaunch Editorial Footer) */}
+      <EditorialFooter />
 
       {/* Floating Chat Support Widget */}
       <div className="fixed bottom-6 right-6 z-40">
@@ -61,34 +58,36 @@ export default function B2BPage() {
           type="button"
           onClick={() => setChatOpen(!chatOpen)}
           aria-label="Chat support"
-          className="w-14 h-14 rounded-full bg-[#00947c] hover:bg-[#007f6a] text-white flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          className="w-14 h-14 rounded-full bg-[#0d1c15] hover:bg-[#162b21] text-white flex items-center justify-center shadow-[0_8px_25px_rgba(13,28,21,0.25)] transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-[#233f33]"
         >
-          <MessageSquare className="w-6 h-6 fill-current" />
+          {chatOpen ? <X className="w-5 h-5 text-[#00e599]" /> : <MessageSquare className="w-5 h-5 text-[#00e599]" />}
         </button>
 
         {chatOpen && (
-          <div className="absolute bottom-16 right-0 w-80 bg-[#121616] rounded-2xl shadow-2xl border border-white/10 p-4 mb-2 animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="font-medium text-white text-sm flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
-                OutLaunch Support
+          <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-2xl border border-[#0d1c15]/10 p-5 mb-2 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center justify-between pb-3 border-b border-[#0d1c15]/10">
+              <div className="font-semibold text-[#0d1c15] text-sm flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#00e599]" />
+                OutLaunch Data Support
               </div>
               <button
                 type="button"
                 onClick={() => setChatOpen(false)}
-                className="text-xs text-white/50 hover:text-white"
+                className="text-xs text-[#73827a] hover:text-[#0d1c15] cursor-pointer"
               >
                 Close
               </button>
             </div>
-            <div className="py-4 text-xs text-white/70 leading-relaxed">
-              Hi there! 👋 How can we help you today? Leave us a message and we'll reply shortly.
+            <div className="py-4 text-xs text-[#4a5851] leading-relaxed">
+              Hi there! 👋 Need a custom slice of the 105M+ company dataset, or API pricing? Leave us a note and an engineer will reply.
             </div>
-            <input
-              type="text"
-              placeholder="Write a message..."
-              className="w-full bg-white/5 rounded-lg px-3 py-2 text-xs text-white placeholder:text-white/40 outline-none border border-white/10 focus:border-brand-500"
-            />
+            <form onSubmit={(e) => { e.preventDefault(); alert('Message sent to data engineering.'); setChatOpen(false); }}>
+              <input
+                type="text"
+                placeholder="Ask a question or enter your email..."
+                className="w-full bg-[#f7f5f0] rounded-xl px-3.5 py-2 text-xs text-[#0d1c15] placeholder:text-[#9ca3af] outline-none border border-[#0d1c15]/10 focus:border-[#00e599]"
+              />
+            </form>
           </div>
         )}
       </div>

@@ -27,6 +27,11 @@ export default function EditorialNavbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
+  const handleAnchorClick = (e, hash) => {
+    e.preventDefault();
+    navigate('/' + hash);
+  };
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
@@ -75,13 +80,15 @@ export default function EditorialNavbar() {
         {/* Center Nav Links (Desktop) */}
         <nav className="hidden md:flex items-center gap-7 text-[14px] font-medium text-[#4a5851]">
           <a
-            href="#workflow"
+            href="/#workflow"
+            onClick={(e) => handleAnchorClick(e, '#workflow')}
             className="hover:text-[#0d1c15] transition-colors relative py-1"
           >
             Workflow
           </a>
           <a
-            href="#human-in-the-loop"
+            href="/#human-in-the-loop"
+            onClick={(e) => handleAnchorClick(e, '#human-in-the-loop')}
             className="hover:text-[#0d1c15] transition-colors relative py-1 flex items-center gap-1.5"
           >
             <span>Control &amp; Review</span>
@@ -90,53 +97,37 @@ export default function EditorialNavbar() {
             </span>
           </a>
           <a
-            href="#features"
+            href="/#features"
+            onClick={(e) => handleAnchorClick(e, '#features')}
             className="hover:text-[#0d1c15] transition-colors relative py-1"
           >
             Features
           </a>
           <a
-            href="#pricing"
+            href="/#pricing"
+            onClick={(e) => handleAnchorClick(e, '#pricing')}
             className="hover:text-[#0d1c15] transition-colors relative py-1"
           >
             Pricing
           </a>
           <a
-            href="#faq"
+            href="/#faq"
+            onClick={(e) => handleAnchorClick(e, '#faq')}
             className="hover:text-[#0d1c15] transition-colors relative py-1"
           >
             FAQ
           </a>
-          <button
-            type="button"
-            onClick={() => navigate(PRODUCT_ROUTES.DASHBOARD)}
-            className="hover:text-[#0d9467] text-[#0d1c15] font-semibold transition-colors relative py-1 cursor-pointer flex items-center gap-1"
-          >
-            <span>Dashboard</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00e599]" />
-          </button>
         </nav>
 
         {/* Right CTA cluster */}
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(PRODUCT_ROUTES.DASHBOARD)}
-            className="hidden sm:inline-flex text-[14px] font-medium text-[#0d1c15] hover:text-[#0d9467] px-3.5 py-2 transition-colors cursor-pointer"
-          >
-            Workspace
-          </button>
-
           <a
-            href="#hero-cta"
+            href={PRODUCT_ROUTES.SIGN_IN || '/sign-in'}
             onClick={(e) => {
-              const el = document.getElementById('hero-cta') || document.querySelector('input[type="text"]');
-              if (el) {
-                e.preventDefault();
-                el.scrollIntoView({ behavior: 'smooth' });
-                el.focus();
-              }
+              e.preventDefault();
+              navigate(PRODUCT_ROUTES.SIGN_IN);
             }}
+            title="Log In / Start Free"
             className="inline-flex items-center gap-1.5 text-[13px] sm:text-[14px] font-semibold bg-[#0d1c15] hover:bg-[#162b21] active:scale-[0.98] text-white px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-xl transition-all shadow-[0_2px_8px_rgba(13,28,21,0.12)] cursor-pointer group"
           >
             <span>Start Free</span>
@@ -164,15 +155,21 @@ export default function EditorialNavbar() {
         >
           <div className="flex flex-col gap-3 font-medium text-base text-[#0d1c15]">
             <a
-              href="#workflow"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#workflow"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleAnchorClick(e, '#workflow');
+              }}
               className="py-2 px-3 rounded-lg hover:bg-[#0d1c15]/5 transition-colors"
             >
               Outreach Workflow
             </a>
             <a
-              href="#human-in-the-loop"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#human-in-the-loop"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleAnchorClick(e, '#human-in-the-loop');
+              }}
               className="py-2 px-3 rounded-lg hover:bg-[#0d1c15]/5 transition-colors flex items-center justify-between"
             >
               <span>Human in the Loop</span>
@@ -181,22 +178,31 @@ export default function EditorialNavbar() {
               </span>
             </a>
             <a
-              href="#features"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#features"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleAnchorClick(e, '#features');
+              }}
               className="py-2 px-3 rounded-lg hover:bg-[#0d1c15]/5 transition-colors"
             >
               Core Capabilities
             </a>
             <a
-              href="#pricing"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#pricing"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleAnchorClick(e, '#pricing');
+              }}
               className="py-2 px-3 rounded-lg hover:bg-[#0d1c15]/5 transition-colors"
             >
               Transparent Pricing
             </a>
             <a
-              href="#faq"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#faq"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleAnchorClick(e, '#faq');
+              }}
               className="py-2 px-3 rounded-lg hover:bg-[#0d1c15]/5 transition-colors"
             >
               FAQ

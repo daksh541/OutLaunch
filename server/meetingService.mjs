@@ -644,15 +644,18 @@ export class MeetingService {
         if (lead) {
           bookingRecord.lead_id = lead.id;
           // Update Lead to 'Meeting Scheduled' only when booking is confirmed
-          await this.crmService.updateLeadStage(
+          const updatedLead = await this.crmService.updateLeadStage(
             userId,
             lead.id,
             'Meeting Scheduled',
             `Meeting booked: "${page.title}" scheduled for ${startObj.toLocaleString()}`
           );
+          lead = updatedLead.lead || updatedLead || lead;
           // Set next followup
+          lead.stage = 'Meeting Scheduled';
           lead.next_followup_at = startObj.toISOString();
           lead.last_activity_at = nowIso;
+          this.crmService._setMemoryLead(lead.id, lead);
         } else {
           // Create new lead in CRM
           const newLead = {
@@ -1168,9 +1171,13 @@ export class MeetingService {
 
     // Extract proposed time of day
     let timeOfDay = 'any';
-    if (lower.includes('morning') || lower.includes('am')) timeOfDay = 'morning';
-    else if (lower.includes('afternoon') || lower.includes('pm')) timeOfDay = 'afternoon';
-    else if (lower.includes('evening')) timeOfDay = 'evening';
+    if (/\b(afternoon|pm)\b/i.test(lower)) {
+      timeOfDay = 'afternoon';
+    } else if (/\b(morning|\d{1,2}\s*am)\b/i.test(lower)) {
+      timeOfDay = 'morning';
+    } else if (/\b(evening|night)\b/i.test(lower)) {
+      timeOfDay = 'evening';
+    }
 
     // Extract timezone mention
     const timeZones = ['est', 'edt', 'pst', 'pdt', 'cst', 'cdt', 'gmt', 'utc', 'ist'];

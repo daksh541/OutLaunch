@@ -67,12 +67,12 @@ const insights = [
 
 export default function GMBusinessInsightsSection() {
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24 bg-[#f7f5f0]">
       <div className="container mx-auto max-w-[1200px] px-4">
         {/* Section Heading */}
-        <h2 className="text-2xl md:text-4xl font-bold text-white text-center mb-12">
+        <h2 className="text-2xl md:text-4xl font-bold text-[#0d1c15] text-center mb-12">
           From locations database to{' '}
-          <span className="gm-text-gradient">business insights</span>
+          <span className="text-[#0d9467]">business insights</span>
         </h2>
 
         {/* 3 Cards */}
@@ -80,15 +80,15 @@ export default function GMBusinessInsightsSection() {
           {insights.map((item, idx) => (
             <div
               key={idx}
-              className="bg-[#111414] rounded-2xl p-6 border border-white/[0.08] hover:border-[#7cd9ba]/50 transition-colors"
+              className="bg-white rounded-2xl p-6 border border-[#0d1c15]/10 shadow-[0_4px_20px_rgba(13,28,21,0.03)] hover:border-[#0d9467]/40 transition-colors"
             >
-              <div className="w-10 h-10 mb-4 flex items-center justify-center">
+              <div className="w-12 h-12 mb-5 rounded-xl bg-[#edf2ec] border border-[#dbe5da] flex items-center justify-center text-[#0d9467]">
                 {item.icon}
               </div>
-              <h3 className="text-lg font-semibold text-white mb-3">
+              <h3 className="text-lg font-semibold text-[#0d1c15] mb-2">
                 {item.title}
               </h3>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">
+              <p className="text-[#4a5851] text-sm leading-relaxed">
                 {item.description}
               </p>
             </div>

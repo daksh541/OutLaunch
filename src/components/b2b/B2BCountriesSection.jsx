@@ -7,16 +7,10 @@ export default function B2BCountriesSection() {
   const visibleCountries = isExpanded ? countriesData : countriesData.slice(0, 21);
 
   return (
-    <section className="mb-48">
-      <h2 className="text-2xl md:text-3xl font-normal text-foreground mb-8 text-center tracking-[-0.02em]">
-        Browse the largest B2B company database across{' '}
-        <span
-          className="bg-clip-text text-transparent"
-          style={{
-            backgroundImage:
-              'linear-gradient(0.283turn, rgba(5, 172, 130, 1) 0%, rgba(21, 173, 220, 1) 100%)',
-          }}
-        >
+    <section className="mb-32 md:mb-48">
+      <h2 className="text-2xl md:text-3xl font-display font-bold text-[#0d1c15] mb-8 text-center tracking-[-0.02em]">
+        Browse company records across{' '}
+        <span className="text-[#0d9467] italic font-editorial font-normal">
           {countriesData.length} countries
         </span>
       </h2>
@@ -27,21 +21,21 @@ export default function B2BCountriesSection() {
             <a
               key={country.code + '-' + country.name}
               href={country.href}
-              className="group glass-window glass-window--inset hover:border-white/[0.12] transition-all duration-300"
+              className="group bg-white rounded-2xl border border-[#0d1c15]/10 p-5 md:py-5 md:px-6 transition-all duration-300 hover:border-[#0d9467]/40 hover:shadow-md block cursor-pointer"
             >
-              <div className="glass-window-inner flex items-center gap-4 p-5 md:py-6 md:px-6 min-h-[96px] md:min-h-[105px]">
-                <span className="font-bold text-xl md:text-2xl text-[#f3f4f6] w-10 shrink-0 font-sans tracking-wide text-left">
+              <div className="flex items-center gap-4">
+                <span className="font-bold text-lg md:text-xl font-mono text-[#0d9467] w-10 shrink-0 tracking-wide text-left">
                   {country.code}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-[15px] md:text-base text-[#f3f4f6] group-hover:text-brand-400 transition-colors truncate">
+                  <h3 className="font-semibold text-sm md:text-base text-[#0d1c15] group-hover:text-[#0d9467] transition-colors truncate">
                     {country.name}
                   </h3>
-                  <p className="text-sm text-[#9ca3af] mt-0.5">
+                  <p className="text-xs font-mono text-[#5a6962] mt-0.5">
                     {country.count}
                   </p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-brand-400 group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" />
+                <ArrowRight className="h-4 w-4 text-[#0d9467] group-hover:translate-x-1 transition-transform flex-shrink-0 ml-2" />
               </div>
             </a>
           ))}
@@ -49,15 +43,15 @@ export default function B2BCountriesSection() {
 
         {!isExpanded && (
           <>
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#090B0B] via-[#090B0B]/80 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-[#f7f5f0] via-[#f7f5f0]/85 to-transparent pointer-events-none" />
             <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4">
               <button
                 type="button"
                 onClick={() => setIsExpanded(true)}
-                className="inline-flex items-center gap-2 glass-edge bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium px-6 py-3 rounded-xl transition-all duration-200 pointer-events-auto cursor-pointer"
+                className="inline-flex items-center gap-2 bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-md pointer-events-auto cursor-pointer"
               >
                 <span>View all {countriesData.length} countries</span>
-                <ChevronDown className="h-4 w-4 text-white/60" />
+                <ChevronDown className="h-4 w-4 text-[#00e599]" />
               </button>
             </div>
           </>
@@ -68,10 +62,10 @@ export default function B2BCountriesSection() {
             <button
               type="button"
               onClick={() => setIsExpanded(false)}
-              className="inline-flex items-center gap-2 glass-edge bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-sm font-medium px-6 py-3 rounded-xl transition-all duration-200 cursor-pointer"
+              className="inline-flex items-center gap-2 bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer"
             >
               <span>Show less</span>
-              <ChevronUp className="h-4 w-4 text-white/60" />
+              <ChevronUp className="h-4 w-4 text-[#00e599]" />
             </button>
           </div>
         )}

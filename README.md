@@ -1,34 +1,40 @@
-# Explee Landing Page Clone
+# OutLaunch — Autonomous Outbound Infrastructure
 
-A faithful, high-fidelity reproduction of the **[Explee](https://explee.com)** landing page built with modern React 18, Vite 6, and Tailwind CSS.
-
-![Explee Hero Preview](verification_screenshots/desktop_01_hero.png)
+OutLaunch is an autonomous outbound sales orchestration platform designed for B2B revenue and growth teams. It combines account discovery, deep prospect research dossiers, synchronized cold email and LinkedIn touchpoints, and a human-in-the-loop review workflow.
 
 ---
 
-## ✨ Features & Visual Accuracy
+## Architecture & Core Modules
 
-- **Organic Particle Flow Streams (`FlowCanvas.jsx`)**:
-  - Exact 8-path cubic Bezier curves with 64-step Look-Up Table (LUT) arc-length parameterization for uniform dot velocities.
-  - Emerald green (`#10b981`) and subtle gray floating particles flanking the hero input and cascading vertically down the CTA section.
-- **Deck-of-Cards Sticky Stacking (`PipelineSection.jsx`)**:
-  - Smooth native sticky stacking mechanism where all 6 pipeline stages progressively overlap with exact 15px vertical step offsets.
-  - Interactive competitor analysis with rotating favicons, fit score tables, prospect identity plaques, email preview, and campaign metric scaling.
-- **Dynamic Pay-as-You-Go Calculator (`CalculatorSection.jsx`)**:
-  - Interactive budget range slider ($0–$100, default $30) computing live email volume ($0.03/email), warm leads range, and meetings.
-  - Floating price bubble dynamically aligned above the slider thumb with `clamp()` math.
-- **Animated Headline Transitions (`BottomCtaSection.jsx`)**:
-  - Staggered word blur-and-slide transitions between *"You’ve heard it all before"* and *"This one really works"*.
-- **Testimonials & Logos Carousel**:
-  - 3-row infinite looping testimonial marquee with hover-pause on desktop, and snap-scrolling on mobile.
-  - Brand and VC logos carousel with G2 5.0 rating badge.
-- **Responsive Navigation & Mobile Drawer**:
-  - Sticky backdrop-blurred navbar with Products dropdown and mobile slide-out drawer.
-  - Floating emerald support chat widget with interactive modal dialog.
+1. **Autonomous Lead Discovery (`/` and `/outreach`)**:
+   - Filter across 250M+ verified global business profiles by exact ICP criteria.
+   - Real-time SMTP verification, zero-bounce defense, and title hierarchy matching.
+2. **Global B2B Directory (`/database`)**:
+   - 105M+ company profiles with firmographics, verified tech stacks, and executive registries across 238 countries.
+3. **Global Places & Commercial Venues (`/gm` and `/google-maps`)**:
+   - 200M+ commercial venues, geocoordinates, operating hours, and location attributes.
+4. **Data Explorer (`/explorer`)**:
+   - Interactive company cluster and industry classification navigation.
+5. **REST API & Developer Hub (`/api`)**:
+   - Programmatic endpoints for company enrichment, prospect discovery, and agent runs.
+6. **Workspace Dashboard & CRM (`/dashboard`)**:
+   - Integrated lead management, campaign tracking, sequence scheduling, and sales call intelligence.
 
 ---
 
-## 🚀 Quick Start
+## Design System: OutLaunch Editorial
+
+The frontend utilizes the original **OutLaunch Editorial** design system:
+- **Warm Cream Canvas**: `#f7f5f0`
+- **Obsidian Typography**: `#0d1c15`
+- **Emerald Accent**: `#00e599`
+- **Deep Forest Emerald**: `#0d9467`
+- **Surfaces**: Crisp `#ffffff` cards with restrained `rgba(13, 28, 21, 0.08)` borders and subtle drop shadows.
+- **Typography**: Inter paired with tabular Monospace labels for verified technical data.
+
+---
+
+## Quick Start
 
 ### 1. Install Dependencies
 
@@ -36,45 +42,30 @@ A faithful, high-fidelity reproduction of the **[Explee](https://explee.com)** l
 npm install
 ```
 
-### 2. Development Server
-
-Start the local development server at `http://localhost:3000`:
+### 2. Start Local Development Server
 
 ```bash
+# Frontend (Vite) on http://localhost:3000
 npm run dev
+
+# Backend API server on http://localhost:3001
+npm run server
 ```
 
-### 3. Production Build
+### 3. Run Verification Tests
 
-Build optimized static assets to `dist/`:
+```bash
+node --test tests/*.test.mjs
+```
+
+### 4. Build for Production
 
 ```bash
 npm run build
-npm run preview
 ```
 
 ---
 
-## 🛠 Tech Stack
+## License & Attribution
 
-- **Framework**: [React 18](https://react.dev/)
-- **Build Tool**: [Vite 6](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Testing & Validation**: [Playwright](https://playwright.dev/)
-
----
-
-## 🧪 Testing & Validation
-
-The codebase includes automated Playwright test scripts in `scripts/`:
-
-```bash
-# Run interaction test suite (slider, hero input, modal, FAQ accordion, mobile nav)
-python scripts/test_interactions.py
-
-# Generate full-page & section-by-section validation screenshots
-python scripts/capture_validation.py
-```
-# OutLaunch
-# OutLaunch
+Third-party dependencies and open-source licenses are documented in [THIRD_PARTY_NOTICES.md](file:///Users/saidaksh/Desktop/Explee/THIRD_PARTY_NOTICES.md).

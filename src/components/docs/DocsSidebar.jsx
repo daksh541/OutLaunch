@@ -71,29 +71,13 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
   };
 
   return (
-    <aside className="w-[288px] shrink-0 border-r border-[rgba(0,0,0,0.1)] bg-white flex flex-col h-screen sticky top-0 font-['Inter',sans-serif] text-[13px] select-none z-20">
-      {/* Explee Logo / Back to Products */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-2 border-b border-[rgba(0,0,0,0.06)]">
-        <a
-          href="/"
-          onClick={(e) => {
-            e.preventDefault();
-            if (onBackToLanding) {
-              onBackToLanding();
-            } else {
-              window.location.href = '/';
-            }
-          }}
-          className="flex items-center gap-2 text-[#1b1b1b] hover:opacity-80 transition-opacity cursor-pointer"
-          title="Back to OutLaunch Home"
-        >
-          <img
-            src="/assets/logo-light.svg"
-            alt="OutLaunch"
-            className="h-5 w-auto"
-          />
-          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded">API Docs</span>
-        </a>
+    <aside className="w-[288px] shrink-0 border-r border-[rgba(0,0,0,0.1)] bg-white flex flex-col h-full font-['Inter',sans-serif] text-[13px] select-none z-20">
+      {/* Subheader: API Reference & Version */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[rgba(0,0,0,0.06)] bg-[#faf9f5]">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-xs uppercase tracking-wider text-[#0d1c15] font-bold">API Reference</span>
+        </div>
+        <span className="text-[10px] font-mono font-semibold text-[#0d9467] bg-[#edf2ec] border border-[#dbe5da] px-1.5 py-0.5 rounded">v1.0.0</span>
       </div>
 
       {/* Search Bar matching Scalar */}

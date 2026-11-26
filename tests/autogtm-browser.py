@@ -267,7 +267,7 @@ with sync_playwright() as p:
     expect(page).to_have_url(re.compile('phase=outreach_companies_loading'))
     assert state['campaign_plan']['selected_ids'] == [state['campaign_plan']['campaigns'][0]['id']]
     assert state['starts'] == 1, 'Later visual stages started another crawl'
-    page.get_by_role('link', name='Explee home').first.click()
+    page.get_by_role('link', name='OutLaunch home').first.click()
     page.get_by_role('textbox', name='Company website').fill('company.com')
     page.get_by_role('button', name='Create my project').click()
     expect(page.get_by_role('heading', name='Profile for company.com', exact=True)).to_be_visible(timeout=10000)

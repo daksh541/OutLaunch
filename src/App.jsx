@@ -12,6 +12,7 @@ import SignInPage from './components/auth/SignInPage';
 import AppAutoGtmPage from './components/autogtm/AppAutoGtmPage';
 import AutoGtmWorkflowPage from './components/autogtm/AutoGtmWorkflowPage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
+import PublicBookingPage from './components/booking/PublicBookingPage';
 
 function ProtectedDashboardRoute() {
   const { user, loading } = useAuth();
@@ -43,62 +44,62 @@ function NotFoundPage() {
   const { navigate } = useNavigation();
 
   return (
-    <div className="min-h-screen bg-[#090b0b] text-white flex flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-md w-full p-8 rounded-2xl bg-[#111414] border border-white/[0.08] shadow-2xl">
-        <h1 className="text-4xl font-bold mb-2 text-white">404</h1>
-        <p className="text-gray-400 mb-6 text-sm">
+    <div className="min-h-screen bg-[#f7f5f0] text-[#0d1c15] flex flex-col items-center justify-center p-6 text-center antialiased">
+      <div className="max-w-md w-full p-8 rounded-2xl bg-white border border-[#0d1c15]/10 shadow-xl">
+        <h1 className="text-4xl font-display font-bold mb-2 text-[#0d1c15]">404</h1>
+        <p className="text-[#4a5851] mb-6 text-sm">
           The requested page could not be found. Select one of the available OutLaunch products:
         </p>
 
         <div className="space-y-2 text-left">
           <button
             onClick={() => navigate(PRODUCT_ROUTES.DASHBOARD)}
-            className="w-full p-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] transition text-left cursor-pointer border border-[#00e599]/30"
+            className="w-full p-3 rounded-xl bg-[#edf2ec] hover:bg-[#e2e9e1] transition text-left cursor-pointer border border-[#dbe5da]"
           >
-            <div className="font-semibold text-sm text-[#00e599]">Outreach Platform Dashboard</div>
-            <div className="text-xs text-gray-400">Manage email, LinkedIn, leads, and sequences</div>
+            <div className="font-semibold text-sm text-[#0d9467]">Outreach Platform Dashboard</div>
+            <div className="text-xs text-[#5a6962]">Manage email, LinkedIn, leads, and sequences</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.OUTREACH)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">Outreach Agent Landing</div>
-            <div className="text-xs text-gray-400">AI agents that find and email your buyers</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">Outreach Agent Landing</div>
+            <div className="text-xs text-[#5a6962]">AI agents that find and email your buyers</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.DATABASE)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">Database</div>
-            <div className="text-xs text-gray-400">The largest B2B company database</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">Database</div>
+            <div className="text-xs text-[#5a6962]">The largest B2B company database</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.GM)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">Google Maps Dataset</div>
-            <div className="text-xs text-gray-400">218M+ local businesses from Google Maps</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">Global Places Dataset</div>
+            <div className="text-xs text-[#5a6962]">200M+ commercial venues and local businesses worldwide</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.API)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">API</div>
-            <div className="text-xs text-gray-400">REST API for company and people data</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">API</div>
+            <div className="text-xs text-[#5a6962]">REST API for company and people data</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.EXPLORER)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">Explorer</div>
-            <div className="text-xs text-gray-400">Explore and filter the company graph</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">Explorer</div>
+            <div className="text-xs text-[#5a6962]">Explore and filter the company graph</div>
           </button>
           <button
             onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
-            className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
+            className="w-full p-3 rounded-xl bg-[#f7f5f0] hover:bg-[#edf2ec] transition text-left cursor-pointer border border-[#0d1c15]/08"
           >
-            <div className="font-semibold text-sm text-white">Sign In</div>
-            <div className="text-xs text-gray-400">Sign in to your account</div>
+            <div className="font-semibold text-sm text-[#0d1c15]">Sign In</div>
+            <div className="text-xs text-[#5a6962]">Sign in to your account</div>
           </button>
         </div>
       </div>
@@ -107,9 +108,11 @@ function NotFoundPage() {
 }
 
 function MainRouter() {
-  const { currentProduct, countrySlug, regionSlug, domain, navigate } = useNavigation();
+  const { currentProduct, countrySlug, regionSlug, domain, bookingSlug, navigate } = useNavigation();
 
   switch (currentProduct) {
+    case 'booking':
+      return <PublicBookingPage bookingSlug={bookingSlug} />;
     case 'dashboard':
       return <DashboardLayout />;
     case 'app-auto-gtm':

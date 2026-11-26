@@ -59,7 +59,7 @@ export default function CountryTreemap({ categories = [] }) {
   const rects = layoutTreemap(categories);
 
   return (
-    <div className="relative w-full h-[480px] rounded-xl overflow-hidden bg-black/40 p-1 border border-white/[0.04] select-none">
+    <div className="relative w-full h-[480px] rounded-xl overflow-hidden bg-[#0d1c15] p-1.5 border border-[#0d1c15]/10 select-none shadow-inner">
       {rects.map((rect, idx) => {
         const isHovered = hoveredIdx === idx;
         const isTiny = rect.width < 14 || rect.height < 14;

@@ -196,3 +196,47 @@
     transform: translateY(-40px);
   }
 }
+
+/* OutLaunch Editorial Design System Adaptation for B2B Sections */
+.landing-editorial-root .glass-window {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(13, 28, 21, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(13, 28, 21, 0.03);
+}
+
+.landing-editorial-root .glass-window--inset {
+  border: 1px solid rgba(13, 28, 21, 0.08);
+  background: #ffffff;
+  padding: 8px;
+}
+
+.landing-editorial-root .glass-window-inner {
+  background: #ffffff;
+  border-radius: 14px;
+}
+
+.landing-editorial-root .glass-window-inner:before {
+  display: none;
+}
+
+.landing-editorial-root .glass-edge {
+  background: #edf2ec;
+  border: 1px solid #dbe5da;
+}
+
+.landing-editorial-root .text-muted-foreground {
+  color: #4a5851;
+}
+
+.landing-editorial-root .border-white\/\[0\.08\],
+.landing-editorial-root .border-white\/\[0\.06\],
+.landing-editorial-root .border-white\/10 {
+  border-color: rgba(13, 28, 21, 0.1) !important;
+}
+
+.landing-editorial-root .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(13, 28, 21, 0.08) !important;
+}
+
