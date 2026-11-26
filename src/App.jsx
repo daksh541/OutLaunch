@@ -10,6 +10,7 @@ import ExplorerPage from './components/explorer/ExplorerPage';
 import SignInPage from './components/auth/SignInPage';
 import AppAutoGtmPage from './components/autogtm/AppAutoGtmPage';
 import AutoGtmWorkflowPage from './components/autogtm/AutoGtmWorkflowPage';
+import DashboardLayout from './components/dashboard/DashboardLayout';
 
 function NotFoundPage() {
   const { navigate } = useNavigation();
@@ -24,10 +25,17 @@ function NotFoundPage() {
 
         <div className="space-y-2 text-left">
           <button
+            onClick={() => navigate(PRODUCT_ROUTES.DASHBOARD)}
+            className="w-full p-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] transition text-left cursor-pointer border border-[#00e599]/30"
+          >
+            <div className="font-semibold text-sm text-[#00e599]">Outreach Platform Dashboard</div>
+            <div className="text-xs text-gray-400">Manage email, LinkedIn, leads, and sequences</div>
+          </button>
+          <button
             onClick={() => navigate(PRODUCT_ROUTES.OUTREACH)}
             className="w-full p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] transition text-left cursor-pointer"
           >
-            <div className="font-semibold text-sm text-white">Outreach Agent</div>
+            <div className="font-semibold text-sm text-white">Outreach Agent Landing</div>
             <div className="text-xs text-gray-400">AI agents that find and email your buyers</div>
           </button>
           <button
@@ -75,6 +83,8 @@ function MainRouter() {
   const { currentProduct, countrySlug, regionSlug, domain, navigate } = useNavigation();
 
   switch (currentProduct) {
+    case 'dashboard':
+      return <DashboardLayout />;
     case 'app-auto-gtm':
       return <AppAutoGtmPage />;
     case 'auto-gtm-explore':

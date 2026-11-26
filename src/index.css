@@ -18,35 +18,37 @@
   --brand-700: #0a7854;
   --brand-800: #096647;
 
-  --background: #f6f5f3;
-  --foreground: #0a0a0a;
+  --background: #f7f5f0;
+  --foreground: #0d1c15;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --chip: rgba(0, 0, 0, 0.04);
-  --border: rgba(0, 0, 0, 0.08);
-  --muted: rgba(0, 0, 0, 0.04);
-  --muted-foreground: #737373;
-  --primary: #171717;
+  --card-foreground: #0d1c15;
+  --chip: rgba(13, 28, 21, 0.05);
+  --border: rgba(13, 28, 21, 0.09);
+  --muted: rgba(13, 28, 21, 0.04);
+  --muted-foreground: #5a6962;
+  --primary: #0d1c15;
   --primary-foreground: #ffffff;
-  --cta-hover: #000000;
-  --shadow-plaque: 0 2px 10px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  --content-max-width: 1200px;
-  --content-padding: 1rem;
+  --cta-hover: #162b21;
+  --shadow-plaque: 0 1px 3px rgba(13, 28, 21, 0.04), 0 8px 24px rgba(13, 28, 21, 0.05);
+  --content-max-width: 1240px;
+  --content-padding: 1.25rem;
 }
 
 html {
   overflow-x: clip;
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -0.011em;
 }
 
 /* Landing Specific Styles */
 .landing-light {
-  --background: #f6f5f3;
+  --background: #f7f5f0;
 }
 
 .landing-light .cta-primary:not(:disabled) {
@@ -883,5 +885,39 @@ body {
   background: rgba(0, 0, 0, 0.15);
   border-radius: 4px;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Modern dialog & modal backdrop scroll containment */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 
 

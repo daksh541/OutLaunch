@@ -1,90 +1,153 @@
-import React, { useState } from 'react';
-import Navbar from '../Navbar';
-import HeroSection from '../HeroSection';
-import CaseStudiesSection from '../CaseStudiesSection';
-import TestimonialsMarquee from '../TestimonialsMarquee';
-import PipelineSection from '../PipelineSection';
-import ThreeThingsSection from '../ThreeThingsSection';
-import CalculatorSection from '../CalculatorSection';
-import FaqSection from '../FaqSection';
-import BottomCtaSection from '../BottomCtaSection';
-import Footer from '../Footer';
-import { MessageSquare } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import EditorialNavbar from '../landing/EditorialNavbar';
+import EditorialHero from '../landing/EditorialHero';
+import StackedWorkflowPipeline from '../landing/StackedWorkflowPipeline';
+import HumanApprovalSection from '../landing/HumanApprovalSection';
+import LeadDiscoverySection from '../landing/LeadDiscoverySection';
+import PersonalisationSection from '../landing/PersonalisationSection';
+import MultichannelOutreachSection from '../landing/MultichannelOutreachSection';
+import CampaignManagementSection from '../landing/CampaignManagementSection';
+import TrustControlSection from '../landing/TrustControlSection';
+import EditorialCalculatorSection from '../landing/EditorialCalculatorSection';
+import EditorialFaqSection from '../landing/EditorialFaqSection';
+import EditorialFinalCta from '../landing/EditorialFinalCta';
+import EditorialFooter from '../landing/EditorialFooter';
+import { MessageSquare, X, Send } from 'lucide-react';
 
 export default function OutreachAgentPage() {
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const chatDialogRef = useRef(null);
+
+  // Esc key and outside click to dismiss chat dialog (Modern Web Guidance compliance)
+  useEffect(() => {
+    if (!chatOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setChatOpen(false);
+    };
+    const handleClickOutside = (e) => {
+      if (chatDialogRef.current && !chatDialogRef.current.contains(e.target)) {
+        setChatOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [chatOpen]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+    alert(`Thanks for reaching out! A support engineer will review: "${chatMessage}"`);
+    setChatMessage('');
+    setChatOpen(false);
+  };
 
   return (
-    <div className="autogtm-root landing theme-light landing-light min-h-screen flex flex-col bg-background text-foreground antialiased font-sans">
-      <div className="landing-scroll-content flex flex-col flex-1">
-        {/* Navigation */}
-        <Navbar />
+    <div className="landing-editorial-root min-h-screen flex flex-col bg-[#f7f5f0] text-[#0d1c15] antialiased selection:bg-[#00e599]/30 selection:text-[#0d1c15]">
+      
+      {/* 1. Navigation */}
+      <EditorialNavbar />
 
-        {/* Hero Section */}
-        <HeroSection />
+      <main className="flex-1 flex flex-col">
+        {/* 2. Hero Section */}
+        <EditorialHero />
 
-        {/* Section 2: What our customers got out of it */}
-        <CaseStudiesSection />
+        {/* 3. Animated Outreach Workflow (Explee Stacked Pipeline) */}
+        <StackedWorkflowPipeline />
 
-        {/* Section 3: What customers are saying */}
-        <TestimonialsMarquee />
+        {/* 4. Product Explanation (Taskaway Human-in-the-Loop Review) */}
+        <HumanApprovalSection />
 
-        {/* Section 4: We run the entire pipeline */}
-        <PipelineSection />
+        {/* 5. Lead Discovery */}
+        <LeadDiscoverySection />
 
-        {/* Section 5: Three things nobody else has */}
-        <ThreeThingsSection />
+        {/* 6. AI Research and Personalisation */}
+        <PersonalisationSection />
 
-        {/* Section 6: Pay as you go with no subscription */}
-        <CalculatorSection />
+        {/* 7. Email and LinkedIn Outreach */}
+        <MultichannelOutreachSection />
 
-        {/* Section 7: Common questions */}
-        <FaqSection />
+        {/* 8. Campaign Management */}
+        <CampaignManagementSection />
 
-        {/* Section 8: Bottom CTA - This one really works */}
-        <BottomCtaSection />
+        {/* 9. Trust, Safety and Control */}
+        <TrustControlSection />
 
-        {/* Section 9: Footer */}
-        <Footer />
-      </div>
+        {/* 10. Interactive Pricing Calculator */}
+        <EditorialCalculatorSection />
 
-      {/* Floating Support Chat Widget */}
+        {/* 11. FAQ */}
+        <EditorialFaqSection />
+
+        {/* 12. Final CTA */}
+        <EditorialFinalCta />
+      </main>
+
+      {/* 13. Footer */}
+      <EditorialFooter />
+
+      {/* Floating Support Chat Widget with Light Dismiss */}
       <div className="fixed bottom-6 right-6 z-40">
         <button
           type="button"
           onClick={() => setChatOpen(!chatOpen)}
-          aria-label="Chat support"
-          className="w-14 h-14 rounded-full bg-[#00947c] hover:bg-[#007f6a] text-white flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+          aria-label="Open support chat"
+          className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#0d1c15] hover:bg-[#162b21] text-[#00e599] flex items-center justify-center shadow-[0_8px_25px_rgba(13,28,21,0.25)] transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-[#233f33]"
         >
-          <MessageSquare className="w-6 h-6 fill-current" />
+          {chatOpen ? <X className="w-6 h-6 text-white" /> : <MessageSquare className="w-6 h-6" />}
         </button>
 
         {chatOpen && (
-          <div className="absolute bottom-16 right-0 w-80 bg-card rounded-2xl shadow-2xl border border-border p-4 mb-2 animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <div className="font-medium text-foreground text-sm flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
-                Explee Support
+          <div
+            ref={chatDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="chat-title"
+            className="absolute bottom-16 sm:bottom-18 right-0 w-[calc(100vw-3rem)] sm:w-88 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-[#0d1c15]/12 p-5 mb-2 animate-scaleUp text-[#0d1c15]"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[#0d1c15]/08">
+              <div id="chat-title" className="font-semibold text-sm flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#00e599] animate-pulse" />
+                Explee Support Concierge
               </div>
               <button
                 type="button"
                 onClick={() => setChatOpen(false)}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                aria-label="Close chat"
+                className="text-xs text-[#73827a] hover:text-[#0d1c15] p-1 rounded-md"
               >
-                Close
+                <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="py-4 text-xs text-muted-foreground leading-relaxed">
-              Hi there! 👋 How can we help you today? Leave us a message and we'll reply shortly.
+
+            <div className="py-4 text-xs text-[#4a5851] leading-relaxed">
+              Hi there! 👋 Have questions about deliverability, prospect data, or setting up your review queue? Ask our team here:
             </div>
-            <input
-              type="text"
-              placeholder="Write a message..."
-              className="w-full bg-chip rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none border border-border/40 focus:border-primary"
-            />
+
+            <form onSubmit={handleSendMessage} className="relative">
+              <input
+                type="text"
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="Write a message..."
+                className="w-full bg-[#fcfbf9] rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-[#0d1c15] placeholder-[#73827a] outline-none border border-[#0d1c15]/12 focus:border-[#0d9467] font-medium"
+              />
+              <button
+                type="submit"
+                aria-label="Send message"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-[#0d1c15] text-[#00e599] hover:bg-[#162b21] transition-colors cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
           </div>
         )}
       </div>
+
     </div>
   );
 }

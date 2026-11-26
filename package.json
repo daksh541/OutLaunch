@@ -13,12 +13,17 @@
     "check:edge": "npx --yes deno@2.9.6 task --config supabase/functions/deno.json check"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.117.2",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@supabase/supabase-js": "^2.119.2",
+    "@types/three": "^0.187.0",
     "clsx": "^2.1.1",
+    "gsap": "^3.15.1",
     "lucide-react": "^0.474.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",

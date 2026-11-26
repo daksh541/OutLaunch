@@ -6,6 +6,7 @@ const NavigationContext = createContext(null);
 
 export const PRODUCT_ROUTES = {
   OUTREACH: '/',
+  DASHBOARD: '/dashboard',
   DATABASE: '/b2b-database',
   API: '/public/api/docs',
   GM: '/gm-dataset',
@@ -21,6 +22,20 @@ export const PRODUCT_ROUTES = {
 export function resolveProductFromLocation() {
   const pathname = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase();
+
+  // 00. Dashboard (/dashboard, /app, #dashboard)
+  if (
+    (pathname.startsWith('/dashboard') ||
+     pathname === '/app' ||
+     pathname.startsWith('/app/') ||
+     hash.includes('dashboard')) &&
+    !pathname.includes('/app-auto-gtm')
+  ) {
+    return {
+      product: 'dashboard',
+      canonicalPath: PRODUCT_ROUTES.DASHBOARD,
+    };
+  }
 
   // 0a. Verification code (/register/verification-code, /verification-code, /verify-email)
   if (
