@@ -94,7 +94,7 @@ export default function EditorialHero() {
             Research prospects, personalise your outreach, and manage email and LinkedIn conversations from one simple workspace.
           </p>
 
-          {/* Input & Launch Form (Preserving Explee input flow with Flow streams) */}
+          {/* Input & Launch Form (Preserving OutLaunch input flow with Flow streams) */}
           <div id="hero-cta" className="max-w-[540px] mx-auto mb-6 relative">
             {/* Desktop Left/Right Flow Streams */}
             <div className="hidden lg:block absolute -left-48 top-1/2 -translate-y-1/2 w-44 h-16 pointer-events-none opacity-60">
@@ -343,7 +343,7 @@ export default function EditorialHero() {
                           Noticed you're actively scaling your outbound sales pod. Most growth leads we chat with spend 12+ hours every week manually digging through prospects' tech stacks just to draft one authentic opening line.
                         </p>
                         <p>
-                          We built Explee to automate that exact research layer — pulling recent company triggers and drafting tailored angles while leaving final approval in your team's hands.
+                          We built OutLaunch to automate that exact research layer — pulling recent company triggers and drafting tailored angles while leaving final approval in your team's hands.
                         </p>
                         <p className="text-[#00e599] font-medium">
                           Would you be open to a 5-minute look at how this works for SaaS founders?

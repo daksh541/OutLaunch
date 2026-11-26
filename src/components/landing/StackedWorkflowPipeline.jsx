@@ -306,7 +306,7 @@ export default function StackedWorkflowPipeline() {
                         Most outbound leaders we chat with say their new reps burn 15+ hours each week manually researching buyer tech stacks instead of having conversations with buyers.
                       </p>
                       <p>
-                        We built Explee to automate that pre-call company research and generate personalized opening lines while leaving your team with 1-click human approval before anything sends.
+                        We built OutLaunch to automate that pre-call company research and generate personalized opening lines while leaving your team with 1-click human approval before anything sends.
                       </p>
                       <p className="font-medium text-[#0d9467]">
                         Open to a quick 5-min look at our benchmark reply rates?
@@ -446,7 +446,7 @@ export default function StackedWorkflowPipeline() {
                         <span>MEETING SCHEDULED</span>
                       </div>
                       <div className="text-base font-semibold text-white">
-                        Demo: Explee &times; Nexar Systems
+                        Demo: OutLaunch &times; Nexar Systems
                       </div>
                       <div className="text-xs text-[#8ba096] mt-1 font-mono">
                         Thursday, 2:30 PM EST · Google Meet

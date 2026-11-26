@@ -17,7 +17,7 @@ const CASE_STUDIES = [
     companyUrl: 'https://camtalksolutions.io',
     linkedin: 'https://www.linkedin.com/in/camille-rose-58578232/',
     avatar: '/assets/camille-rose.jpg',
-    quote: '“We tried cold outreach with an agency and got zero responses. With Explee people actually reply, and what used to take hours takes me 15 minutes a day.”',
+    quote: '“We tried cold outreach with an agency and got zero responses. With OutLaunch people actually reply, and what used to take hours takes me 15 minutes a day.”',
     leads: '39',
     cost: '$6.67'
   },
@@ -27,7 +27,7 @@ const CASE_STUDIES = [
     companyUrl: 'https://risingsunsagency.com',
     linkedin: 'https://www.linkedin.com/in/alex-sunshine-731383189/',
     avatar: '/assets/alex-sunshine.jpg',
-    quote: '“We work with a lot of lead gen agencies and platforms, and Explee’s infrastructure is the best one we’ve seen. You input the campaign and it just runs.”',
+    quote: '“We work with a lot of lead gen agencies and platforms, and OutLaunch’s infrastructure is the best one we’ve seen. You input the campaign and it just runs.”',
     leads: '254',
     cost: '$6.52'
   },
@@ -37,7 +37,7 @@ const CASE_STUDIES = [
     companyUrl: 'https://thediplomaticinsight.com',
     linkedin: 'https://www.linkedin.com/in/farhatasif/',
     avatar: '/assets/farhat-asif.jpg',
-    quote: '“Explee has opened doors we would have spent months trying to knock on manually.”',
+    quote: '“OutLaunch has opened doors we would have spent months trying to knock on manually.”',
     leads: '238',
     cost: '$1.71'
   }

@@ -20,7 +20,7 @@ export default function PersonalisationSection() {
           </p>
         </div>
 
-        {/* Side-by-Side Comparison: Bad Generic vs Explee Deep Research */}
+        {/* Side-by-Side Comparison: Bad Generic vs OutLaunch Deep Research */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
           {/* Card 1: The Generic Way */}
@@ -64,13 +64,13 @@ export default function PersonalisationSection() {
             </div>
           </div>
 
-          {/* Card 2: Explee Bespoke Angle */}
+          {/* Card 2: OutLaunch Bespoke Angle */}
           <div className="p-6 sm:p-8 rounded-2xl md:rounded-3xl border border-[#0d9467]/30 bg-[#f7fbf8] shadow-[0_12px_40px_rgba(13,148,103,0.06)] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#0d9467]/20">
                 <div className="flex items-center gap-2 text-[#0d9467] font-mono text-xs font-bold uppercase tracking-wider">
                   <Check className="w-4 h-4" />
-                  <span>Explee Bespoke Research Angle</span>
+                  <span>OutLaunch Bespoke Research Angle</span>
                 </div>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#00e599]/20 text-[#0d9467] font-bold border border-[#00e599]/30">
                   18.4% Reply Rate
@@ -89,7 +89,7 @@ export default function PersonalisationSection() {
                   Most growth leaders we chat with find that new reps lose 15+ hours each week manually researching buyer tech stacks just to draft one tailored opening line.
                 </p>
                 <p>
-                  We built Explee to automate that exact research layer while leaving your team with 1-click human approval before anything sends.
+                  We built OutLaunch to automate that exact research layer while leaving your team with 1-click human approval before anything sends.
                 </p>
                 <p className="font-semibold text-[#0d9467]">
                   Would you be open to a 5-minute look at how this cuts SDR ramp time?

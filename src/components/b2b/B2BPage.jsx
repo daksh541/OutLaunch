@@ -71,7 +71,7 @@ export default function B2BPage() {
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="font-medium text-white text-sm flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-500" />
-                Explee Support
+                OutLaunch Support
               </div>
               <button
                 type="button"

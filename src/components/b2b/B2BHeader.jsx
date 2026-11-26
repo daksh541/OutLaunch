@@ -19,7 +19,7 @@ export default function B2BHeader() {
           }}
         >
           <img
-            alt="Explee"
+            alt="OutLaunch"
             className="h-7 w-auto"
             height="28"
             width="100"

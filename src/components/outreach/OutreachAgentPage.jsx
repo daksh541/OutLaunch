@@ -56,7 +56,7 @@ export default function OutreachAgentPage() {
         {/* 2. Hero Section */}
         <EditorialHero />
 
-        {/* 3. Animated Outreach Workflow (Explee Stacked Pipeline) */}
+        {/* 3. Animated Outreach Workflow (OutLaunch Stacked Pipeline) */}
         <StackedWorkflowPipeline />
 
         {/* 4. Product Explanation (Taskaway Human-in-the-Loop Review) */}
@@ -112,7 +112,7 @@ export default function OutreachAgentPage() {
             <div className="flex items-center justify-between pb-3 border-b border-[#0d1c15]/08">
               <div id="chat-title" className="font-semibold text-sm flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#00e599] animate-pulse" />
-                Explee Support Concierge
+                OutLaunch Support Concierge
               </div>
               <button
                 type="button"

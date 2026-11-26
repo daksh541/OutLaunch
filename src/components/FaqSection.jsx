@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "Whose mailboxes send the emails? Is my domain at risk?",
-    a: "Outreach goes out from our pool of pre-warmed inboxes, never from your own mailbox or domain, so your reputation is never on the line. Each prospect is paired with one inbox that carries the whole conversation, and replies land back inside Explee."
+    a: "Outreach goes out from our pool of pre-warmed inboxes, never from your own mailbox or domain, so your reputation is never on the line. Each prospect is paired with one inbox that carries the whole conversation, and replies land back inside OutLaunch."
   },
   {
     q: "How do you keep emails out of spam?",
@@ -24,19 +24,19 @@ const FAQS = [
   },
   {
     q: "What happens when a prospect replies?",
-    a: "Replies land in your Explee inbox, where the agent answers questions and moves interested prospects toward a call. Add your booking link and it routes meetings straight to your calendar. Calendly, Cal.com, HubSpot Meetings and most major schedulers are supported."
+    a: "Replies land in your OutLaunch inbox, where the agent answers questions and moves interested prospects toward a call. Add your booking link and it routes meetings straight to your calendar. Calendly, Cal.com, HubSpot Meetings and most major schedulers are supported."
   },
   {
     q: "Can I bring my own leads?",
-    a: "Yes. Upload a CSV of up to 30,000 contacts and Explee validates every address with the same engine it uses for the leads it finds itself, then writes and sends to them on the normal schedule. Or let the agent build the list for you across 105M+ companies."
+    a: "Yes. Upload a CSV of up to 30,000 contacts and OutLaunch validates every address with the same engine it uses for the leads it finds itself, then writes and sends to them on the normal schedule. Or let the agent build the list for you across 105M+ companies."
   },
   {
-    q: "Is Explee the same as AutoGTM?",
-    a: "Yes. AutoGTM was the name of our outreach product, and it is now simply Explee. Same agent, same pricing, same login. If you signed up when it was called AutoGTM, nothing changes for you: your campaigns, your credits and your account all carry over."
+    q: "Is OutLaunch the same as AutoGTM?",
+    a: "Yes. AutoGTM was the name of our outreach product, and it is now simply OutLaunch. Same agent, same pricing, same login. If you signed up when it was called AutoGTM, nothing changes for you: your campaigns, your credits and your account all carry over."
   },
   {
     q: "Is cold email even allowed?",
-    a: "Explee sends B2B outreach to business addresses with an honest sender identity, and opt-outs are honored immediately. You control the geography of every campaign, so markets with stricter rules can be excluded entirely."
+    a: "OutLaunch sends B2B outreach to business addresses with an honest sender identity, and opt-outs are honored immediately. You control the geography of every campaign, so markets with stricter rules can be excluded entirely."
   }
 ];
 

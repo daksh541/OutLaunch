@@ -160,7 +160,7 @@ export default function ExplorerPage() {
               >
                 <img
                   src="/static/logo/explee/logo-dark.svg"
-                  alt="Explee"
+                  alt="OutLaunch"
                   className="h-7 w-auto"
                 />
               </a>
@@ -433,7 +433,7 @@ export default function ExplorerPage() {
           >
             <img
               src="/static/logo/explee/logo-dark.svg"
-              alt="Explee"
+              alt="OutLaunch"
               className="h-4 w-auto"
             />
           </a>
@@ -514,7 +514,7 @@ export default function ExplorerPage() {
         >
           <img
             src="/static/logo/explee/logo-dark.svg"
-            alt="Explee"
+            alt="OutLaunch"
             className="h-4 w-auto"
           />
         </a>
@@ -854,7 +854,7 @@ export default function ExplorerPage() {
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-semibold text-sm">Explee Assistant</span>
+              <span className="font-semibold text-sm">OutLaunch Assistant</span>
             </div>
             <button
               type="button"

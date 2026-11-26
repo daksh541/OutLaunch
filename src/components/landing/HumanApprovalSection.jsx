@@ -13,7 +13,7 @@ const TASKS = [
     linkedin: 'linkedin.com/in/sarah-jenkins-growth',
     trigger: 'Series A announced + hiring 4 SDRs',
     subject: 'Quick question about Hyperflow\'s outbound pod scaling',
-    body: 'Hi Sarah, noticed you\'re actively onboarding 4 new SDRs following your Series A round. Most growth leaders we talk with find that new reps lose 15+ hours each week researching prospect tech stacks before writing a single tailored email.\n\nWe built Explee to automate that research and draft high-conviction messages while keeping your team in full control with 1-click human approval.\n\nOpen to a 5-minute look at how this cuts ramp time?',
+    body: 'Hi Sarah, noticed you\'re actively onboarding 4 new SDRs following your Series A round. Most growth leaders we talk with find that new reps lose 15+ hours each week researching prospect tech stacks before writing a single tailored email.\n\nWe built OutLaunch to automate that research and draft high-conviction messages while keeping your team in full control with 1-click human approval.\n\nOpen to a 5-minute look at how this cuts ramp time?',
   },
   {
     id: 'task-2',
@@ -26,7 +26,7 @@ const TASKS = [
     linkedin: 'linkedin.com/in/david-vance-revops',
     trigger: 'Recent migration from HubSpot to Salesforce CRM',
     subject: 'Idea on reducing duplicate research during Kinetix\'s CRM shift',
-    body: 'Hi David, saw Kinetix recently transitioned your sales infrastructure to Salesforce. Often during a migration, outbound data enrichment gets fragmented and reps spend more time verifying contacts than booking demos.\n\nExplee integrates directly with your CRM to verify deliverability and ensure only clean, research-backed prospects enter your reps\' queues.\n\nWould it make sense to share a quick benchmark report for cloud software?',
+    body: 'Hi David, saw Kinetix recently transitioned your sales infrastructure to Salesforce. Often during a migration, outbound data enrichment gets fragmented and reps spend more time verifying contacts than booking demos.\n\nOutLaunch integrates directly with your CRM to verify deliverability and ensure only clean, research-backed prospects enter your reps\' queues.\n\nWould it make sense to share a quick benchmark report for cloud software?',
   },
   {
     id: 'task-3',

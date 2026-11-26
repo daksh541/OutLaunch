@@ -299,7 +299,7 @@ export default function FinalTrialModal({
                     className="mt-0.5 rounded border-black/20 text-[#0d9467] focus:ring-0"
                   />
                   <label htmlFor="terms-check" className="text-[11px] text-gray-600 leading-snug">
-                    I allow Explee to email on behalf of <span className="font-mono text-gray-900">{companyDomain}</span> and accept the{' '}
+                    I allow OutLaunch to email on behalf of <span className="font-mono text-gray-900">{companyDomain}</span> and accept the{' '}
                     <span className="underline cursor-pointer hover:text-gray-900">Terms of use</span>.
                   </label>
                 </div>

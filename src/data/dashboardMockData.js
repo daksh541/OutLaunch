@@ -296,7 +296,7 @@ export const INITIAL_LINKEDIN_TASKS = [
     taskType: 'InMail / Direct Message',
     scheduledFor: 'Today, 4:15 PM',
     status: 'Pending',
-    draft: 'Hi David, saw Kinetix transitioned sales infrastructure to Salesforce CRM. Often during a migration, outbound enrichment gets fragmented. Explee integrates directly with your CRM to verify deliverability so reps only touch verified records. Would it make sense to share a quick benchmark report?',
+    draft: 'Hi David, saw Kinetix transitioned sales infrastructure to Salesforce CRM. Often during a migration, outbound enrichment gets fragmented. OutLaunch integrates directly with your CRM to verify deliverability so reps only touch verified records. Would it make sense to share a quick benchmark report?',
     characterCount: 291
   },
   {
@@ -342,9 +342,9 @@ export const INITIAL_CONVERSATIONS = [
     snippet: 'Hey team, this arrived right as we were evaluating outbound tooling for our new reps. Do you have 15 mins this Thursday?',
     history: [
       {
-        sender: 'You (Explee Workspace)',
+        sender: 'You (OutLaunch Workspace)',
         time: 'Yesterday, 9:15 AM',
-        text: 'Hi Marcus, noticed Nexar is expanding the sales team with 3 new SDRs this month. Most outbound leaders we chat with say new reps burn 15+ hours each week manually researching buyer tech stacks. We built Explee to automate that pre-call research while leaving your team with 1-click human approval before anything sends. Open to a quick 5-min look at our benchmark reply rates?'
+        text: 'Hi Marcus, noticed Nexar is expanding the sales team with 3 new SDRs this month. Most outbound leaders we chat with say new reps burn 15+ hours each week manually researching buyer tech stacks. We built OutLaunch to automate that pre-call research while leaving your team with 1-click human approval before anything sends. Open to a quick 5-min look at our benchmark reply rates?'
       },
       {
         sender: 'Marcus Reed',
@@ -368,7 +368,7 @@ export const INITIAL_CONVERSATIONS = [
     snippet: 'Accepted the invite for Friday 10 AM GMT. Excited to see the European B2B data coverage.',
     history: [
       {
-        sender: 'You (Explee Workspace)',
+        sender: 'You (OutLaunch Workspace)',
         time: 'Nov 24, 10:00 AM',
         text: 'Hi Amara, loved your keynote at SaaStr on lowering CAC through personalized sales touchpoints. We built an AI workspace specifically for sales leaders looking to scale personalized outreach in EMEA without hiring an army of SDRs. Thought this would resonate with Prism\'s European growth goals.'
       },
@@ -378,7 +378,7 @@ export const INITIAL_CONVERSATIONS = [
         text: 'Thanks for reaching out! We are currently looking for GDPR-compliant European company data for our outbound reps. Could you demo your EU data coverage?'
       },
       {
-        sender: 'You (Explee Workspace)',
+        sender: 'You (OutLaunch Workspace)',
         time: 'Nov 25, 4:00 PM',
         text: 'Absolutely Amara. Sent an invite for Friday 10:00 AM GMT to demo our European database and automated MX verification.'
       },
@@ -404,9 +404,9 @@ export const INITIAL_CONVERSATIONS = [
     snippet: 'We just locked our Q4 vendor budget, but please ping me again in mid-January.',
     history: [
       {
-        sender: 'You (Explee Workspace)',
+        sender: 'You (OutLaunch Workspace)',
         time: 'Nov 22, 11:30 AM',
-        text: 'Hi Chloe, saw Aetheria Health received FDA software clearance. Many clinical sales teams struggle with reaching medical directors without generic spam complaints. Explee helps target qualified hospital networks with verified physician emails.'
+        text: 'Hi Chloe, saw Aetheria Health received FDA software clearance. Many clinical sales teams struggle with reaching medical directors without generic spam complaints. OutLaunch helps target qualified hospital networks with verified physician emails.'
       },
       {
         sender: 'Chloe Tremblay',

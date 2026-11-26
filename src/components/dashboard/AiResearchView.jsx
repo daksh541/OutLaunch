@@ -44,7 +44,7 @@ const PRESET_COMPANIES = {
     angles: [
       {
         title: 'Post-Migration Data Hygiene',
-        hook: 'Saw Nexar recently transitioned sales infrastructure to Salesforce CRM. Often during a migration, outbound enrichment gets fragmented. Explee integrates directly with your CRM to verify deliverability so reps only touch verified records.',
+        hook: 'Saw Nexar recently transitioned sales infrastructure to Salesforce CRM. Often during a migration, outbound enrichment gets fragmented. OutLaunch integrates directly with your CRM to verify deliverability so reps only touch verified records.',
         target: 'Head of Outbound'
       }
     ]
@@ -92,7 +92,7 @@ export default function AiResearchView() {
     angles: [
       {
         title: 'Core Value Angle',
-        hook: `Noticed ${domainInput}'s outbound expansion this quarter. Most sales leaders lose 12+ hours weekly on manual prospect research. Explee automates that research with 1-click human review.`,
+        hook: `Noticed ${domainInput}'s outbound expansion this quarter. Most sales leaders lose 12+ hours weekly on manual prospect research. OutLaunch automates that research with 1-click human review.`,
         target: 'Head of Outbound Sales'
       }
     ]

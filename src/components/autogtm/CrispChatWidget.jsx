@@ -10,7 +10,7 @@ export default function CrispChatWidget() {
           <div className="flex items-center justify-between pb-2 border-b border-black/[0.06]">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-[#10b981]" />
-              <span className="font-semibold text-xs text-gray-900">Explee Support</span>
+              <span className="font-semibold text-xs text-gray-900">OutLaunch Support</span>
             </div>
             <button
               type="button"

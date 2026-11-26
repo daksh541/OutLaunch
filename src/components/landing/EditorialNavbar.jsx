@@ -58,7 +58,7 @@ export default function EditorialNavbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-lg tracking-tight text-[#0d1c15] leading-none">
-                Explee
+                OutLaunch
               </span>
               <span className="font-mono text-[9px] uppercase tracking-wider text-[#4a5851] leading-tight font-medium mt-0.5">
                 Outreach Workspace
@@ -205,7 +205,7 @@ export default function EditorialNavbar() {
 
           <div className="pt-4 border-t border-[#0d1c15]/10 flex flex-col gap-2.5">
             <div className="text-xs font-mono uppercase tracking-wider text-[#73827a] px-3 pb-1">
-              Explee Products
+              OutLaunch Products
             </div>
             <button
               onClick={() => {

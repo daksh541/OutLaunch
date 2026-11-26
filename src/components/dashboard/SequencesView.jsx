@@ -16,7 +16,7 @@ export default function SequencesView({ sequences }) {
       description: st.description,
       subject: st.subject || (st.channel === 'Email' ? 'Quick question regarding {{company}} outreach pipeline' : ''),
       templateBody: st.templateBody || (st.channel === 'Email' 
-        ? `Hi {{firstName}},\n\nSaw {{company}} recently expanded your team. Are you currently exploring automated outbound across cold email and LinkedIn?\n\nExplee helps B2B teams source verified decision-makers and review AI drafts before sending.\n\nBest,\nYour Name`
+        ? `Hi {{firstName}},\n\nSaw {{company}} recently expanded your team. Are you currently exploring automated outbound across cold email and LinkedIn?\n\nOutLaunch helps B2B teams source verified decision-makers and review AI drafts before sending.\n\nBest,\nYour Name`
         : `Hi {{firstName}}, noticed your work leading growth at {{company}}. Would love to connect here on LinkedIn!`)
     });
   };

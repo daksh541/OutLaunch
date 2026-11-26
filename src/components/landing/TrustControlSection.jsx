@@ -39,7 +39,7 @@ export default function TrustControlSection() {
             Built with rigorous safety and deliverability controls
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
-            Your brand reputation is everything. Explee combines automated infrastructure isolation with human approval to guarantee safe, sustainable outreach.
+            Your brand reputation is everything. OutLaunch combines automated infrastructure isolation with human approval to guarantee safe, sustainable outreach.
           </p>
         </div>
 

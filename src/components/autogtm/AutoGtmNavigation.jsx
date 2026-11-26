@@ -32,11 +32,11 @@ export default function AutoGtmNavigation(props) {
   return (
     <>
       <header className="flex h-14 w-full shrink-0 items-center justify-between border-b border-black/[0.08] bg-white px-4 md:hidden">
-        <a href={PRODUCT_ROUTES.AUTO_GTM} aria-label="Explee home" onClick={(event) => {
+        <a href={PRODUCT_ROUTES.AUTO_GTM} aria-label="OutLaunch home" onClick={(event) => {
           event.preventDefault();
           restart();
         }}>
-          <img src="/assets/logo-light.svg" alt="Explee" width="100" height="28" className="h-7 w-auto" />
+          <img src="/assets/logo-light.svg" alt="OutLaunch" width="100" height="28" className="h-7 w-auto" />
         </a>
         <button
           type="button"

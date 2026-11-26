@@ -126,7 +126,7 @@ export default function Footer() {
               </li>
               <li>
                 <a className="hover:text-foreground transition-colors" href="#">
-                  AutoGTM is now Explee
+                  AutoGTM is now OutLaunch
                 </a>
               </li>
               <li>
@@ -142,7 +142,7 @@ export default function Footer() {
         <div className="pt-6 border-t border-border/40 text-xs md:text-sm">
           <div className="flex flex-col md:flex-row justify-between items-center gap-2">
             <p className="mb-2 md:mb-0">
-              © 2026 Explee LTD, made with 🦎 in London
+              © 2026 OutLaunch LTD, made with 🦎 in London
             </p>
             <div className="flex items-center flex-wrap justify-center">
               <a className="hover:underline hover:text-foreground" href="#">

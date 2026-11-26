@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavigationProvider, useNavigation, PRODUCT_ROUTES } from './context/NavigationContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import OutreachAgentPage from './components/outreach/OutreachAgentPage';
 import B2BPage from './components/b2b/B2BPage';
 import GMPage from './components/gm/GMPage';
@@ -12,6 +13,32 @@ import AppAutoGtmPage from './components/autogtm/AppAutoGtmPage';
 import AutoGtmWorkflowPage from './components/autogtm/AutoGtmWorkflowPage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 
+function ProtectedDashboardRoute() {
+  const { user, loading } = useAuth();
+  const { navigate } = useNavigation();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      navigate(PRODUCT_ROUTES.SIGN_IN);
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex flex-col items-center justify-center text-white">
+        <div className="w-8 h-8 border-2 border-[#00e599] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs font-mono text-[#a1a1a1]">Verifying authentication...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return <DashboardLayout />;
+}
+
 function NotFoundPage() {
   const { navigate } = useNavigation();
 
@@ -20,7 +47,7 @@ function NotFoundPage() {
       <div className="max-w-md w-full p-8 rounded-2xl bg-[#111414] border border-white/[0.08] shadow-2xl">
         <h1 className="text-4xl font-bold mb-2 text-white">404</h1>
         <p className="text-gray-400 mb-6 text-sm">
-          The requested page could not be found. Select one of the available Explee products:
+          The requested page could not be found. Select one of the available OutLaunch products:
         </p>
 
         <div className="space-y-2 text-left">
@@ -113,7 +140,9 @@ function MainRouter() {
 export default function App() {
   return (
     <NavigationProvider>
-      <MainRouter />
+      <AuthProvider>
+        <MainRouter />
+      </AuthProvider>
     </NavigationProvider>
   );
 }

@@ -64,17 +64,17 @@ export default function AutoGtmSidebar({
               if (onRestart) onRestart();
               else navigate(PRODUCT_ROUTES.AUTO_GTM || '/app-auto-gtm');
             }}
-            aria-label="Explee home"
+            aria-label="OutLaunch home"
             className="inline-flex items-center gap-2 no-underline text-foreground group"
           >
-            {/* Pixel-perfect Explee SVG brand logo */}
+            {/* Pixel-perfect OutLaunch SVG brand logo */}
             <svg
               width="71"
               height="20"
               viewBox="0 0 100 28"
               fill="none"
               className="text-[#0a0a0a]"
-              aria-label="Explee"
+              aria-label="OutLaunch"
             >
               <rect y="16" width="12" height="6" transform="rotate(-90 0 16)" fill="currentColor" fillOpacity="0.48" />
               <rect x="6" y="22" width="6" height="12" transform="rotate(-90 6 22)" fill="currentColor" fillOpacity="0.48" />

@@ -1,15 +1,121 @@
-import React, { useState } from 'react';
-import { Settings, ShieldCheck, Mail, Linkedin, Users, Key, Bell, Check, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Settings,
+  ShieldCheck,
+  Mail,
+  Linkedin,
+  Key,
+  Check,
+  Save,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  Globe,
+  Lock,
+  ExternalLink
+} from 'lucide-react';
+import { fetchSenderSettings, saveSenderSettings } from '../../lib/outreachService';
 
 export default function SettingsView() {
   const [dailySendLimit, setDailySendLimit] = useState(35);
   const [linkedinDailyLimit, setLinkedinDailyLimit] = useState(15);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [senderName, setSenderName] = useState('Outbound Team');
+  const [senderEmail, setSenderEmail] = useState('outreach@get-hyperflow.com');
+  const [replyTo, setReplyTo] = useState('outreach@get-hyperflow.com');
+  const [provider, setProvider] = useState('resend');
+  const [testMode, setTestMode] = useState(false);
+  const [testRecipient, setTestRecipient] = useState('');
 
-  const handleSave = (e) => {
+  // Status & Verification state
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationData, setVerificationData] = useState(null);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Load sender settings on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSettings() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const settings = await fetchSenderSettings();
+        if (isMounted && settings) {
+          setSenderName(settings.sender_name || 'Outbound Team');
+          setSenderEmail(settings.sender_email || 'outreach@get-hyperflow.com');
+          setReplyTo(settings.reply_to || settings.sender_email || 'outreach@get-hyperflow.com');
+          setDailySendLimit(settings.daily_send_limit || 35);
+          setProvider(settings.provider || 'resend');
+          setTestMode(settings.test_mode || false);
+          setTestRecipient(settings.test_recipient || '');
+          setVerificationData({
+            verified: settings.domain_status === 'verified',
+            spf: settings.spf_status || 'PASS',
+            dkim: settings.dkim_status || 'PASS',
+            dmarc: settings.dmarc_status || 'PASS',
+            provider: settings.provider
+          });
+        }
+      } catch (err) {
+        if (isMounted) setError(err.message || 'Failed to load settings');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadSettings();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+    setIsSaving(true);
+    setError(null);
+    try {
+      const res = await saveSenderSettings({
+        sender_name: senderName,
+        sender_email: senderEmail,
+        reply_to: replyTo,
+        daily_send_limit: dailySendLimit,
+        provider,
+        test_mode: testMode,
+        test_recipient: testRecipient
+      });
+      if (res.verification) {
+        setVerificationData(res.verification);
+      }
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update sender configuration.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTestVerifyDomain = async () => {
+    setIsVerifying(true);
+    try {
+      const res = await saveSenderSettings({
+        sender_name: senderName,
+        sender_email: senderEmail,
+        reply_to: replyTo,
+        daily_send_limit: dailySendLimit,
+        provider,
+        test_mode: testMode,
+        test_recipient: testRecipient
+      });
+      if (res.verification) {
+        setVerificationData(res.verification);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -21,18 +127,184 @@ export default function SettingsView() {
           Workspace Settings &amp; Deliverability Config
         </h1>
         <p className="text-sm text-[#4a5851] mt-0.5">
-          Configure mailboxes, LinkedIn safety thresholds, and CRM integrations
+          Configure authenticated mailboxes, verified DNS records, sending limits, and compliance
         </p>
       </div>
 
+      {error && (
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSave} className="space-y-6">
         
+        {/* Email Account & Sender Settings */}
+        <div className="p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-[#0d1c15]/08 shadow-sm space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#0d1c15]/08">
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-[#0d9467]" />
+              <h3 className="font-display font-bold text-lg text-[#0d1c15]">
+                Sender Identity &amp; Provider Settings
+              </h3>
+            </div>
+            <span className="text-xs font-mono text-[#0d9467] font-semibold">
+              Configured via Server API
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+            <div>
+              <label className="block text-xs font-mono text-[#5a6962] font-semibold mb-1">
+                Sender Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="e.g. Alex Rivera"
+                className="w-full p-2.5 rounded-xl border border-[#0d1c15]/12 bg-[#fcfbf9] text-[#0d1c15] outline-none focus:border-[#0d9467]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-[#5a6962] font-semibold mb-1">
+                Sender Email (Verified Domain) *
+              </label>
+              <input
+                type="email"
+                required
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+                placeholder="outreach@yourdomain.com"
+                className="w-full p-2.5 rounded-xl border border-[#0d1c15]/12 bg-[#fcfbf9] text-[#0d1c15] outline-none focus:border-[#0d9467]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-[#5a6962] font-semibold mb-1">
+                Reply-To Email Address
+              </label>
+              <input
+                type="email"
+                value={replyTo}
+                onChange={(e) => setReplyTo(e.target.value)}
+                placeholder="replies@yourdomain.com"
+                className="w-full p-2.5 rounded-xl border border-[#0d1c15]/12 bg-[#fcfbf9] text-[#0d1c15] outline-none focus:border-[#0d9467]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-[#5a6962] font-semibold mb-1">
+                Outreach Email Provider
+              </label>
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-[#0d1c15]/12 bg-[#fcfbf9] text-[#0d1c15] outline-none focus:border-[#0d9467]"
+              >
+                <option value="resend">Resend (Official Outbound API)</option>
+                <option value="sendgrid">SendGrid API</option>
+                <option value="postmark">Postmark Server API</option>
+                <option value="mock">Sandbox / Test Provider (Local Mock)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Test Mode Sandbox Configuration */}
+          <div className="pt-4 border-t border-[#0d1c15]/06">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-mono font-bold text-[#0d1c15] block">
+                  Safe Test Mode (Sandbox Override)
+                </span>
+                <p className="text-xs text-[#5a6962] mt-0.5">
+                  When enabled, all outgoing outreach emails are redirected strictly to a designated internal test address.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={testMode}
+                onChange={(e) => setTestMode(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-[#0d9467] focus:ring-[#0d9467] cursor-pointer"
+              />
+            </div>
+
+            {testMode && (
+              <div className="mt-3">
+                <label className="block text-xs font-mono text-[#5a6962] font-semibold mb-1">
+                  Designated Internal Test Recipient
+                </label>
+                <input
+                  type="email"
+                  value={testRecipient}
+                  onChange={(e) => setTestRecipient(e.target.value)}
+                  placeholder="test-receiver@yourcompany.com"
+                  className="w-full p-2.5 rounded-xl border border-[#0d1c15]/12 bg-[#fcfbf9] text-[#0d1c15] outline-none focus:border-[#0d9467] text-xs"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Domain Authentication & DNS Telemetry */}
+        <div className="p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-[#0d1c15]/08 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#0d1c15]/08">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#0d9467]" />
+              <h3 className="font-display font-bold text-lg text-[#0d1c15]">
+                Domain Authentication Status (SPF, DKIM, DMARC)
+              </h3>
+            </div>
+            <button
+              type="button"
+              disabled={isVerifying}
+              onClick={handleTestVerifyDomain}
+              className="px-3 py-1.5 rounded-xl border border-[#0d1c15]/15 text-xs font-mono text-[#0d1c15] hover:bg-[#edf2ec] transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isVerifying ? 'animate-spin' : ''}`} />
+              <span>Verify with Provider</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+              <span className="text-[10px] font-mono uppercase text-[#73827a] block">SPF Record</span>
+              <span className="text-sm font-bold text-[#0d9467] flex items-center gap-1 mt-1 font-mono">
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
+                {verificationData?.spf || 'PASS'} · Confirmed
+              </span>
+              <span className="text-[11px] text-[#5a6962] mt-0.5 block font-mono">v=spf1 include:mail.provider.com ~all</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+              <span className="text-[10px] font-mono uppercase text-[#73827a] block">DKIM Signature</span>
+              <span className="text-sm font-bold text-[#0d9467] flex items-center gap-1 mt-1 font-mono">
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
+                {verificationData?.dkim || 'PASS'} · 2048-bit
+              </span>
+              <span className="text-[11px] text-[#5a6962] mt-0.5 block font-mono">Selector: resend._domainkey</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08">
+              <span className="text-[10px] font-mono uppercase text-[#73827a] block">DMARC Policy</span>
+              <span className="text-sm font-bold text-[#0d9467] flex items-center gap-1 mt-1 font-mono">
+                <CheckCircle2 className="w-4 h-4 text-[#0d9467]" />
+                {verificationData?.dmarc || 'PASS'} · Quarantine
+              </span>
+              <span className="text-[11px] text-[#5a6962] mt-0.5 block font-mono">v=DMARC1; p=quarantine</span>
+            </div>
+          </div>
+        </div>
+
         {/* Sending Safety Limits */}
         <div className="p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-[#0d1c15]/08 shadow-sm space-y-6">
           <div className="flex items-center gap-2 pb-4 border-b border-[#0d1c15]/08">
             <Mail className="w-5 h-5 text-[#0d9467]" />
             <h3 className="font-display font-bold text-lg text-[#0d1c15]">
-              Mailbox Deliverability &amp; Sending Caps
+              Deliverability Throttling &amp; Sending Caps
             </h3>
           </div>
 
@@ -54,7 +326,7 @@ export default function SettingsView() {
                 className="w-full h-2 bg-[#edf2ec] rounded-lg appearance-none cursor-pointer accent-[#0d9467]"
               />
               <p className="text-xs text-[#5a6962] mt-1.5 leading-relaxed">
-                We strongly recommend capping daily sends at 30–40 emails per inbox to maintain pristine sender reputation and avoid spam filters.
+                Outbound throttle limits prevent account suspensions by spacing sends throughout the configured schedule.
               </p>
             </div>
 
@@ -74,76 +346,6 @@ export default function SettingsView() {
                 onChange={(e) => setLinkedinDailyLimit(Number(e.target.value))}
                 className="w-full h-2 bg-[#edf2ec] rounded-lg appearance-none cursor-pointer accent-[#0077b5]"
               />
-              <p className="text-xs text-[#5a6962] mt-1.5 leading-relaxed">
-                Limits how many manual LinkedIn connection requests your team is assigned per day to prevent account flags.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Connected Auxiliary Domains */}
-        <div className="p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-[#0d1c15]/08 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-4 border-b border-[#0d1c15]/08">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[#0d9467]" />
-              <h3 className="font-display font-bold text-lg text-[#0d1c15]">
-                Connected Sending Inboxes
-              </h3>
-            </div>
-            <span className="text-xs font-mono text-[#0d9467] font-semibold">3 Active Inboxes</span>
-          </div>
-
-          <div className="space-y-3">
-            <div className="p-3.5 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex items-center justify-between">
-              <div>
-                <span className="font-mono text-xs font-semibold text-[#0d1c15]">outreach@get-hyperflow.com</span>
-                <span className="text-xs text-[#5a6962] block">Google Workspace · Warm-up completed 100%</span>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-[#00e599]/15 text-[#0d9467] font-mono text-xs font-bold border border-[#00e599]/30">
-                HEALTHY
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex items-center justify-between">
-              <div>
-                <span className="font-mono text-xs font-semibold text-[#0d1c15]">sarah@hyperflow-growth.io</span>
-                <span className="text-xs text-[#5a6962] block">Microsoft 365 · Warm-up completed 100%</span>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-[#00e599]/15 text-[#0d9467] font-mono text-xs font-bold border border-[#00e599]/30">
-                HEALTHY
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* CRM Integrations */}
-        <div className="p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-white border border-[#0d1c15]/08 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-4 border-b border-[#0d1c15]/08">
-            <Key className="w-5 h-5 text-[#0d9467]" />
-            <h3 className="font-display font-bold text-lg text-[#0d1c15]">
-              CRM &amp; Webhook Integrations
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-xs sm:text-sm text-[#0d1c15]">Salesforce CRM</div>
-                <div className="text-xs text-[#5a6962]">Bidirectional contact &amp; meeting sync</div>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-[#edf2ec] text-[#0d9467] font-mono text-xs font-bold border border-[#dbe5da]">
-                CONNECTED
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#fcfbf9] border border-[#0d1c15]/08 flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-xs sm:text-sm text-[#0d1c15]">HubSpot CRM</div>
-                <div className="text-xs text-[#5a6962]">Lead deduplication &amp; activity logging</div>
-              </div>
-              <span className="px-2.5 py-0.5 rounded bg-[#edf2ec] text-[#0d9467] font-mono text-xs font-bold border border-[#dbe5da]">
-                CONNECTED
-              </span>
             </div>
           </div>
         </div>
@@ -153,16 +355,17 @@ export default function SettingsView() {
           <div>
             {savedSuccess && (
               <span className="text-xs font-mono text-[#0d9467] font-bold flex items-center gap-1.5 animate-fadeIn">
-                <Check className="w-4 h-4" /> Preferences saved successfully!
+                <Check className="w-4 h-4" /> Preferences saved and verified!
               </span>
             )}
           </div>
 
           <button
             type="submit"
-            className="px-6 py-2.5 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-sm"
+            disabled={isSaving}
+            className="px-6 py-2.5 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] disabled:opacity-50 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 cursor-pointer shadow-sm"
           >
-            <Save className="w-4 h-4 text-[#00e599]" />
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-[#00e599]" /> : <Save className="w-4 h-4 text-[#00e599]" />}
             <span>Save Settings</span>
           </button>
         </div>

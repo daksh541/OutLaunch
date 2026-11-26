@@ -66,7 +66,7 @@ export default function PipelineSection() {
                             </div>
                           </div>
                           <span className="text-sm md:text-base font-medium text-muted-foreground">
-                            Explee agent is studying competitors…
+                            OutLaunch agent is studying competitors…
                           </span>
                         </div>
 

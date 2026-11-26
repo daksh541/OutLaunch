@@ -36,7 +36,7 @@ export default function AppAutoGtmPage() {
         <div className="my-auto flex w-full max-w-[560px] shrink-0 flex-col py-6 sm:px-4 sm:py-12 animate-card-enter">
           {/* Tag */}
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-            Explee
+            OutLaunch
           </p>
 
           {/* Heading */}

@@ -11,7 +11,7 @@ export default function AgentActivityFeed({
       {/* Header status */}
       <div className="flex items-center gap-1.5 text-gray-500 font-mono text-[11px]">
         <span className="size-2 rounded-full bg-[#10b981] animate-pulse-dot shrink-0" />
-        <span className="truncate">Explee agent is working on step {step} of {totalSteps}</span>
+        <span className="truncate">OutLaunch agent is working on step {step} of {totalSteps}</span>
       </div>
 
       {/* Terminal log lines */}

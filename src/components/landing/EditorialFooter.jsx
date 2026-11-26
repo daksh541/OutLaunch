@@ -24,7 +24,7 @@ export default function EditorialFooter() {
                 </svg>
               </div>
               <span className="font-display font-bold text-xl tracking-tight text-white">
-                Explee
+                OutLaunch
               </span>
             </div>
 
@@ -161,7 +161,7 @@ export default function EditorialFooter() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5a6962] font-mono">
           <div>
-            &copy; {new Date().getFullYear()} Explee Inc. Find the right people. Start better conversations.
+            &copy; {new Date().getFullYear()} OutLaunch Inc. Find the right people. Start better conversations.
           </div>
           <div className="flex items-center gap-6">
             <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>

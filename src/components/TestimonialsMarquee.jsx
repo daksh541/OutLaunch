@@ -9,7 +9,7 @@ const ROW_1 = [
     linkedin: "https://www.linkedin.com/in/joe-purcell-17540988"
   },
   {
-    quote: "Multi-academy trusts have been the hardest to get a foot in the door with. With Explee they're the ones I hear back from most, and a few trusts are now coming on board.",
+    quote: "Multi-academy trusts have been the hardest to get a foot in the door with. With OutLaunch they're the ones I hear back from most, and a few trusts are now coming on board.",
     name: "Stuart Armley-Jones",
     company: "Student Radar",
     avatar: "/assets/stuart-armley-jones.png",
@@ -54,7 +54,7 @@ const ROW_2 = [
     linkedin: "https://www.linkedin.com/in/yassine-rajallah/"
   },
   {
-    quote: "Explee has opened doors we would have spent months trying to knock on manually.",
+    quote: "OutLaunch has opened doors we would have spent months trying to knock on manually.",
     name: "Farhat Asif",
     company: "The Diplomatic Insight",
     avatar: "/assets/farhat-a.png",
@@ -64,14 +64,14 @@ const ROW_2 = [
 
 const ROW_3 = [
   {
-    quote: "We tried cold outreach with an agency and got zero responses. With Explee people actually reply, and what used to take hours takes me 15 minutes a day.",
+    quote: "We tried cold outreach with an agency and got zero responses. With OutLaunch people actually reply, and what used to take hours takes me 15 minutes a day.",
     name: "Camille Rose",
     company: "CamTalk Solutions",
     avatar: "/assets/camille-rose.jpg",
     linkedin: "https://www.linkedin.com/in/camille-rose-58578232/"
   },
   {
-    quote: "A CEO told me: I'm glad you researched my company. The first paragraph Explee wrote was a hit.",
+    quote: "A CEO told me: I'm glad you researched my company. The first paragraph OutLaunch wrote was a hit.",
     name: "Raju Bhupatiraju",
     company: "PODS Asia",
     avatar: "/assets/raju-bhupatiraju.jpg",

@@ -79,7 +79,7 @@ export default function IntroductionContent() {
             <div className="grid grid-cols-[492px_492px] gap-[48px] items-center mb-[14px]">
               <div>
                 <h1 className="text-[24px] font-semibold text-[#1b1b1b] leading-[34.8px] tracking-tight m-0">
-                  Explee Public API
+                  OutLaunch Public API
                 </h1>
               </div>
 
@@ -89,7 +89,7 @@ export default function IntroductionContent() {
                   className="text-[#1b1b1b] flex items-center rounded-lg px-2 py-1 text-[13px] hover:bg-[#f8f8f8] no-underline transition-colors"
                 >
                   <MailIcon className="size-3 text-current mr-1.5" />
-                  <span>Explee Support</span>
+                  <span>OutLaunch Support</span>
                 </a>
                 <a
                   href="https://explee.com"

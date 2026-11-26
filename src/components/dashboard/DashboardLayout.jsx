@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -18,17 +18,32 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  Check
+  Check,
+  LogOut,
+  Loader2,
+  AlertCircle,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   INITIAL_METRICS,
-  INITIAL_PROSPECTS,
-  INITIAL_CAMPAIGNS,
   INITIAL_LINKEDIN_TASKS,
   INITIAL_CONVERSATIONS,
   INITIAL_SEQUENCES
 } from '../../data/dashboardMockData';
+import {
+  fetchLeads,
+  createLead,
+  updateLead,
+  deleteLead,
+  bulkCreateLeads,
+  fetchCampaigns,
+  createCampaign,
+  updateCampaign,
+  deleteCampaign
+} from '../../lib/outreachService';
 
 import OverviewView from './OverviewView';
 import LeadsView from './LeadsView';
@@ -38,40 +53,97 @@ import LinkedInTasksView from './LinkedInTasksView';
 import InboxView from './InboxView';
 import AiResearchView from './AiResearchView';
 import AnalyticsView from './AnalyticsView';
+import CampaignAnalyticsView from './CampaignAnalyticsView';
 import SettingsView from './SettingsView';
+import FindLeadsView from './FindLeadsView';
+import AiPersonalizationModal from './AiPersonalizationModal';
 
 export default function DashboardLayout() {
   const { navigate } = useNavigation();
-  const [currentTab, setCurrentTab] = useState('overview'); // overview, leads, campaigns, sequences, tasks, inbox, research, analytics, settings
+  const { user, profile, signOut } = useAuth();
+
+  const [currentTab, setCurrentTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  // Workspace Switcher State
+  // Data Loading & Error States
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState(null);
+
+  // Reactive State Store
+  const [prospects, setProspects] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
+  const [linkedinTasks, setLinkedinTasks] = useState(INITIAL_LINKEDIN_TASKS);
+  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
+  const [sequences] = useState(INITIAL_SEQUENCES);
+  const [activeResearchLead, setActiveResearchLead] = useState(null);
+
+  // Workspaces
+  const companyName = profile?.company_name || 'Acme Outbound';
+  const userDisplayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'Admin User');
+  const userInitials = userDisplayName.substring(0, 2).toUpperCase();
+
   const [workspaces, setWorkspaces] = useState([
-    { id: 'ws-1', name: 'Acme Outbound', plan: 'Growth Plan', tag: 'Primary', initial: 'A' },
-    { id: 'ws-2', name: 'Acme EMEA Expansion', plan: 'Scale Plan', tag: 'Secondary', initial: 'E' },
-    { id: 'ws-3', name: 'Acme Founder Pilots', plan: 'Starter Plan', tag: 'Sandbox', initial: 'F' }
+    { id: 'ws-1', name: companyName, plan: 'Growth Plan', tag: 'Primary', initial: companyName.charAt(0).toUpperCase() },
+    { id: 'ws-2', name: `${companyName} EMEA`, plan: 'Scale Plan', tag: 'Secondary', initial: 'E' },
+    { id: 'ws-3', name: `${companyName} Pilots`, plan: 'Starter Plan', tag: 'Sandbox', initial: 'P' }
   ]);
   const [selectedWorkspace, setSelectedWorkspace] = useState({
     id: 'ws-1',
-    name: 'Acme Outbound',
+    name: companyName,
     plan: 'Growth Plan',
     tag: 'Primary',
-    initial: 'A'
+    initial: companyName.charAt(0).toUpperCase()
   });
   const [newWorkspaceModal, setNewWorkspaceModal] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
-  // Reactive State Store
-  const [metrics, setMetrics] = useState(INITIAL_METRICS);
-  const [prospects, setProspects] = useState(INITIAL_PROSPECTS);
-  const [campaigns, setCampaigns] = useState(INITIAL_CAMPAIGNS);
-  const [linkedinTasks, setLinkedinTasks] = useState(INITIAL_LINKEDIN_TASKS);
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
-  const [sequences] = useState(INITIAL_SEQUENCES);
+  // Fetch real data from Supabase
+  const loadDashboardData = useCallback(async () => {
+    if (!user?.id) return;
+    setIsLoadingData(true);
+    setDataError(null);
+    try {
+      const [leadsData, campaignsData] = await Promise.all([
+        fetchLeads(user.id),
+        fetchCampaigns(user.id)
+      ]);
+      setProspects(leadsData);
+      setCampaigns(campaignsData);
+    } catch (err) {
+      console.error('Error loading Supabase dashboard data:', err);
+      setDataError('Could not load data from Supabase. Please ensure migrations are applied.');
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Compute live overview metrics
+  const totalProspectsCount = prospects.length;
+  const activeCampaignsCount = campaigns.filter((c) => c.status === 'Active').length;
+  const repliedProspectsCount = prospects.filter((p) => p.status === 'Replied').length;
+  const bookedProspectsCount = prospects.filter((p) => p.status === 'Meeting Booked').length;
+  const replyRate = totalProspectsCount > 0 ? ((repliedProspectsCount / totalProspectsCount) * 100).toFixed(1) : '0.0';
+
+  const metrics = {
+    totalProspects: totalProspectsCount,
+    activeCampaigns: activeCampaignsCount,
+    emailsSent: campaigns.reduce((acc, c) => acc + (c.emailsSent || 0), 0) || 0,
+    replyRate: parseFloat(replyRate),
+    positiveReplies: repliedProspectsCount,
+    meetingsBooked: bookedProspectsCount,
+    inboxPlacement: 99.4,
+    spamScore: 0.1,
+    chartData: INITIAL_METRICS.chartData
+  };
 
   const [notifications, setNotifications] = useState([
     {
@@ -97,51 +169,95 @@ export default function DashboardLayout() {
     }
   ]);
 
-  // Handlers
-  const handleAddLead = (newLead) => {
-    setProspects((prev) => [newLead, ...prev]);
-    setMetrics((prev) => ({
-      ...prev,
-      totalProspects: prev.totalProspects + 1
-    }));
+  // Lead handlers
+  const handleAddLead = async (newLeadData) => {
+    try {
+      const created = await createLead(user.id, newLeadData);
+      setProspects((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error('Failed to add lead:', err);
+      alert('Failed to save lead to Supabase: ' + err.message);
+    }
   };
 
-  const handleImportLeads = (newLeads) => {
-    setProspects((prev) => [...newLeads, ...prev]);
-    setMetrics((prev) => ({
-      ...prev,
-      totalProspects: prev.totalProspects + newLeads.length
-    }));
+  const handleUpdateLead = async (leadId, updates) => {
+    try {
+      const updated = await updateLead(leadId, updates);
+      setProspects((prev) => prev.map((l) => (l.id === leadId ? updated : l)));
+    } catch (err) {
+      console.error('Failed to update lead:', err);
+      alert('Failed to update lead in Supabase: ' + err.message);
+    }
   };
 
-  const handleAddCampaign = (newCamp) => {
-    setCampaigns((prev) => [newCamp, ...prev]);
-    setMetrics((prev) => ({
-      ...prev,
-      activeCampaigns: prev.activeCampaigns + 1
-    }));
+  const handleDeleteLead = async (leadId) => {
+    try {
+      await deleteLead(leadId);
+      setProspects((prev) => prev.filter((l) => l.id !== leadId));
+    } catch (err) {
+      console.error('Failed to delete lead:', err);
+      alert('Failed to delete lead from Supabase: ' + err.message);
+    }
   };
 
-  const handleToggleCampaignStatus = (campId) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id === campId) {
-          const nextStatus = c.status === 'Active' ? 'Paused' : 'Active';
-          return { ...c, status: nextStatus };
-        }
-        return c;
-      })
-    );
+  const handleImportLeads = async (importedList) => {
+    try {
+      const createdList = await bulkCreateLeads(user.id, importedList);
+      setProspects((prev) => [...createdList, ...prev]);
+    } catch (err) {
+      console.error('Failed to import leads:', err);
+      alert('Failed to import leads to Supabase: ' + err.message);
+    }
+  };
+
+  // Campaign handlers
+  const handleAddCampaign = async (newCampData) => {
+    try {
+      const created = await createCampaign(user.id, newCampData);
+      setCampaigns((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error('Failed to create campaign:', err);
+      alert('Failed to create campaign in Supabase: ' + err.message);
+    }
+  };
+
+  const handleUpdateCampaign = async (campaignId, updates) => {
+    try {
+      const updated = await updateCampaign(campaignId, updates);
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, ...updated } : c)));
+    } catch (err) {
+      console.error('Failed to update campaign:', err);
+      alert('Failed to update campaign in Supabase: ' + err.message);
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId) => {
+    try {
+      await deleteCampaign(campaignId);
+      setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
+    } catch (err) {
+      console.error('Failed to delete campaign:', err);
+      alert('Failed to delete campaign from Supabase: ' + err.message);
+    }
+  };
+
+  const handleToggleCampaignStatus = async (campId) => {
+    const target = campaigns.find((c) => c.id === campId);
+    if (!target) return;
+    const nextStatus = target.status === 'Active' ? 'Paused' : 'Active';
+    try {
+      await updateCampaign(campId, { status: nextStatus });
+      setCampaigns((prev) =>
+        prev.map((c) => (c.id === campId ? { ...c, status: nextStatus } : c))
+      );
+    } catch (err) {
+      console.error('Failed to toggle campaign status:', err);
+    }
   };
 
   const handleCompleteLinkedInTask = (taskId) => {
     setLinkedinTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          return { ...t, status: 'Completed' };
-        }
-        return t;
-      })
+      prev.map((t) => (t.id === taskId ? { ...t, status: 'Completed' } : t))
     );
   };
 
@@ -162,147 +278,176 @@ export default function DashboardLayout() {
     );
   };
 
-  const markAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map(n => ({ ...n, read: true })));
+  const handleSignOut = async () => {
+    await signOut();
+    navigate(PRODUCT_ROUTES.SIGN_IN);
   };
 
-  const pendingTaskCount = linkedinTasks.filter(t => t.status === 'Pending').length;
-  const unreadInboxCount = conversations.filter(c => c.unread).length;
-  const unreadNotificationCount = notifications.filter(n => !n.read).length;
+  // Global search filtering
+  const searchResults = globalSearchQuery.trim()
+    ? {
+        prospects: prospects.filter(
+          (p) =>
+            (p.name && p.name.toLowerCase().includes(globalSearchQuery.toLowerCase())) ||
+            (p.company && p.company.toLowerCase().includes(globalSearchQuery.toLowerCase())) ||
+            (p.email && p.email.toLowerCase().includes(globalSearchQuery.toLowerCase()))
+        ).slice(0, 3),
+        campaigns: campaigns.filter(
+          (c) =>
+            (c.name && c.name.toLowerCase().includes(globalSearchQuery.toLowerCase())) ||
+            (c.audience && c.audience.toLowerCase().includes(globalSearchQuery.toLowerCase()))
+        ).slice(0, 2)
+      }
+    : null;
 
   const NAV_ITEMS = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'leads', label: 'Leads', icon: Users, badge: prospects.length },
-    { id: 'campaigns', label: 'Campaigns', icon: Send, badge: campaigns.filter(c => c.status === 'Active').length },
-    { id: 'sequences', label: 'Email sequences', icon: Mail },
-    { id: 'tasks', label: 'LinkedIn tasks', icon: Linkedin, badge: pendingTaskCount > 0 ? `${pendingTaskCount} pending` : null, highlight: true },
-    { id: 'inbox', label: 'Inbox', icon: Inbox, badge: unreadInboxCount > 0 ? unreadInboxCount : null },
-    { id: 'research', label: 'AI research', icon: Sparkles },
+    { id: 'find-leads', label: 'Find Leads', icon: Search, badge: 'New', highlight: true },
+    { id: 'leads', label: 'Prospects', icon: Users, badge: prospects.length.toString() },
+    { id: 'campaigns', label: 'Campaigns', icon: Send, badge: `${activeCampaignsCount} Active` },
+    { id: 'sequences', label: 'Sequences', icon: Mail },
+    { id: 'tasks', label: 'LinkedIn Tasks', icon: Linkedin, badge: '3 Review' },
+    { id: 'inbox', label: 'Unified Inbox', icon: Inbox, badge: '2 New' },
+    { id: 'research', label: 'AI Deep Research', icon: Sparkles },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'settings', label: 'Workspace Settings', icon: Settings }
   ];
 
-  // Global search matching
-  const searchResults = globalSearchQuery.trim().length > 1
-    ? prospects.filter(p => p.name.toLowerCase().includes(globalSearchQuery.toLowerCase()) || p.company.toLowerCase().includes(globalSearchQuery.toLowerCase())).slice(0, 4)
-    : [];
-
   return (
-    <div className="min-h-screen bg-[#f7f5f0] text-[#0d1c15] flex font-sans antialiased">
+    <div className="h-screen w-screen overflow-hidden bg-[#f7f5f0] text-[#0d1c15] flex font-sans antialiased selection:bg-[#00e599]/30">
       
-      {/* 1. Persistent Sidebar (Desktop) */}
-      <aside className="hidden lg:flex flex-col justify-between w-64 bg-white border-r border-[#0d1c15]/08 h-screen sticky top-0 z-40 select-none">
-        
-        {/* Top: Logo & Workspace Selector */}
-        <div>
-          {/* Brand Wordmark */}
-          <div className="px-5 py-4 border-b border-[#0d1c15]/08 flex items-center justify-between">
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(PRODUCT_ROUTES.OUTREACH);
-              }}
-              className="flex items-center gap-2 group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-lg bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-mono font-bold text-xs shadow-2xs group-hover:scale-105 transition-transform">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#00e599" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.8" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.4" />
-                </svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display font-bold text-base tracking-tight text-[#0d1c15] leading-none">
-                  Explee
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-[#73827a] leading-tight font-medium">
-                  Outreach Workspace
-                </span>
-              </div>
-            </a>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          role="presentation"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-xs"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-            <button
-              type="button"
-              onClick={() => navigate(PRODUCT_ROUTES.OUTREACH)}
-              title="Return to Landing Page"
-              className="p-1 rounded-md text-[#73827a] hover:text-[#0d1c15] hover:bg-[#edf2ec] transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          </div>
+      {/* 1. Sidebar Navigation (Fixed height, independent scroll, collapsible) */}
+      <aside
+        className={`fixed lg:relative top-0 bottom-0 left-0 z-50 h-screen bg-[#fcfbf9] border-r border-[#0d1c15]/08 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 select-none ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${sidebarCollapsed ? 'lg:w-[72px]' : 'lg:w-64 w-64'}`}
+      >
+        <div className="flex flex-col min-h-0 flex-1">
+          {/* Logo & Collapse Toggle */}
+          <div className={`border-b border-[#0d1c15]/08 ${sidebarCollapsed ? 'p-3 flex flex-col items-center gap-3' : 'p-4'}`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center w-full' : 'justify-between mb-3'}`}>
+              <button
+                type="button"
+                onClick={() => navigate(PRODUCT_ROUTES.OUTREACH)}
+                className={`flex items-center gap-2 group cursor-pointer text-left ${sidebarCollapsed ? 'justify-center' : ''}`}
+                title="OutLaunch Outreach"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#0d1c15] flex items-center justify-center text-[#00e599] font-bold text-sm shrink-0 shadow-2xs group-hover:bg-[#162b21] transition-colors">
+                  O
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="font-display font-bold tracking-tight text-lg text-[#0d1c15] group-hover:text-[#0d9467] transition-colors truncate">
+                    OutLaunch
+                  </span>
+                )}
+              </button>
 
-          {/* Workspace Switcher */}
-          <div className="p-3 relative">
-            <button
-              type="button"
-              onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
-              className="w-full p-2.5 rounded-xl bg-[#fcfbf9] hover:bg-[#edf2ec] border border-[#0d1c15]/08 transition-colors flex items-center justify-between text-left cursor-pointer group"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-6 h-6 rounded-md bg-[#0d1c15] text-white flex items-center justify-center font-mono text-[10px] font-bold shrink-0">
-                  {selectedWorkspace.initial}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-[#0d1c15] truncate">{selectedWorkspace.name}</div>
-                  <div className="text-[10px] text-[#73827a] truncate font-mono">{selectedWorkspace.tag} · {selectedWorkspace.plan}</div>
-                </div>
-              </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-[#73827a] group-hover:text-[#0d1c15] transition-transform ${workspaceMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
+              {/* Desktop Collapse / Expand Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className={`hidden lg:flex p-1.5 rounded-lg text-[#73827a] hover:text-[#0d1c15] hover:bg-[#edf2ec] transition-colors cursor-pointer ${
+                  sidebarCollapsed ? 'w-full justify-center mt-1' : ''
+                }`}
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {sidebarCollapsed ? (
+                  <PanelLeftOpen className="w-4 h-4 text-[#0d9467]" />
+                ) : (
+                  <PanelLeftClose className="w-4 h-4" />
+                )}
+              </button>
 
-            {/* Workspace Dropdown Menu */}
-            {workspaceMenuOpen && (
-              <div className="absolute top-16 left-3 right-3 bg-white rounded-2xl shadow-xl border border-[#0d1c15]/10 p-2 z-50 animate-scaleUp space-y-1">
-                <div className="px-2.5 py-1 text-[10px] font-mono text-[#73827a] uppercase font-bold">
-                  Switch Workspace
-                </div>
-                {workspaces.map((ws) => {
-                  const isSelected = ws.id === selectedWorkspace.id;
-                  return (
-                    <button
-                      key={ws.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedWorkspace(ws);
-                        setWorkspaceMenuOpen(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left flex items-center justify-between text-xs transition-colors cursor-pointer ${
-                        isSelected ? 'bg-[#edf2ec] font-semibold text-[#0d1c15]' : 'hover:bg-[#fcfbf9] text-[#4a5851]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-5 h-5 rounded bg-[#0d1c15] text-white flex items-center justify-center font-mono text-[9px] font-bold shrink-0">
-                          {ws.initial}
-                        </div>
-                        <div className="truncate">
-                          <div className="text-xs font-semibold">{ws.name}</div>
-                          <div className="text-[10px] text-[#73827a] font-mono">{ws.plan}</div>
-                        </div>
+              {/* Mobile Close Button */}
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="lg:hidden p-1.5 rounded-lg text-[#73827a] hover:text-[#0d1c15] hover:bg-[#edf2ec]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Workspace Selector */}
+            {!sidebarCollapsed ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
+                  className="w-full p-2 rounded-xl bg-[#edf2ec] hover:bg-[#dbe5da] transition-colors flex items-center justify-between text-left cursor-pointer border border-[#dbe5da]"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-6 h-6 rounded-md bg-[#0d1c15] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+                      {selectedWorkspace.initial}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#0d1c15] truncate">
+                        {selectedWorkspace.name}
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#0d9467] shrink-0" />}
-                    </button>
-                  );
-                })}
+                      <div className="text-[10px] text-[#5a6962] font-mono leading-none">
+                        {selectedWorkspace.plan}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#5a6962] shrink-0" />
+                </button>
 
-                <div className="pt-1 mt-1 border-t border-[#0d1c15]/08">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWorkspaceMenuOpen(false);
-                      setNewWorkspaceModal(true);
-                    }}
-                    className="w-full p-2 text-left text-xs font-semibold text-[#0d9467] hover:bg-[#edf2ec] rounded-xl flex items-center gap-1.5 cursor-pointer"
+                {/* Workspace Dropdown */}
+                {workspaceMenuOpen && (
+                  <div
+                    role="presentation"
+                    className="absolute left-0 right-0 top-full mt-1.5 p-1.5 bg-white rounded-2xl shadow-xl border border-[#0d1c15]/10 z-50 text-xs animate-scaleUp"
                   >
-                    <span>+ Add New Workspace</span>
-                  </button>
-                </div>
+                    <div className="px-2 py-1 text-[10px] font-mono uppercase text-[#73827a] font-semibold">
+                      Workspaces
+                    </div>
+                    {workspaces.map((ws) => (
+                      <button
+                        key={ws.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedWorkspace(ws);
+                          setWorkspaceMenuOpen(false);
+                        }}
+                        className="w-full p-2 rounded-xl hover:bg-[#edf2ec] flex items-center justify-between text-left cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-md bg-[#0d1c15] text-white text-[10px] font-bold flex items-center justify-center">
+                            {ws.initial}
+                          </div>
+                          <span className="font-medium text-[#0d1c15] truncate">{ws.name}</span>
+                        </div>
+                        {selectedWorkspace.id === ws.id && (
+                          <Check className="w-3.5 h-3.5 text-[#0d9467]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Minimized Workspace Avatar */
+              <div
+                title={`${selectedWorkspace.name} (${selectedWorkspace.plan})`}
+                className="w-9 h-9 rounded-xl bg-[#edf2ec] text-[#0d1c15] font-bold text-xs flex items-center justify-center border border-[#dbe5da] cursor-pointer hover:bg-[#dbe5da] transition-colors"
+                onClick={() => setSidebarCollapsed(false)}
+              >
+                {selectedWorkspace.initial}
               </div>
             )}
           </div>
 
-          {/* Navigation Links List */}
-          <nav className="px-3 space-y-1 mt-1">
+          {/* Navigation Links List (Scrollable if viewport is small) */}
+          <nav className="p-2 space-y-1 mt-1 overflow-y-auto flex-1">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
@@ -311,19 +456,26 @@ export default function DashboardLayout() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setCurrentTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                  title={sidebarCollapsed ? `${item.label} ${item.badge ? `(${item.badge})` : ''}` : undefined}
+                  onClick={() => {
+                    setCurrentTab(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center rounded-xl text-xs font-medium transition-all cursor-pointer relative group ${
+                    sidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
+                  } ${
                     isActive
                       ? 'bg-[#0d1c15] text-white font-semibold shadow-xs'
                       : 'text-[#4a5851] hover:text-[#0d1c15] hover:bg-[#edf2ec]/70'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#00e599]' : 'text-[#73827a]'}`} />
-                    <span className="truncate">{item.label}</span>
+                  <div className={`flex items-center gap-2.5 min-w-0 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                    <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'text-[#00e599] scale-105' : 'text-[#73827a] group-hover:scale-105'}`} />
+                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                   </div>
 
-                  {item.badge && (
+                  {/* Badge in full mode */}
+                  {!sidebarCollapsed && item.badge && (
                     <span
                       className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
                         isActive
@@ -336,6 +488,15 @@ export default function DashboardLayout() {
                       {item.badge}
                     </span>
                   )}
+
+                  {/* Dot indicator when collapsed */}
+                  {sidebarCollapsed && item.badge && (
+                    <span
+                      className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
+                        item.highlight ? 'bg-[#0077b5]' : 'bg-[#00e599]'
+                      }`}
+                    />
+                  )}
                 </button>
               );
             })}
@@ -343,65 +504,104 @@ export default function DashboardLayout() {
         </div>
 
         {/* Bottom Credits & User Profile */}
-        <div className="p-3 border-t border-[#0d1c15]/08 space-y-3">
-          {/* Free Credit Status Bar */}
-          <div className="p-3 rounded-xl bg-[#edf2ec] border border-[#dbe5da] text-xs">
-            <div className="flex items-center justify-between text-[11px] font-mono text-[#182e24] font-semibold mb-1">
-              <span>CREDITS REMAINING</span>
-              <span className="text-[#0d9467] font-bold">$24.60</span>
+        <div className={`border-t border-[#0d1c15]/08 ${sidebarCollapsed ? 'p-2 space-y-2 flex flex-col items-center' : 'p-3 space-y-3'}`}>
+          {/* Credit Status Bar */}
+          {!sidebarCollapsed ? (
+            <div className="p-3 rounded-xl bg-[#edf2ec] border border-[#dbe5da] text-xs">
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#182e24] font-semibold mb-1">
+                <span>SUPABASE STATUS</span>
+                <span className="text-[#0d9467] font-bold">CONNECTED</span>
+              </div>
+              <div className="w-full h-1.5 bg-[#dbe5da] rounded-full overflow-hidden">
+                <div className="w-full h-full bg-[#0d9467] rounded-full" />
+              </div>
+              <span className="text-[10px] text-[#5a6962] block mt-1">RLS Protected Session Active</span>
             </div>
-            <div className="w-full h-1.5 bg-[#dbe5da] rounded-full overflow-hidden">
-              <div className="w-3/4 h-full bg-[#0d9467] rounded-full" />
-            </div>
-            <span className="text-[10px] text-[#5a6962] block mt-1">~820 verified emails left</span>
-          </div>
+          ) : (
+            <div
+              title="Supabase: Connected (RLS Active)"
+              className="w-2.5 h-2.5 rounded-full bg-[#0d9467] my-1 ring-4 ring-[#edf2ec]"
+            />
+          )}
 
           {/* User Profile Pill */}
-          <div className="p-2 rounded-xl bg-white border border-[#0d1c15]/08 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-[#0d1c15] text-[#00e599] font-bold text-xs flex items-center justify-center shrink-0">
-                AD
+          {!sidebarCollapsed ? (
+            <div className="p-2 rounded-xl bg-white border border-[#0d1c15]/08 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#0d1c15] text-[#00e599] font-bold text-xs flex items-center justify-center shrink-0">
+                  {userInitials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-[#0d1c15] truncate">{userDisplayName}</div>
+                  <div className="text-[10px] text-[#0d9467] font-mono font-semibold truncate">{user?.email || 'Authenticated'}</div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-[#0d1c15] truncate">admin@company.com</div>
-                <div className="text-[10px] text-[#0d9467] font-mono font-semibold">Growth Tier · Verified</div>
-              </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => navigate(PRODUCT_ROUTES.SIGN_IN)}
-              title="Sign out / Switch account"
-              className="text-[10px] font-mono text-[#73827a] hover:text-[#0d1c15] cursor-pointer"
-            >
-              Sign out
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                title="Sign out of Supabase"
+                className="text-[10px] font-mono text-[#73827a] hover:text-[#0d1c15] cursor-pointer flex items-center gap-1 p-1 hover:bg-[#edf2ec] rounded"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            /* Minimized Profile & Logout */
+            <div className="flex flex-col items-center gap-2">
+              <div
+                title={`${userDisplayName} (${user?.email})`}
+                className="w-9 h-9 rounded-full bg-[#0d1c15] text-[#00e599] font-bold text-xs flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                {userInitials}
+              </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                title="Sign out"
+                className="p-1.5 rounded-lg text-[#73827a] hover:text-[#0d1c15] hover:bg-[#edf2ec] transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
       </aside>
 
-      {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* 2. Main Content Area (Independently scrollable) */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         
         {/* Top Navigation Bar */}
-        <header className="sticky top-0 z-30 bg-[#f7f5f0]/90 backdrop-blur-md border-b border-[#0d1c15]/08 px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-30 bg-[#f7f5f0]/90 backdrop-blur-md border-b border-[#0d1c15]/08 px-4 sm:px-8 h-16 flex items-center justify-between gap-4 shrink-0">
           
           {/* Left Title / Breadcrumbs */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-[#0d1c15] hover:bg-[#edf2ec] rounded-lg"
+              className="lg:hidden p-2 text-[#0d1c15] hover:bg-[#edf2ec] rounded-lg cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
+
+            {/* Quick Toggle for Collapsed Sidebar on Desktop */}
+            {sidebarCollapsed && (
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed(false)}
+                className="hidden lg:flex p-2 text-[#73827a] hover:text-[#0d1c15] hover:bg-[#edf2ec] rounded-lg cursor-pointer transition-colors"
+                title="Expand sidebar"
+              >
+                <PanelLeftOpen className="w-4 h-4 text-[#0d9467]" />
+              </button>
+            )}
 
             <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
               <span className="text-[#73827a] hidden sm:inline">Workspace</span>
               <span className="text-[#73827a] hidden sm:inline">/</span>
               <span className="font-semibold text-[#0d1c15] capitalize font-display text-base">
-                {NAV_ITEMS.find(n => n.id === currentTab)?.label || 'Overview'}
+                {NAV_ITEMS.find((n) => n.id === currentTab)?.label || 'Overview'}
               </span>
             </div>
           </div>
@@ -411,7 +611,7 @@ export default function DashboardLayout() {
             <Search className="w-4 h-4 text-[#73827a] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search prospects, campaigns, or domains (e.g. Sarah, Series A)..."
+              placeholder="Search prospects or campaigns..."
               value={globalSearchQuery}
               onChange={(e) => setGlobalSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
@@ -419,70 +619,91 @@ export default function DashboardLayout() {
               className="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border border-[#0d1c15]/10 bg-white text-[#0d1c15] placeholder-[#73827a] outline-none focus:border-[#0d9467] font-medium"
             />
 
-            {/* Live Search Results Dropdown */}
-            {isSearchFocused && searchResults.length > 0 && (
-              <div className="absolute top-10 left-0 right-0 bg-white rounded-2xl shadow-xl border border-[#0d1c15]/10 p-2 space-y-1 z-50">
-                <div className="px-3 py-1 text-[10px] font-mono text-[#73827a] uppercase font-bold">Matching Prospects</div>
-                {searchResults.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setCurrentTab('leads');
-                      setGlobalSearchQuery('');
-                    }}
-                    className="w-full text-left p-2 rounded-xl hover:bg-[#edf2ec] text-xs flex items-center justify-between cursor-pointer"
-                  >
-                    <div>
-                      <div className="font-semibold text-[#0d1c15]">{p.name}</div>
-                      <div className="text-[11px] text-[#5a6962]">{p.title} @ {p.company}</div>
-                    </div>
-                    <span className="font-mono text-[10px] text-[#0d9467] font-bold">{p.fitScore}% FIT</span>
-                  </button>
-                ))}
+            {/* Live Search Dropdown */}
+            {isSearchFocused && searchResults && (
+              <div
+                role="presentation"
+                className="absolute left-0 right-0 top-full mt-2 p-3 bg-white rounded-2xl shadow-xl border border-[#0d1c15]/10 z-50 text-xs animate-scaleUp"
+              >
+                {searchResults.prospects.length > 0 && (
+                  <div className="mb-2">
+                    <span className="text-[10px] font-mono uppercase text-[#73827a] font-semibold block mb-1">
+                      Prospects
+                    </span>
+                    {searchResults.prospects.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setCurrentTab('leads');
+                          setGlobalSearchQuery('');
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-[#edf2ec] cursor-pointer flex items-center justify-between"
+                      >
+                        <span className="font-medium text-[#0d1c15]">{p.name} ({p.company})</span>
+                        <span className="text-[10px] font-mono text-[#0d9467]">{p.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchResults.campaigns.length > 0 && (
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-[#73827a] font-semibold block mb-1">
+                      Campaigns
+                    </span>
+                    {searchResults.campaigns.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setCurrentTab('campaigns');
+                          setGlobalSearchQuery('');
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-[#edf2ec] cursor-pointer flex items-center justify-between"
+                      >
+                        <span className="font-medium text-[#0d1c15]">{c.name}</span>
+                        <span className="text-[10px] font-mono text-[#0d9467]">{c.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchResults.prospects.length === 0 && searchResults.campaigns.length === 0 && (
+                  <div className="text-center py-2 text-xs text-[#73827a]">
+                    No matching prospects or campaigns found.
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Right Controls: Notifications & Actions */}
+          {/* Right Header Utilities */}
           <div className="flex items-center gap-3">
-            {/* Notifications Popover */}
+            {/* Notifications Popover Trigger */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                aria-label="View notifications"
-                className="relative p-2 rounded-xl text-[#0d1c15] hover:bg-[#edf2ec] transition-colors cursor-pointer border border-[#0d1c15]/08"
+                className="p-2 text-[#5a6962] hover:text-[#0d1c15] hover:bg-[#edf2ec] rounded-xl transition-colors relative cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                {unreadNotificationCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#00e599] ring-2 ring-white" />
-                )}
+                <span className="w-2 h-2 rounded-full bg-[#0d9467] absolute top-1.5 right-1.5 ring-2 ring-white" />
               </button>
 
               {notificationsOpen && (
                 <div
-                  role="dialog"
-                  aria-label="Notifications"
-                  className="absolute right-0 top-12 w-80 sm:w-92 bg-white rounded-2xl shadow-2xl border border-[#0d1c15]/10 p-4 space-y-3 z-50 animate-scaleUp text-[#0d1c15]"
+                  role="presentation"
+                  className="absolute right-0 top-full mt-2 w-80 p-3 bg-white rounded-2xl shadow-2xl border border-[#0d1c15]/10 z-50 animate-scaleUp"
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-[#0d1c15]/08">
-                    <span className="font-semibold text-xs font-mono uppercase text-[#0d1c15]">Notifications</span>
-                    <button
-                      type="button"
-                      onClick={markAllNotificationsRead}
-                      className="text-[11px] font-mono text-[#0d9467] hover:underline cursor-pointer"
-                    >
-                      Mark all as read
-                    </button>
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#0d1c15]/08">
+                    <span className="font-display font-bold text-xs text-[#0d1c15]">Notifications</span>
+                    <span className="text-[10px] font-mono text-[#0d9467]">3 New Alerts</span>
                   </div>
-
-                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                  <div className="space-y-2">
                     {notifications.map((n) => (
                       <div
                         key={n.id}
                         className={`p-2.5 rounded-xl border text-xs ${
-                          n.read ? 'bg-[#fcfbf9] border-[#0d1c15]/06 text-[#5a6962]' : 'bg-[#edf2ec]/50 border-[#dbe5da] text-[#0d1c15] font-medium'
+                          n.read ? 'bg-[#fcfbf9] border-[#0d1c15]/06' : 'bg-[#edf2ec]/60 border-[#dbe5da]'
                         }`}
                       >
                         <div className="font-semibold text-xs flex items-center justify-between mb-0.5">
@@ -503,13 +724,29 @@ export default function DashboardLayout() {
               onClick={() => setCurrentTab('leads')}
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white font-semibold text-xs transition-colors cursor-pointer shadow-xs"
             >
-              <span>+ Add Lead</span>
+              <span>+ Add Prospect</span>
             </button>
           </div>
         </header>
 
         {/* View Router */}
         <main className="p-4 sm:p-8 flex-1">
+          {dataError && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <span>{dataError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={loadDashboardData}
+                className="px-3 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 font-semibold cursor-pointer text-xs"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {currentTab === 'overview' && (
             <OverviewView
               metrics={metrics}
@@ -521,20 +758,46 @@ export default function DashboardLayout() {
             />
           )}
 
+          {currentTab === 'find-leads' && (
+            <FindLeadsView
+              userId={user?.id}
+              existingLeads={prospects}
+              campaigns={campaigns}
+              onLeadsSaved={(savedList) => {
+                setProspects((prev) => [...savedList, ...prev]);
+              }}
+              onOpenAiResearch={(lead) => {
+                setActiveResearchLead(lead);
+              }}
+              onNavigate={(tab) => setCurrentTab(tab)}
+            />
+          )}
+
           {currentTab === 'leads' && (
             <LeadsView
               prospects={prospects}
+              userId={user?.id}
               onAddLead={handleAddLead}
+              onUpdateLead={handleUpdateLead}
+              onDeleteLead={handleDeleteLead}
               onImportLeads={handleImportLeads}
+              isLoading={isLoadingData}
+              error={dataError}
             />
           )}
 
           {currentTab === 'campaigns' && (
             <CampaignsView
               campaigns={campaigns}
+              prospects={prospects}
+              sequenceSteps={sequences[0]?.steps || []}
               onAddCampaign={handleAddCampaign}
+              onUpdateCampaign={handleUpdateCampaign}
+              onDeleteCampaign={handleDeleteCampaign}
               onToggleStatus={handleToggleCampaignStatus}
               onNavigate={(tab) => setCurrentTab(tab)}
+              isLoading={isLoadingData}
+              error={dataError}
             />
           )}
 
@@ -563,8 +826,8 @@ export default function DashboardLayout() {
           )}
 
           {currentTab === 'analytics' && (
-            <AnalyticsView
-              metrics={metrics}
+            <CampaignAnalyticsView
+              onNavigateToCampaigns={() => setCurrentTab('campaigns')}
             />
           )}
 
@@ -574,161 +837,13 @@ export default function DashboardLayout() {
         </main>
       </div>
 
-      {/* Mobile Sidebar Drawer */}
-      {sidebarOpen && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-50 flex bg-black/40 backdrop-blur-xs lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigation drawer"
-            onClick={(e) => e.stopPropagation()}
-            className="w-72 bg-white h-full p-4 flex flex-col justify-between shadow-2xl animate-scaleUp"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#0d1c15]/08">
-                <span className="font-display font-bold text-base text-[#0d1c15]">Explee Workspace</span>
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="p-1.5 rounded-lg text-[#73827a] hover:text-[#0d1c15]"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <nav className="space-y-1">
-                {NAV_ITEMS.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentTab === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setCurrentTab(item.id);
-                        setSidebarOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold ${
-                        isActive
-                          ? 'bg-[#0d1c15] text-white shadow-xs'
-                          : 'text-[#4a5851] hover:text-[#0d1c15] hover:bg-[#edf2ec]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-[#00e599]' : 'text-[#73827a]'}`} />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#edf2ec] text-[#0d1c15]">
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            <div className="pt-4 border-t border-[#0d1c15]/08">
-              <button
-                type="button"
-                onClick={() => {
-                  setSidebarOpen(false);
-                  navigate(PRODUCT_ROUTES.OUTREACH);
-                }}
-                className="w-full py-2 px-3 rounded-xl bg-[#edf2ec] text-[#0d1c15] font-semibold text-xs flex items-center justify-center gap-1.5"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Landing Page</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create New Workspace Modal */}
-      {newWorkspaceModal && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn"
-          onClick={() => setNewWorkspaceModal(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Create Workspace"
-            className="w-full max-w-md bg-white rounded-3xl border border-[#0d1c15]/10 shadow-2xl p-6 sm:p-7 space-y-5 animate-scaleUp"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-[#0d1c15]/08 pb-4">
-              <div>
-                <h3 className="font-display font-bold text-lg text-[#0d1c15]">Create Workspace</h3>
-                <p className="text-xs text-[#73827a] mt-0.5">Separate campaigns, prospects, and sender mailboxes</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setNewWorkspaceModal(false)}
-                className="p-1 rounded-lg text-[#73827a] hover:text-[#0d1c15]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!newWorkspaceName.trim()) return;
-                const newWs = {
-                  id: `ws-${Date.now()}`,
-                  name: newWorkspaceName.trim(),
-                  plan: 'Starter Plan',
-                  tag: 'Sandbox',
-                  initial: newWorkspaceName.trim().charAt(0).toUpperCase()
-                };
-                setWorkspaces(prev => [...prev, newWs]);
-                setSelectedWorkspace(newWs);
-                setNewWorkspaceName('');
-                setNewWorkspaceModal(false);
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-semibold text-[#0d1c15] uppercase tracking-wide">
-                  Workspace Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Acme Enterprise Outbound"
-                  value={newWorkspaceName}
-                  onChange={(e) => setNewWorkspaceName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#0d1c15]/15 bg-white text-[#0d1c15] outline-none focus:border-[#0d9467]"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setNewWorkspaceModal(false)}
-                  className="px-4 py-2 rounded-xl border border-[#0d1c15]/15 text-xs sm:text-sm font-semibold text-[#0d1c15] hover:bg-[#fcfbf9]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold transition-colors shadow-sm"
-                >
-                  Create &amp; Switch
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* AI Personalization Modal from Find Leads / Prospects */}
+      {activeResearchLead && (
+        <AiPersonalizationModal
+          lead={activeResearchLead}
+          userId={user?.id}
+          onClose={() => setActiveResearchLead(null)}
+        />
       )}
 
     </div>

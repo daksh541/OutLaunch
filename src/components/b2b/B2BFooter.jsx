@@ -129,7 +129,7 @@ export default function B2BFooter() {
         <div className="pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center text-xs">
             <p className="mb-2 md:mb-0">
-              © 2026 Explee LTD — made with 🦎 in London
+              © 2026 OutLaunch LTD — made with 🦎 in London
             </p>
             <div className="flex items-center flex-wrap justify-center">
               <a className="hover:underline" href="/terms-of-use">

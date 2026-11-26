@@ -85,11 +85,11 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
             }
           }}
           className="flex items-center gap-2 text-[#1b1b1b] hover:opacity-80 transition-opacity cursor-pointer"
-          title="Back to Explee Home"
+          title="Back to OutLaunch Home"
         >
           <img
             src="/assets/logo-light.svg"
-            alt="Explee"
+            alt="OutLaunch"
             className="h-5 w-auto"
           />
           <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-1.5 py-0.5 rounded">API Docs</span>

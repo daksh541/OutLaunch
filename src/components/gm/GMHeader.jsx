@@ -20,7 +20,7 @@ export default function GMHeader() {
           >
             <img
               src="/static/logo/explee/logo-dark.svg"
-              alt="Explee"
+              alt="OutLaunch"
               className="h-7 w-auto"
             />
           </a>

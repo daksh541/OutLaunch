@@ -20,7 +20,7 @@ export default function Navbar() {
           }}
         >
           <img
-            alt="Explee"
+            alt="OutLaunch"
             className="h-7 w-auto block"
             height="28"
             width="100"

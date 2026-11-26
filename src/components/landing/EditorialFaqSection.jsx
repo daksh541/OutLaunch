@@ -3,16 +3,16 @@ import { ChevronDown, HelpCircle } from 'lucide-react';
 
 const FAQS = [
   {
-    q: 'How does Explee protect my company email domain from landing in spam?',
+    q: 'How does OutLaunch protect my company email domain from landing in spam?',
     a: 'We never send cold outreach from your primary corporate email domain. We configure dedicated secondary domains with full SPF, DKIM, and DMARC authentication and run them through a 2-week peer-to-peer warm-up routine before sending. Daily sends are strictly capped at 25–40 emails per inbox to mimic natural human behavior.'
   },
   {
     q: 'How does the human-in-the-loop review queue work?',
-    a: 'By default, Explee operates in "Review Mode." The AI discovers prospects, researches company signals, and drafts tailored messages into your approval queue. You can review each draft, edit any line, approve in 1 click, or approve entire batches before anything is dispatched. You can also turn on auto-pilot once you trust the AI\'s output.'
+    a: 'By default, OutLaunch operates in "Review Mode." The AI discovers prospects, researches company signals, and drafts tailored messages into your approval queue. You can review each draft, edit any line, approve in 1 click, or approve entire batches before anything is dispatched. You can also turn on auto-pilot once you trust the AI\'s output.'
   },
   {
     q: 'Is LinkedIn outreach safe with my personal LinkedIn account?',
-    a: 'Yes. Explee connects via safe, session-managed API protocols that observe official LinkedIn rate limits (maximum 15–20 connection requests per day). We space touchpoints with organic intervals and avoid mass automated scraping that could trigger account restrictions.'
+    a: 'Yes. OutLaunch connects via safe, session-managed API protocols that observe official LinkedIn rate limits (maximum 15–20 connection requests per day). We space touchpoints with organic intervals and avoid mass automated scraping that could trigger account restrictions.'
   },
   {
     q: 'Where does the prospect and company data come from?',

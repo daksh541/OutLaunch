@@ -7,7 +7,7 @@ export default function GMFooter() {
         <div className="container mx-auto max-w-[1200px] px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-[#9ca3af]">
-              © 2026 Explee LTD — made with 🦎 in London
+              © 2026 OutLaunch LTD — made with 🦎 in London
             </p>
             <div className="flex items-center gap-6 text-sm text-[#9ca3af]">
               <a href="/terms" className="hover:text-white transition-colors">
