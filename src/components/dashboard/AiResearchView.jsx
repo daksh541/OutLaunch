@@ -244,19 +244,23 @@ export default function AiResearchView() {
                   <button
                     type="button"
                     onClick={() => handleCopyAngle(idx, angle.hook)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#0d1c15]/10 text-xs font-semibold text-[#0d1c15] hover:bg-[#edf2ec] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#0d1c15]/10 text-xs font-semibold text-[#0d1c15] hover:bg-[#edf2ec] transition-colors cursor-pointer"
                   >
-                    {copiedIndex === idx ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-[#0d9467]" />
-                        <span className="text-[#0d9467]">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-[#5a6962]" />
-                        <span>Copy Hook</span>
-                      </>
-                    )}
+                    <div className="relative w-3.5 h-3.5">
+                      <Copy
+                        className={`w-3.5 h-3.5 text-[#5a6962] transition-all duration-200 absolute inset-0 ${
+                          copiedIndex === idx ? 'opacity-0 scale-50' : 'opacity-100 scale-100'
+                        }`}
+                      />
+                      <Check
+                        className={`w-3.5 h-3.5 text-[#0d9467] transition-all duration-200 absolute inset-0 ${
+                          copiedIndex === idx ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                        }`}
+                      />
+                    </div>
+                    <span className={copiedIndex === idx ? 'text-[#0d9467] font-bold' : ''}>
+                      {copiedIndex === idx ? 'Copied!' : 'Copy Hook'}
+                    </span>
                   </button>
                 </div>
                 <p className="text-xs sm:text-sm text-[#182e24] leading-relaxed font-sans bg-white p-4 rounded-xl border border-[#0d1c15]/06">

@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import ProductsDropdown from '../navigation/ProductsDropdown';
 import { Menu, X, ArrowUpRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { prefersReducedMotion } from '../../lib/motion';
 
 export default function EditorialNavbar() {
   const { navigate } = useNavigation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalScroll > 0) {
+        setScrollProgress((window.scrollY / totalScroll) * 100);
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -40,6 +46,13 @@ export default function EditorialNavbar() {
           : 'bg-[#f7f5f0]/70 backdrop-blur-sm border-b border-transparent'
       }`}
     >
+      {/* Scroll progress bar (thin green line at the top) */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#0d1c15]/05 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-[#0d9467] to-[#00e599] transition-all duration-75 ease-out"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between">
         {/* Brand Logo */}
         <div className="flex items-center gap-6">
@@ -52,13 +65,13 @@ export default function EditorialNavbar() {
             }}
             className="flex items-center gap-2.5 group cursor-pointer"
           >
-            {/* Geometric Editorial Mark */}
-            <div className="w-8 h-8 rounded-lg bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-mono font-bold text-sm tracking-tighter shadow-sm group-hover:scale-105 transition-transform">
+            {/* Geometric Editorial Mark with Draw-in */}
+            <div className="w-8 h-8 rounded-lg bg-[#0d1c15] text-[#00e599] flex items-center justify-center font-mono font-bold text-sm tracking-tighter shadow-sm group-hover:scale-105 group-hover:shadow-[0_0_12px_rgba(0,229,153,0.3)] transition-all">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#00e599" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.8" />
+                <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#00e599" className="transition-all duration-300 group-hover:opacity-90" />
+                <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.8" className="transition-all duration-300 group-hover:opacity-100" />
                 <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" fillOpacity="0.4" />
-                <path d="M14 17.5L21 17.5M17.5 14L21 17.5L17.5 21" stroke="#00e599" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M14 17.5L21 17.5M17.5 14L21 17.5L17.5 21" stroke="#00e599" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-check-draw transition-transform duration-200 group-hover:translate-x-0.5" />
               </svg>
             </div>
             <div className="flex flex-col">

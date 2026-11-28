@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { MeetingsSkeleton } from '../ui/DashboardSkeleton';
 import {
   Calendar,
   Clock,
@@ -443,10 +444,7 @@ export default function MeetingSchedulerView({ onNavigateToCrm }) {
 
           {/* Meetings Cards Grid / List */}
           {isLoading ? (
-            <div className="p-12 text-center text-xs text-[#73827a] bg-white rounded-3xl border border-[#0d1c15]/06">
-              <div className="w-6 h-6 border-2 border-[#0d9467] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              Loading scheduled meetings...
-            </div>
+            <MeetingsSkeleton />
           ) : meetings.length === 0 ? (
             <div className="p-12 text-center text-xs bg-white rounded-3xl border border-[#0d1c15]/06 text-[#73827a]">
               <CalendarDays className="w-10 h-10 text-[#dbe5da] mx-auto mb-2" />

@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { Mail, Linkedin, ArrowRight, ShieldCheck, Clock, CheckCircle2, RotateCw, Send, MessageSquare, UserCheck, Shield, ExternalLink, Play } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 export default function MultichannelOutreachSection() {
   const [activeTab, setActiveTab] = useState('email');
 
   return (
-    <section className="py-20 md:py-28 bg-[#f7f5f0] border-t border-[#0d1c15]/08 relative">
+    <section className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
         <div className="max-w-3xl mb-12 sm:mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <Mail className="w-3.5 h-3.5" />
             <span>03 · MULTI-CHANNEL ORCHESTRATION</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            Coordinated Email and LinkedIn sequences
+            <AnimatedWordHighlight text="Coordinated Email and LinkedIn sequences" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Reach prospects across channels without confusing them. Tailored cold emails and social touchpoints work together with smart reply collision defense.
@@ -23,7 +24,7 @@ export default function MultichannelOutreachSection() {
         </div>
 
         {/* Channel Mode Switcher */}
-        <div className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-6 sm:p-8 md:p-10">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-6 sm:p-8 md:p-10">
           
           <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-8 border-b border-[#0d1c15]/08">
             <div className="flex items-center gap-2 p-1 rounded-xl bg-[#edf2ec] border border-[#dbe5da]">

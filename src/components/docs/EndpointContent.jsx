@@ -3025,8 +3025,8 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
   }, [endpoint.path, endpoint.method]);
 
   const methodColors = {
-    GET: 'text-[#009485]',
-    POST: 'text-[#009485]',
+    GET: 'text-[#0d9467]',
+    POST: 'text-[#0d9467]',
     PATCH: 'text-[#ffaa01]',
     DEL: 'text-[#d52b2a]',
     DELETE: 'text-[#d52b2a]',
@@ -5090,7 +5090,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
             <div className="rounded-lg border border-[#2e3240] bg-[#1e2029] overflow-hidden shadow-2xs">
               <div className="bg-[#171922] px-3.5 py-2.5 flex items-center justify-between border-b border-[#2e3240]">
                 <div className="flex items-center min-w-0">
-                  <span className={`font-['JetBrains_Mono',monospace] text-[12px] font-bold ${methodColors[displayMethod] || methodColors[endpoint.method] || 'text-[#009485]'}`}>
+                  <span className={`font-['JetBrains_Mono',monospace] text-[12px] font-bold ${methodColors[displayMethod] || methodColors[endpoint.method] || 'text-[#0d9467]'}`}>
                     {displayMethod}
                   </span>
                   <span className="font-['JetBrains_Mono',monospace] text-[12.5px] text-[#d4d4d8] ml-2.5 truncate" title={endpoint.path}>
@@ -5175,7 +5175,7 @@ export default function EndpointContent({ endpoint, nextEndpoint, isChild = fals
                     type="checkbox"
                     checked={showSchema}
                     onChange={(e) => setShowSchema(e.target.checked)}
-                    className="size-3.5 rounded border-gray-300 text-[#009485] focus:ring-0 cursor-pointer accent-[#009485]"
+                    className="size-3.5 rounded border-gray-300 text-[#0d9467] focus:ring-0 cursor-pointer accent-[#0d9467]"
                   />
                 </div>
               </div>

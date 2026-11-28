@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, CheckCircle2, Building2, MapPin, Users, Database, Sparkles, ArrowRight } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 const SAMPLE_PROSPECTS = [
   {
@@ -77,17 +78,17 @@ export default function LeadDiscoverySection() {
   });
 
   return (
-    <section id="features" className="py-20 md:py-28 bg-[#f7f5f0] relative">
+    <section id="features" className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
-        <div className="max-w-3xl mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+        <div className="max-w-3xl mb-12 sm:mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <Database className="w-3.5 h-3.5" />
             <span>01 · PRECISION DISCOVERY</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            Find the exact people who need your product today
+            <AnimatedWordHighlight text="Find the exact people who need your product today" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Filter through over 250 million verified decision-maker records. Search by current tech stack, recent funding, headcount growth, or hiring intent.

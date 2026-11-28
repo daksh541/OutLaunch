@@ -2341,6 +2341,901 @@ export {
   updatePlanAction as updateAccountPlanAction
 };
 
+// ==========================================
+// AI CUSTOMER SUCCESS & RENEWAL INTELLIGENCE
+// ==========================================
+
+export async function fetchCustomerSuccessAccounts({ status, healthStatus, ownerId, search, autoSeed = false } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (healthStatus) params.set('healthStatus', healthStatus);
+  if (ownerId) params.set('ownerId', ownerId);
+  if (search) params.set('search', search);
+  if (autoSeed) params.set('autoSeed', 'true');
+
+  const res = await fetch(`/api/customer-success/accounts?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer success accounts');
+  return data.accounts || [];
+}
+
+export async function createCustomerSuccessAccount(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/customer-success/accounts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create customer success account');
+  return data.account;
+}
+
+export async function fetchCustomerSuccessAccount(accountId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer success account');
+  return data.account;
+}
+
+export async function updateCustomerSuccessAccount(accountId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update customer success account');
+  return data.account;
+}
+
+export async function fetchCustomerSuccessTimeline(accountId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}/timeline`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer timeline');
+  return data.timeline || [];
+}
+
+export async function fetchCustomerHealth(accountId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}/health`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer health');
+  return data.health;
+}
+
+export async function recalculateCustomerHealth(accountId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}/health/recalculate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to recalculate customer health');
+  return data.health;
+}
+
+export async function fetchCustomerHealthHistory(accountId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/accounts/${accountId}/health/history`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer health history');
+  return data.history || [];
+}
+
+export async function fetchCustomerRenewals({ status, accountId, startDate, endDate } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (accountId) params.set('accountId', accountId);
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+
+  const res = await fetch(`/api/customer-success/renewals?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch renewals');
+  return data.renewals || [];
+}
+
+export async function createCustomerRenewal(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/customer-success/renewals', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create renewal opportunity');
+  return data.renewal;
+}
+
+export async function fetchCustomerRenewal(renewalId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/renewals/${renewalId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch renewal detail');
+  return data.renewal;
+}
+
+export async function updateCustomerRenewal(renewalId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/renewals/${renewalId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update renewal opportunity');
+  return data.renewal;
+}
+
+export async function fetchRenewalForecast({ currency = 'USD', startDate, endDate } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ currency });
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+
+  const res = await fetch(`/api/customer-success/renewals/forecast?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch renewal forecast');
+  return data.forecast;
+}
+
+export async function fetchChurnRisks() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/customer-success/renewals/risks', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch churn risks');
+  return data.risks || [];
+}
+
+export async function fetchRenewalForecastAccuracy({ currency = 'USD' } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams({ currency });
+  const res = await fetch(`/api/customer-success/renewals/accuracy?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch renewal forecast accuracy');
+  return data.accuracy;
+}
+
+export async function fetchExpansionOpportunities({ status, accountId, opportunityType } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (accountId) params.set('accountId', accountId);
+  if (opportunityType) params.set('opportunityType', opportunityType);
+
+  const res = await fetch(`/api/customer-success/expansion?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch expansion opportunities');
+  return data.opportunities || [];
+}
+
+export async function createExpansionOpportunity(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/customer-success/expansion', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create expansion opportunity');
+  return data.opportunity || data.opportunities;
+}
+
+export async function fetchExpansionOpportunity(expansionId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/expansion/${expansionId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch expansion opportunity');
+  return data.opportunity;
+}
+
+export async function updateExpansionOpportunity(expansionId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/expansion/${expansionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update expansion opportunity');
+  return data.opportunity;
+}
+
+export async function approveExpansionOpportunity(expansionId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/expansion/${expansionId}/approve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to approve expansion opportunity');
+  return data.opportunity;
+}
+
+export async function dismissExpansionOpportunity(expansionId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/expansion/${expansionId}/dismiss`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to dismiss expansion opportunity');
+  return data.opportunity;
+}
+
+export async function fetchCustomerSuccessPlans({ accountId, status } = {}) {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (accountId) params.set('accountId', accountId);
+  if (status) params.set('status', status);
+
+  const res = await fetch(`/api/customer-success/plans?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer success plans');
+  return data.plans || [];
+}
+
+export async function createCustomerSuccessPlan(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/customer-success/plans', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create customer success plan');
+  return data.plan;
+}
+
+export async function fetchCustomerSuccessPlan(planId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/plans/${planId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch customer success plan');
+  return data.plan;
+}
+
+export async function updateCustomerSuccessPlan(planId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/plans/${planId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update customer success plan');
+  return data.plan;
+}
+
+export async function generateCustomerSuccessPlanDraft(targetId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/plans/${targetId}/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to generate customer success plan draft');
+  return data.draft;
+}
+
+export async function approveCustomerSuccessPlan(planId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/customer-success/plans/${planId}/approve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to approve customer success plan');
+  return data.plan;
+}
+
+// ==============================================================================
+// AI CUSTOMER SUPPORT & TICKET INTELLIGENCE SDK
+// ==============================================================================
+
+export async function fetchSupportTickets(params = {}) {
+  const token = await getAuthToken();
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      query.set(k, String(v));
+    }
+  });
+
+  const res = await fetch(`/api/support/tickets?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch support tickets');
+  return data;
+}
+
+export async function createSupportTicket(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/tickets', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create support ticket');
+  return data.ticket;
+}
+
+export async function fetchSupportTicket(ticketId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch support ticket');
+  return data.ticket;
+}
+
+export async function updateSupportTicket(ticketId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update support ticket');
+  return data.ticket;
+}
+
+export async function addSupportTicketMessage(ticketId, messagePayload) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(messagePayload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to add message to ticket');
+  return data.message;
+}
+
+export async function analyzeSupportTicketWithAI(ticketId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}/ai-analyze`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to analyze support ticket');
+  return data.insight;
+}
+
+export async function evaluateSupportTicketEscalation(ticketId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}/escalation-eval`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to evaluate ticket escalation');
+  return data.evaluation;
+}
+
+export async function approveSupportTicketEscalation(ticketId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}/escalate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to approve ticket escalation');
+  return data.ticket;
+}
+
+export async function dismissSupportTicketEscalation(ticketId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/support/tickets/${ticketId}/de-escalate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to dismiss ticket escalation');
+  return data.ticket;
+}
+
+export async function fetchSupportMetrics() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/metrics', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch support metrics');
+  return data.metrics;
+}
+
+export async function fetchSupportIssueAnalytics() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/analytics', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch support analytics');
+  return data.analytics;
+}
+
+export async function fetchSupportSlaPolicies() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/sla-policies', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch SLA policies');
+  return data.policies || [];
+}
+
+export async function updateSupportSlaPolicy(policyPayload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/sla-policies', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(policyPayload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update SLA policy');
+  return data.policy;
+}
+
+export async function fetchSupportProviders() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/providers', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch support providers');
+  return data.providers || [];
+}
+
+export async function importSupportTicketsCsv(csvContent) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/support/import/csv', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ csv_content: csvContent }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to import CSV support tickets');
+  return data;
+}
+
+// ==============================================================================
+// AI CUSTOMER ENGAGEMENT & LIFECYCLE AUTOMATION SDK
+// ==============================================================================
+
+export async function fetchLifecycleWorkflows(params = {}) {
+  const token = await getAuthToken();
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      query.set(k, String(v));
+    }
+  });
+
+  const res = await fetch(`/api/lifecycle/workflows?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle workflows');
+  return data;
+}
+
+export async function createLifecycleWorkflow(payload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/lifecycle/workflows', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create lifecycle workflow');
+  return data.workflow;
+}
+
+export async function fetchLifecycleWorkflow(workflowId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle workflow');
+  return data.workflow;
+}
+
+export async function updateLifecycleWorkflow(workflowId, updates) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(updates),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to update lifecycle workflow');
+  return data.workflow;
+}
+
+export async function publishLifecycleWorkflow(workflowId, payload = {}) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}/publish`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to publish lifecycle workflow');
+  return data;
+}
+
+export async function pauseLifecycleWorkflow(workflowId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}/pause`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to pause lifecycle workflow');
+  return data.workflow;
+}
+
+export async function resumeLifecycleWorkflow(workflowId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}/resume`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to resume lifecycle workflow');
+  return data.workflow;
+}
+
+export async function duplicateLifecycleWorkflow(workflowId, name) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}/duplicate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to duplicate lifecycle workflow');
+  return data.workflow;
+}
+
+export async function fetchLifecycleWorkflowVersions(workflowId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/workflows/${workflowId}/versions`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch workflow versions');
+  return data.versions || [];
+}
+
+export async function fetchLifecycleTemplates() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/lifecycle/templates', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle templates');
+  return data.templates || [];
+}
+
+export async function instantiateLifecycleTemplate(templateId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/templates/${templateId}/instantiate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to instantiate lifecycle template');
+  return data.workflow;
+}
+
+export async function fetchLifecycleRuns(params = {}) {
+  const token = await getAuthToken();
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      query.set(k, String(v));
+    }
+  });
+
+  const res = await fetch(`/api/lifecycle/runs?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle runs');
+  return data;
+}
+
+export async function fetchLifecycleRun(runId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/runs/${runId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle run');
+  return data.run;
+}
+
+export async function cancelLifecycleRun(runId, reason) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/runs/${runId}/cancel`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to cancel lifecycle run');
+  return data.run;
+}
+
+export async function retryLifecycleRun(runId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/runs/${runId}/retry`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to retry lifecycle run');
+  return data.run;
+}
+
+export async function fetchLifecycleEvents(params = {}) {
+  const token = await getAuthToken();
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      query.set(k, String(v));
+    }
+  });
+
+  const res = await fetch(`/api/lifecycle/events?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle events');
+  return data;
+}
+
+export async function ingestLifecycleEvent(eventPayload) {
+  const token = await getAuthToken();
+  const res = await fetch('/api/lifecycle/events/ingest', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify(eventPayload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to ingest lifecycle event');
+  return data;
+}
+
+export async function fetchLifecycleApprovals(params = {}) {
+  const token = await getAuthToken();
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      query.set(k, String(v));
+    }
+  });
+
+  const res = await fetch(`/api/lifecycle/approvals?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle approvals');
+  return data;
+}
+
+export async function approveLifecycleAction(approvalId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/approvals/${approvalId}/approve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to approve lifecycle action');
+  return data.approval;
+}
+
+export async function rejectLifecycleAction(approvalId, reason) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/approvals/${approvalId}/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to reject lifecycle action');
+  return data.approval;
+}
+
+export async function fetchLifecycleRecommendations() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/lifecycle/recommendations', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle recommendations');
+  return data.recommendations || [];
+}
+
+export async function createDraftFromLifecycleRecommendation(recommendationId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/recommendations/${recommendationId}/create-draft`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token || ''}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to create draft from recommendation');
+  return data.workflow;
+}
+
+export async function fetchLifecycleAnalyticsOverview() {
+  const token = await getAuthToken();
+  const res = await fetch('/api/lifecycle/analytics/overview', {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch lifecycle analytics overview');
+  return data.analytics;
+}
+
+export async function fetchLifecycleWorkflowAnalytics(workflowId) {
+  const token = await getAuthToken();
+  const res = await fetch(`/api/lifecycle/analytics/workflows/${workflowId}`, {
+    headers: { Authorization: `Bearer ${token || ''}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to fetch workflow analytics');
+  return data.analytics;
+}
+
+
+
 
 
 

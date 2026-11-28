@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { RevenueIntelligenceSkeleton } from '../ui/DashboardSkeleton';
 import {
   TrendingUp,
   DollarSign,
@@ -195,13 +196,7 @@ export default function RevenueIntelligenceView() {
   }, [dealRisks, riskFilter, riskSearch]);
 
   if (loading && !overview) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[460px] p-8">
-        <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin mb-3" />
-        <p className="text-sm font-medium text-emerald-100">Calculating revenue intelligence & pipeline forecasts...</p>
-        <p className="text-xs text-emerald-300 mt-1">Evaluating deterministic weighted pipeline & risk-adjusted close probabilities</p>
-      </div>
-    );
+    return <RevenueIntelligenceSkeleton />;
   }
 
   const cur = overview?.currency || 'USD';

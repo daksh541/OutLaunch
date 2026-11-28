@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TableSkeleton } from '../ui/DashboardSkeleton';
 import {
   Search,
   Filter,
@@ -43,6 +44,8 @@ export default function LeadsView({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [isCsvSubmitting, setIsCsvSubmitting] = useState(false);
+  const [isAddSubmitting, setIsAddSubmitting] = useState(false);
   const [copiedDraft, setCopiedDraft] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -104,21 +107,26 @@ export default function LeadsView({
     e.preventDefault();
     if (!newLead.name || !newLead.email) return;
 
-    if (onAddLead) {
-      await onAddLead(newLead);
-    }
+    setIsAddSubmitting(true);
+    try {
+      if (onAddLead) {
+        await onAddLead(newLead);
+      }
 
-    setNewLead({
-      name: '',
-      title: '',
-      company: '',
-      email: '',
-      linkedin: '',
-      website: '',
-      location: '',
-      notes: ''
-    });
-    setIsAddModalOpen(false);
+      setNewLead({
+        name: '',
+        title: '',
+        company: '',
+        email: '',
+        linkedin: '',
+        website: '',
+        location: '',
+        notes: ''
+      });
+      setIsAddModalOpen(false);
+    } finally {
+      setIsAddSubmitting(false);
+    }
   };
 
   const handleStartEdit = (lead, e) => {
@@ -171,28 +179,33 @@ export default function LeadsView({
     const lines = csvText.trim().split('\n');
     if (lines.length <= 1) return;
 
-    const newEntries = [];
-    // Skip header line
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',').map((p) => p.trim());
-      if (parts.length >= 4 && parts[3]) {
-        newEntries.push({
-          name: parts[0] || 'Unknown',
-          title: parts[1] || 'Decision Maker',
-          company: parts[2] || 'Enterprise Target',
-          email: parts[3],
-          linkedin: parts[4] || '',
-          location: 'United States',
-          status: 'Researched',
-          notes: 'Imported via CSV batch upload',
-        });
+    setIsCsvSubmitting(true);
+    try {
+      const newEntries = [];
+      // Skip header line
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(',').map((p) => p.trim());
+        if (parts.length >= 4 && parts[3]) {
+          newEntries.push({
+            name: parts[0] || 'Unknown',
+            title: parts[1] || 'Decision Maker',
+            company: parts[2] || 'Enterprise Target',
+            email: parts[3],
+            linkedin: parts[4] || '',
+            location: 'United States',
+            status: 'Researched',
+            notes: 'Imported via CSV batch upload',
+          });
+        }
       }
-    }
 
-    if (newEntries.length > 0 && onImportLeads) {
-      await onImportLeads(newEntries);
+      if (newEntries.length > 0 && onImportLeads) {
+        await onImportLeads(newEntries);
+      }
+      setIsCsvModalOpen(false);
+    } finally {
+      setIsCsvSubmitting(false);
     }
-    setIsCsvModalOpen(false);
   };
 
   const handleCopyDraft = (text) => {
@@ -218,19 +231,29 @@ export default function LeadsView({
         <div className="flex items-center gap-2.5">
           <button
             type="button"
+            disabled={isCsvSubmitting}
             onClick={() => setIsCsvModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl border border-[#0d1c15]/15 hover:bg-white text-xs sm:text-sm font-semibold text-[#0d1c15] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            className="px-3.5 py-2 rounded-xl border border-[#0d1c15]/15 hover:bg-white text-xs sm:text-sm font-semibold text-[#0d1c15] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-60"
           >
-            <Upload className="w-4 h-4 text-[#5a6962]" />
+            {isCsvSubmitting ? (
+              <Loader2 className="w-4 h-4 text-[#0d9467] animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 text-[#5a6962]" />
+            )}
             <span>Import CSV</span>
           </button>
 
           <button
             type="button"
+            disabled={isAddSubmitting}
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-60"
           >
-            <Plus className="w-4 h-4 text-[#00e599]" />
+            {isAddSubmitting ? (
+              <Loader2 className="w-4 h-4 text-[#00e599] animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4 text-[#00e599]" />
+            )}
             <span>Add Prospect</span>
           </button>
         </div>
@@ -295,10 +318,7 @@ export default function LeadsView({
       {/* Main Leads Table */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#0d1c15]/08 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-12 flex flex-col items-center justify-center text-center">
-            <Loader2 className="w-8 h-8 text-[#0d9467] animate-spin mb-3" />
-            <p className="text-sm font-mono text-[#5a6962]">Loading prospects from Supabase...</p>
-          </div>
+          <TableSkeleton rows={7} />
         ) : filteredLeads.length === 0 ? (
           <div className="p-12 flex flex-col items-center justify-center text-center">
             <Users className="w-12 h-12 text-[#73827a]/40 mb-3" />
@@ -734,9 +754,11 @@ export default function LeadsView({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold cursor-pointer"
+                  disabled={isAddSubmitting}
+                  className="px-5 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold cursor-pointer flex items-center gap-2 disabled:opacity-60"
                 >
-                  Save Prospect
+                  {isAddSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#00e599]" />}
+                  <span>{isAddSubmitting ? 'Saving Prospect…' : 'Save Prospect'}</span>
                 </button>
               </div>
             </form>
@@ -940,9 +962,11 @@ export default function LeadsView({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold cursor-pointer"
+                    disabled={isCsvSubmitting}
+                    className="px-5 py-2 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] text-white text-xs font-semibold cursor-pointer flex items-center gap-2 disabled:opacity-60"
                   >
-                    Import to Supabase
+                    {isCsvSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#00e599]" />}
+                    <span>{isCsvSubmitting ? 'Importing…' : 'Import to Supabase'}</span>
                   </button>
                 </div>
               </div>

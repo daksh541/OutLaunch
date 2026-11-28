@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal, Mail, Linkedin, CheckCircle2, UserCheck, ShieldCheck, Sparkles, Send, Clock, ArrowRight } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 const SCENARIOS = {
   growth: {
@@ -44,17 +45,17 @@ export default function OutboundSequenceSimulator() {
   const current = SCENARIOS[selectedScenario];
 
   return (
-    <section id="demo" className="py-20 md:py-28 bg-[#f7f5f0] border-t border-[#0d1c15]/08 relative">
+    <section id="demo" className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-[11px] font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-[11px] font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>INTERACTIVE WORKFLOW SIMULATOR</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-tight">
-            Configure your outbound cadence
+            <AnimatedWordHighlight text="Configure your outbound cadence" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Test different buyer personas, channel mixes, and governance workflows to see how OutLaunch prepares your pipeline.
@@ -62,7 +63,7 @@ export default function OutboundSequenceSimulator() {
         </div>
 
         {/* Interactive Configuration Card */}
-        <div className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] overflow-hidden">
           
           {/* Controls Bar */}
           <div className="p-6 sm:p-8 bg-[#fcfbf9] border-b border-[#0d1c15]/08 grid grid-cols-1 md:grid-cols-3 gap-6">

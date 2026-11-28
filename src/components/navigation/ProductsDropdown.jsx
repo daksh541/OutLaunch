@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutGrid, ChevronDown, Sparkles, Code2, Globe, MapPin, Compass } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
+import { triggerCircularTransition } from '../../lib/motion';
 
 const products = [
   {
@@ -58,9 +59,23 @@ export default function ProductsDropdown({ theme = 'light' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelectProduct = (path) => {
+  // Close dropdown when user scrolls
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isOpen]);
+
+  const handleSelectProduct = (item, targetEl) => {
     setIsOpen(false);
-    navigate(path);
+    if (item.id === 'explorer') {
+      triggerCircularTransition(targetEl, () => navigate(item.path));
+    } else {
+      navigate(item.path);
+    }
   };
 
   return (
@@ -87,14 +102,14 @@ export default function ProductsDropdown({ theme = 'light' }) {
       {/* Floating Dropdown Menu Card */}
       {isOpen && (
         <div
-          className={`absolute top-full left-0 mt-2 w-80 md:w-88 rounded-2xl p-2 z-50 shadow-2xl transition-all animate-in fade-in slide-in-from-top-2 ${
+          className={`absolute top-full left-0 mt-2 w-80 md:w-88 rounded-2xl p-2 z-50 backdrop-blur-md transition-all animate-in fade-in slide-in-from-top-2 ${
             isDark
-              ? 'bg-[#111414] border border-white/[0.1] text-white shadow-black/80'
-              : 'bg-card border border-border text-foreground shadow-plaque'
+              ? 'bg-[#111414]/95 border border-white/[0.12] text-white shadow-[0_16px_40px_rgba(0,0,0,0.6)]'
+              : 'bg-white/95 border border-[#0d1c15]/10 text-foreground shadow-[0_16px_40px_rgba(13,28,21,0.12)]'
           }`}
         >
           <div className="space-y-1">
-            {products.map((item) => {
+            {products.map((item, idx) => {
               const Icon = item.icon;
               const isActive = currentProduct === item.id;
 
@@ -102,9 +117,10 @@ export default function ProductsDropdown({ theme = 'light' }) {
                 <a
                   key={item.id}
                   href={item.path}
+                  style={{ animationDelay: `${idx * 40}ms` }}
                   onClick={(e) => {
                     e.preventDefault();
-                    handleSelectProduct(item.path);
+                    handleSelectProduct(item, e.currentTarget);
                   }}
                   className={`group flex items-start gap-3.5 p-3 rounded-xl transition-colors cursor-pointer ${
                     isActive

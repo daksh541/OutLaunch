@@ -26,7 +26,7 @@ const tagLabels = {
 };
 
 const methodBadgeColors = {
-  GET: 'text-[#009485] bg-[#ecf8f6]',
+  GET: 'text-[#0d9467] bg-[#edf2ec]',
   POST: 'text-[#0a52af] bg-[#eef4fc]',
   PATCH: 'text-[#ffaa01] bg-[#fef8eb]',
   DEL: 'text-[#d52b2a] bg-[#faecec]',
@@ -41,7 +41,7 @@ function TagBlock({ tagKey, showShowMore = false }) {
   const getMethodColor = (m) => {
     if (m === 'DELETE' || m === 'DEL') return 'text-[#d52b2a]';
     if (m === 'PATCH') return 'text-[#ffaa01]';
-    return 'text-[#009485]';
+    return 'text-[#0d9467]';
   };
 
   const hasShowMore = showShowMore || endpoints.length > 4 || tagKey === 'search' || tagKey === 'contact' || tagKey === 'agents' || tagKey === 'tasks' || tagKey === 'billing' || tagKey === 'deduplication';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -30,7 +30,10 @@ import {
   Mic,
   Award,
   TrendingUp,
-  MapPin
+  MapPin,
+  HeartHandshake,
+  LifeBuoy,
+  GitMerge
 } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -68,6 +71,9 @@ import CallIntelligenceView from './CallIntelligenceView';
 import SalesCoachingView from './SalesCoachingView';
 import RevenueIntelligenceView from './RevenueIntelligenceView';
 import SalesTerritoryView from './SalesTerritoryView';
+import CustomerSuccessView from './CustomerSuccessView';
+import SupportIntelligenceView from './SupportIntelligenceView';
+import LifecycleAutomationView from './LifecycleAutomationView';
 import SettingsView from './SettingsView';
 import FindLeadsView from './FindLeadsView';
 import AiPersonalizationModal from './AiPersonalizationModal';
@@ -125,7 +131,10 @@ export default function DashboardLayout() {
 
   // Fetch real data from Supabase
   const loadDashboardData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoadingData(false);
+      return;
+    }
     setIsLoadingData(true);
     setDataError(null);
     try {
@@ -193,11 +202,12 @@ export default function DashboardLayout() {
   // Lead handlers
   const handleAddLead = async (newLeadData) => {
     try {
-      const created = await createLead(user.id, newLeadData);
+      const userId = user?.id || 'demo-user';
+      const created = await createLead(userId, newLeadData);
       setProspects((prev) => [created, ...prev]);
     } catch (err) {
       console.error('Failed to add lead:', err);
-      alert('Failed to save lead to Supabase: ' + err.message);
+      alert('Failed to save lead: ' + err.message);
     }
   };
 
@@ -223,22 +233,24 @@ export default function DashboardLayout() {
 
   const handleImportLeads = async (importedList) => {
     try {
-      const createdList = await bulkCreateLeads(user.id, importedList);
+      const userId = user?.id || 'demo-user';
+      const createdList = await bulkCreateLeads(userId, importedList);
       setProspects((prev) => [...createdList, ...prev]);
     } catch (err) {
       console.error('Failed to import leads:', err);
-      alert('Failed to import leads to Supabase: ' + err.message);
+      alert('Failed to import leads: ' + err.message);
     }
   };
 
   // Campaign handlers
   const handleAddCampaign = async (newCampData) => {
     try {
-      const created = await createCampaign(user.id, newCampData);
+      const userId = user?.id || 'demo-user';
+      const created = await createCampaign(userId, newCampData);
       setCampaigns((prev) => [created, ...prev]);
     } catch (err) {
       console.error('Failed to create campaign:', err);
-      alert('Failed to create campaign in Supabase: ' + err.message);
+      alert('Failed to create campaign: ' + err.message);
     }
   };
 
@@ -321,25 +333,58 @@ export default function DashboardLayout() {
       }
     : null;
 
-  const NAV_ITEMS = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'find-leads', label: 'Find Leads', icon: Search, badge: 'New', highlight: true },
-    { id: 'leads', label: 'Prospects', icon: Users, badge: prospects.length.toString() },
-    { id: 'crm', label: 'CRM & Pipeline', icon: Briefcase, badge: 'Deals' },
-    { id: 'meetings', label: 'Meetings', icon: Calendar, badge: 'Calendar' },
-    { id: 'calls', label: 'Call Intelligence', icon: Mic, badge: 'AI' },
-    { id: 'coaching', label: 'Sales Coaching', icon: Award, badge: 'AI' },
-    { id: 'revenue', label: 'Revenue Intelligence', icon: TrendingUp, badge: 'AI' },
-    { id: 'territories', label: 'Territory & Accounts', icon: MapPin, badge: 'AI' },
-    { id: 'campaigns', label: 'Campaigns', icon: Send, badge: `${activeCampaignsCount} Active` },
-    { id: 'sequences', label: 'Sequences', icon: Mail },
-    { id: 'tasks', label: 'LinkedIn Tasks', icon: Linkedin, badge: '3 Review' },
-    { id: 'inbox', label: 'Unified Inbox', icon: Inbox, badge: '2 New' },
-    { id: 'research', label: 'AI Deep Research', icon: Sparkles },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'optimization', label: 'Optimize', icon: Zap, badge: 'AI' },
-    { id: 'settings', label: 'Workspace Settings', icon: Settings }
-  ];
+  const [collapsedGroups, setCollapsedGroups] = useState({
+    outbound: false,
+    intelligence: false,
+    analytics: false,
+  });
+
+  const toggleGroup = (groupId) => {
+    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const NAV_GROUPS = useMemo(() => [
+    {
+      id: 'outbound',
+      label: 'Core Outbound',
+      items: [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'find-leads', label: 'Find Leads', icon: Search, badge: 'New', highlight: true },
+        { id: 'leads', label: 'Prospects', icon: Users, badge: prospects.length.toString() },
+        { id: 'campaigns', label: 'Campaigns', icon: Send, badge: `${activeCampaignsCount} Active` },
+        { id: 'sequences', label: 'Sequences', icon: Mail },
+        { id: 'tasks', label: 'LinkedIn Tasks', icon: Linkedin, badge: '3 Review' },
+        { id: 'inbox', label: 'Unified Inbox', icon: Inbox, badge: '2 New' },
+      ],
+    },
+    {
+      id: 'intelligence',
+      label: 'Revenue & Intelligence',
+      items: [
+        { id: 'crm', label: 'CRM & Pipeline', icon: Briefcase, badge: 'Deals' },
+        { id: 'meetings', label: 'Meetings', icon: Calendar, badge: 'Calendar' },
+        { id: 'calls', label: 'Call Intelligence', icon: Mic, badge: 'AI' },
+        { id: 'coaching', label: 'Sales Coaching', icon: Award, badge: 'AI' },
+        { id: 'revenue', label: 'Revenue Intelligence', icon: TrendingUp, badge: 'AI' },
+        { id: 'territories', label: 'Territory & Accounts', icon: MapPin, badge: 'AI' },
+        { id: 'customer-success', label: 'Customer Success', icon: HeartHandshake, badge: 'AI' },
+        { id: 'support', label: 'Support Intelligence', icon: LifeBuoy, badge: 'AI' },
+        { id: 'lifecycle', label: 'Lifecycle Automation', icon: GitMerge, badge: 'AI' },
+        { id: 'research', label: 'AI Deep Research', icon: Sparkles },
+      ],
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics & Settings',
+      items: [
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'optimization', label: 'Optimize', icon: Zap, badge: 'AI' },
+        { id: 'settings', label: 'Workspace Settings', icon: Settings },
+      ],
+    },
+  ], [prospects.length, activeCampaignsCount]);
+
+  const NAV_ITEMS = useMemo(() => NAV_GROUPS.flatMap((g) => g.items), [NAV_GROUPS]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#f7f5f0] text-[#0d1c15] flex font-sans antialiased selection:bg-[#00e599]/30">
@@ -474,58 +519,94 @@ export default function DashboardLayout() {
             )}
           </div>
 
-          {/* Navigation Links List (Scrollable if viewport is small) */}
-          <nav className="p-2 space-y-1 mt-1 overflow-y-auto flex-1">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentTab === item.id;
+          {/* Navigation Links List with Collapsible Groups & Fade Mask */}
+          <nav
+            className="p-2 space-y-3 mt-1 overflow-y-auto flex-1 custom-scrollbar"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%)',
+            }}
+          >
+            {NAV_GROUPS.map((group) => {
+              const isGroupCollapsed = !!collapsedGroups[group.id];
 
               return (
-                <button
-                  key={item.id}
-                  type="button"
-                  title={sidebarCollapsed ? `${item.label} ${item.badge ? `(${item.badge})` : ''}` : undefined}
-                  onClick={() => {
-                    setCurrentTab(item.id);
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center rounded-xl text-xs font-medium transition-all cursor-pointer relative group ${
-                    sidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
-                  } ${
-                    isActive
-                      ? 'bg-[#0d1c15] text-white font-semibold shadow-xs'
-                      : 'text-[#4a5851] hover:text-[#0d1c15] hover:bg-[#edf2ec]/70'
-                  }`}
-                >
-                  <div className={`flex items-center gap-2.5 min-w-0 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-                    <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'text-[#00e599] scale-105' : 'text-[#73827a] group-hover:scale-105'}`} />
-                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
-                  </div>
-
-                  {/* Badge in full mode */}
-                  {!sidebarCollapsed && item.badge && (
-                    <span
-                      className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
-                        isActive
-                          ? 'bg-[#182e24] text-[#00e599]'
-                          : item.highlight
-                          ? 'bg-[#0077b5]/15 text-[#0077b5]'
-                          : 'bg-[#edf2ec] text-[#5a6962]'
-                      }`}
+                <div key={group.id} className="space-y-1">
+                  {!sidebarCollapsed && (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.id)}
+                      className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#73827a] hover:text-[#0d1c15] transition-colors cursor-pointer select-none"
                     >
-                      {item.badge}
-                    </span>
+                      <span>{group.label}</span>
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform duration-200 ${
+                          isGroupCollapsed ? '-rotate-90 text-[#73827a]' : 'text-[#0d9467]'
+                        }`}
+                      />
+                    </button>
                   )}
 
-                  {/* Dot indicator when collapsed */}
-                  {sidebarCollapsed && item.badge && (
-                    <span
-                      className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
-                        item.highlight ? 'bg-[#0077b5]' : 'bg-[#00e599]'
-                      }`}
-                    />
+                  {(!isGroupCollapsed || sidebarCollapsed) && (
+                    <div className="space-y-0.5 animate-fadeIn">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = currentTab === item.id;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            title={sidebarCollapsed ? `${item.label} ${item.badge ? `(${item.badge})` : ''}` : undefined}
+                            onClick={() => {
+                              setCurrentTab(item.id);
+                              setSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center rounded-xl text-xs font-medium transition-all cursor-pointer relative group ${
+                              sidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
+                            } ${
+                              isActive
+                                ? 'bg-[#0d1c15] text-white font-semibold shadow-xs'
+                                : 'text-[#4a5851] hover:text-[#0d1c15] hover:bg-[#edf2ec]/70'
+                            }`}
+                          >
+                            {isActive && (
+                              <div className="absolute left-1 top-2 bottom-2 w-1 rounded-full bg-[#00e599]" />
+                            )}
+                            <div className={`flex items-center gap-2.5 min-w-0 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                              <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'text-[#00e599] scale-105' : 'text-[#73827a] group-hover:scale-105'}`} />
+                              {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                            </div>
+
+                            {/* Badge in full mode */}
+                            {!sidebarCollapsed && item.badge && (
+                              <span
+                                className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
+                                  isActive
+                                    ? 'bg-[#182e24] text-[#00e599]'
+                                    : item.highlight
+                                    ? 'bg-[#0077b5]/15 text-[#0077b5]'
+                                    : 'bg-[#edf2ec] text-[#5a6962]'
+                                }`}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+
+                            {/* Dot indicator when collapsed */}
+                            {sidebarCollapsed && item.badge && (
+                              <span
+                                className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
+                                  item.highlight ? 'bg-[#0077b5]' : 'bg-[#00e599]'
+                                }`}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </nav>
@@ -714,7 +795,10 @@ export default function DashboardLayout() {
                 className="p-2 text-[#5a6962] hover:text-[#0d1c15] hover:bg-[#edf2ec] rounded-xl transition-colors relative cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                <span className="w-2 h-2 rounded-full bg-[#0d9467] absolute top-1.5 right-1.5 ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e599] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0d9467] ring-2 ring-white" />
+                </span>
               </button>
 
               {notificationsOpen && (
@@ -776,6 +860,7 @@ export default function DashboardLayout() {
           )}
 
           <DashboardErrorBoundary key={currentTab} onReset={() => setCurrentTab('overview')}>
+            <div className="animate-fadeIn">
             {currentTab === 'overview' && (
               <OverviewView
                 metrics={metrics}
@@ -855,6 +940,29 @@ export default function DashboardLayout() {
               />
             )}
 
+            {currentTab === 'customer-success' && (
+              <CustomerSuccessView
+                prospects={prospects}
+                onNavigateToCrm={() => setCurrentTab('crm')}
+              />
+            )}
+
+            {currentTab === 'support' && (
+              <SupportIntelligenceView
+                prospects={prospects}
+                onNavigateToCrm={() => setCurrentTab('crm')}
+                onNavigateToCustomerSuccess={() => setCurrentTab('customer-success')}
+              />
+            )}
+
+            {currentTab === 'lifecycle' && (
+              <LifecycleAutomationView
+                prospects={prospects}
+                onNavigateToCrm={() => setCurrentTab('crm')}
+                onNavigateToCustomerSuccess={() => setCurrentTab('customer-success')}
+              />
+            )}
+
             {currentTab === 'campaigns' && (
               <CampaignsView
                 campaigns={campaigns}
@@ -909,6 +1017,7 @@ export default function DashboardLayout() {
             {currentTab === 'settings' && (
               <SettingsView />
             )}
+            </div>
           </DashboardErrorBoundary>
         </main>
       </div>

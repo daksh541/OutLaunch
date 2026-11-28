@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AiResearchProgressBar } from '../ui/DashboardSkeleton';
 import {
   Sparkles,
   Mail,
@@ -375,13 +376,7 @@ export default function AiPersonalizationModal({ lead, userId, onClose }) {
 
               {/* Research Output Panel */}
               {isResearchLoading ? (
-                <div className="p-12 flex flex-col items-center justify-center text-center bg-[#fcfbf9] rounded-2xl border border-[#0d1c15]/08">
-                  <Loader2 className="w-8 h-8 text-[#0d9467] animate-spin mb-3" />
-                  <p className="text-sm font-semibold text-[#0d1c15]">Conducting AI Lead Research</p>
-                  <p className="text-xs text-[#5a6962] mt-1">
-                    Analyzing role context, priorities, and verified signals...
-                  </p>
-                </div>
+                <AiResearchProgressBar />
               ) : researchData ? (
                 <div className="space-y-4">
                   {/* Overview Grid */}
@@ -460,9 +455,12 @@ export default function AiPersonalizationModal({ lead, userId, onClose }) {
                         <button
                           type="button"
                           onClick={() => handleCopy(researchData.suggested_angle, 'angle')}
-                          className="text-xs font-mono text-[#0d9467] hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-xs font-mono text-[#0d9467] hover:underline flex items-center gap-1.5 cursor-pointer"
                         >
-                          {copiedKey === 'angle' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <div className="relative w-3 h-3">
+                            <Copy className={`w-3 h-3 transition-all duration-200 absolute inset-0 ${copiedKey === 'angle' ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`} />
+                            <Check className={`w-3 h-3 text-[#0d9467] transition-all duration-200 absolute inset-0 ${copiedKey === 'angle' ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
+                          </div>
                           <span>{copiedKey === 'angle' ? 'Copied' : 'Copy'}</span>
                         </button>
                       </div>

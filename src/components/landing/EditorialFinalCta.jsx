@@ -37,14 +37,17 @@ export default function EditorialFinalCta() {
         navigate(PRODUCT_ROUTES.SIGN_IN);
         return;
       }
-      navigate(`/auto-gtm/company/${encodeURIComponent(domain)}/explore?src=landing&phase=research_company_loading`);
+      navigate(`/analysis/${encodeURIComponent(domain)}`);
     } catch (err) {
       setError(err.message || 'Please enter a valid website address');
     }
   };
 
   return (
-    <section className="py-24 md:py-32 bg-[#0d1c15] text-white relative overflow-hidden">
+    <section className="pt-32 pb-24 md:pt-44 md:pb-28 bg-gradient-to-b from-[#14261d] via-[#0d1c15] to-[#08120e] text-white relative overflow-hidden">
+      {/* Tall gradual gradient blend from the light page into the dark footer */}
+      <div className="absolute top-0 left-0 right-0 h-48 sm:h-64 bg-gradient-to-b from-[#f7f5f0] via-[#12281e]/80 to-transparent pointer-events-none z-10" />
+
       {/* Clean OutLaunch Geometric Grid Accent */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,229,153,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,229,153,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 

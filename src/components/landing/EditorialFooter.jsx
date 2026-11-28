@@ -1,19 +1,46 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { ArrowUpRight } from 'lucide-react';
+import { gsap, ScrollTrigger, prefersReducedMotion } from '../../lib/motion';
 
 export default function EditorialFooter() {
   const { navigate } = useNavigation();
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    if (prefersReducedMotion() || !footerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.footer-col',
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: footerRef.current,
+            start: 'top 85%',
+            once: true,
+          },
+        }
+      );
+    }, footerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <footer className="bg-[#08120e] text-[#8ba096] border-t border-[#162920] pt-16 pb-12 font-sans">
+    <footer ref={footerRef} className="bg-[#08120e] text-[#8ba096] border-t border-[#162920] pt-16 pb-12 font-sans">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Top Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#162920]">
           
           {/* Col 1 & 2: Brand & Mission */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="footer-col lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-[#00e599] text-[#08120e] flex items-center justify-center font-mono font-bold text-sm shadow-sm">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -41,7 +68,7 @@ export default function EditorialFooter() {
           </div>
 
           {/* Col 3: Products */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-white font-bold">
               Products
             </h4>
@@ -99,7 +126,7 @@ export default function EditorialFooter() {
           </div>
 
           {/* Col 4: Platform */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-white font-bold">
               Platform
             </h4>
@@ -128,7 +155,7 @@ export default function EditorialFooter() {
           </div>
 
           {/* Col 5: Account & Support */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-white font-bold">
               Access
             </h4>

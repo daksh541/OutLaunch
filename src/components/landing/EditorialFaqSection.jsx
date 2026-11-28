@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, HelpCircle } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 const FAQS = [
   {
@@ -36,17 +37,17 @@ export default function EditorialFaqSection() {
   };
 
   return (
-    <section id="faq" className="py-20 md:py-28 bg-[#ffffff] border-y border-[#0d1c15]/08 relative scroll-mt-20">
+    <section id="faq" className="py-20 md:py-24 bg-transparent relative scroll-mt-20">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <HelpCircle className="w-3.5 h-3.5" />
             <span>COMMON QUESTIONS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            Everything you need to know
+            <AnimatedWordHighlight text="Everything you need to know" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Clear, honest answers about deliverability, data sources, and how our human review queue works.
@@ -54,7 +55,7 @@ export default function EditorialFaqSection() {
         </div>
 
         {/* Accordion Container */}
-        <div className="max-w-[760px] mx-auto divide-y divide-[#0d1c15]/08">
+        <div className="max-w-[800px] mx-auto bg-white/80 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-[#0d1c15]/08 p-6 sm:p-8 md:p-10 shadow-sm divide-y divide-[#0d1c15]/08">
           {FAQS.map((faq, idx) => {
             const isOpen = openIndex === idx;
 
@@ -76,11 +77,16 @@ export default function EditorialFaqSection() {
                   </div>
                 </button>
 
-                {isOpen && (
-                  <div className="pt-3 pb-1 text-sm sm:text-base text-[#4a5851] leading-relaxed font-sans animate-fadeIn">
-                    <p>{faq.a}</p>
+                <div
+                  className="accordion-content"
+                  data-open={isOpen}
+                >
+                  <div className="accordion-inner">
+                    <div className="pt-3 pb-1 text-sm sm:text-base text-[#4a5851] leading-relaxed font-sans">
+                      <p>{faq.a}</p>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

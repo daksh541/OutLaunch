@@ -1,19 +1,20 @@
 import React from 'react';
 import { Sparkles, FileText, Check, X, ShieldAlert, Zap, Globe, MessageSquareQuote } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 export default function PersonalisationSection() {
   return (
-    <section className="py-20 md:py-28 bg-[#ffffff] border-y border-[#0d1c15]/08 relative">
+    <section className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
-        <div className="max-w-3xl mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+        <div className="max-w-3xl mb-12 sm:mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
             <span>02 · RESEARCH &amp; PERSONALISATION</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            Never send a generic template again
+            <AnimatedWordHighlight text="Never send a generic template again" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Our agent reads company press releases, podcast appearances, LinkedIn posts, job vacancies, and tech stacks to write emails that feel like a thoughtful colleague reaching out.

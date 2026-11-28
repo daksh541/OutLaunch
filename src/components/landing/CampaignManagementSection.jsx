@@ -1,19 +1,20 @@
 import React from 'react';
 import { LayoutDashboard, TrendingUp, Users, Mail, CheckCircle2, AlertTriangle, ArrowUpRight } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 export default function CampaignManagementSection() {
   return (
-    <section className="py-20 md:py-28 bg-[#ffffff] border-y border-[#0d1c15]/08 relative">
+    <section className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Header */}
         <div className="max-w-3xl mb-14 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#edf2ec] border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <LayoutDashboard className="w-3.5 h-3.5" />
             <span>04 · CAMPAIGN MANAGEMENT</span>
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            One simple workspace for your entire outbound engine
+            <AnimatedWordHighlight text="One simple workspace for your entire outbound engine" />
           </h2>
           <p className="mt-4 text-base sm:text-lg text-[#4a5851] leading-relaxed">
             Manage multi-mailbox sending limits, track active conversations, inspect reply sentiment, and sync booked meetings with your CRM.
@@ -21,7 +22,7 @@ export default function CampaignManagementSection() {
         </div>
 
         {/* Campaign Metrics Dashboard Mockup */}
-        <div className="bg-[#fcfbf9] rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-6 sm:p-8 md:p-10">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl md:rounded-3xl border border-[#0d1c15]/10 shadow-[0_12px_40px_rgba(13,28,21,0.06)] p-6 sm:p-8 md:p-10">
           
           {/* Top Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

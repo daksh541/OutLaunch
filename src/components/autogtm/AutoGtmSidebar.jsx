@@ -235,30 +235,38 @@ export default function AutoGtmSidebar({
 
                   {/* 2-column grid of competitors with external link */}
                   <div className="grid grid-cols-2 gap-1.5">
-                    {displayedCompetitors.map((comp, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between rounded-md bg-[#f8fafc] border border-black/[0.04] px-2 py-1 text-[11px] text-gray-700 truncate"
-                      >
-                        <span className="truncate">{comp.domain}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="10"
-                          height="10"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-400 shrink-0 ml-1"
+                    {displayedCompetitors.map((comp, idx) => {
+                      const domain = comp?.domain || (typeof comp === 'string' ? comp : '');
+                      const href = comp?.source_urls?.[0] || (domain ? `https://${domain}` : '#');
+                      return (
+                        <a
+                          key={idx}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between rounded-md bg-[#f8fafc] border border-black/[0.04] px-2 py-1 text-[11px] text-gray-700 hover:text-[#0d9467] hover:bg-[#edf2ec] transition-colors truncate"
+                          title={comp?.name || domain}
                         >
-                          <path d="M15 3h6v6"></path>
-                          <path d="M10 14 21 3"></path>
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                        </svg>
-                      </div>
-                    ))}
+                          <span className="truncate">{domain}</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-400 shrink-0 ml-1"
+                          >
+                            <path d="M15 3h6v6"></path>
+                            <path d="M10 14 21 3"></path>
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          </svg>
+                        </a>
+                      );
+                    })}
                   </div>
 
                   {competitors.length > 8 && (

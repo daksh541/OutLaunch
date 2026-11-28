@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserCheck, CheckCircle2, Edit3, Linkedin, Mail, ArrowRight, ShieldCheck, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 const TASKS = [
   {
@@ -86,18 +87,18 @@ export default function HumanApprovalSection() {
   };
 
   return (
-    <section id="human-in-the-loop" className="py-20 md:py-28 bg-[#edf2ec]/50 border-y border-[#0d1c15]/08 relative">
+    <section id="human-in-the-loop" className="py-20 md:py-24 bg-transparent relative">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         
         {/* Section Headline */}
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-2xs">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-[#dbe5da] text-xs font-mono text-[#0d9467] font-semibold uppercase tracking-wider mb-3 shadow-xs">
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Taskaway-Inspired Human-in-the-Loop</span>
+            <span>04 · HUMAN-IN-THE-LOOP CONTROL</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-[#0d1c15] tracking-tight leading-[1.12]">
-            AI prepares the outreach.{' '}
+            <AnimatedWordHighlight text="AI prepares the outreach." />{' '}
             <span className="text-[#0d9467] italic font-editorial font-normal">
               You stay in control.
             </span>

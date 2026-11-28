@@ -46,6 +46,187 @@ body {
   letter-spacing: -0.011em;
 }
 
+/* Error Shake Animation */
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake-x 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Checkmark Stroke Draw */
+@keyframes checkmark-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmark-draw 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Sliding Pill Tab Indicator Transition */
+.tab-pill-slider {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Skeleton Shimmer Wave */
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: #edebe4;
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeleton-shimmer 1.6s infinite;
+  content: '';
+}
+
+.skeleton-shimmer-dark {
+  position: relative;
+  overflow: hidden;
+  background-color: #12221a;
+}
+
+.skeleton-shimmer-dark::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 229, 153, 0) 0,
+    rgba(0, 229, 153, 0.1) 50%,
+    rgba(0, 229, 153, 0) 100%
+  );
+  animation: skeleton-shimmer 1.6s infinite;
+  content: '';
+}
+
+/* Native View Transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Accordion expand helper */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.accordion-content[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.accordion-inner {
+  overflow: hidden;
+}
+
+/* Ripple Effect for Buttons */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-animation 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Shimmer animation for hero italic emphasis */
+@keyframes text-shimmer-sweep {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    #0d9467 0%,
+    #00e599 50%,
+    #0d9467 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: text-shimmer-sweep 4s linear infinite;
+}
+
+/* Self-drawing SVG path helper */
+.svg-draw-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: svg-draw 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes svg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Lenis smooth scrolling compatibility */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 /* OutLaunch High-Contrast Guarantees */
 .bg-\[\#0d1c15\],
 .bg-\[\#14221c\],
@@ -925,6 +1106,21 @@ a.bg-\[\#162b21\] {
 
 .animate-scaleUp {
   animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideFade {
+  animation: slideFade 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Modern dialog & modal backdrop scroll containment */

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { AnalyticsChartSkeleton } from '../ui/DashboardSkeleton';
 import {
   BarChart3,
   TrendingUp,
@@ -546,14 +547,11 @@ export default function CampaignAnalyticsView({ onNavigateToCampaigns }) {
         </div>
 
         {/* Visual Chart Bars */}
-        <div className="h-56 w-full flex items-end gap-1.5 sm:gap-2.5 pt-8 pb-4 border-b border-[#0d1c15]/10 overflow-x-auto">
-          {trends.length === 0 ? (
-            <div className="w-full h-full flex flex-col items-center justify-center text-xs text-[#0d1c15]/40">
-              <BarChart3 className="w-8 h-8 stroke-1 mb-2 opacity-50" />
-              No outreach telemetry recorded for this timeframe.
-            </div>
-          ) : (
-            trends.map((item, idx) => {
+        {isLoading || trends.length === 0 ? (
+          <AnalyticsChartSkeleton height={200} />
+        ) : (
+          <div className="h-56 w-full flex items-end gap-1.5 sm:gap-2.5 pt-8 pb-4 border-b border-[#0d1c15]/10 overflow-x-auto">
+            {trends.map((item, idx) => {
               const sentHeight = Math.min(100, (item.sent / maxTrendVal) * 100);
               const repliesHeight = Math.min(100, (item.replies / maxTrendVal) * 100);
               const posHeight = Math.min(100, (item.positive_replies / maxTrendVal) * 100);
@@ -624,9 +622,9 @@ export default function CampaignAnalyticsView({ onNavigateToCampaigns }) {
                   </span>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </div>
 
       {/* 5. Campaign Performance Table */}
@@ -896,9 +894,19 @@ export default function CampaignAnalyticsView({ onNavigateToCampaigns }) {
             {/* Drawer Content */}
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               {isDetailLoading ? (
-                <div className="py-16 text-center text-xs text-[#0d1c15]/40 flex flex-col items-center justify-center">
-                  <RefreshCw className="w-8 h-8 animate-spin text-[#0d9467] mb-3" />
-                  Aggregating sequence performance, conversion funnel, and reply sentiment...
+                <div className="space-y-6 animate-fadeIn py-2">
+                  <div className="space-y-2">
+                    <div className="w-32 h-4 rounded skeleton-shimmer" />
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="h-16 rounded-xl skeleton-shimmer" />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-40 h-4 rounded skeleton-shimmer" />
+                    <div className="h-44 rounded-xl skeleton-shimmer" />
+                  </div>
                 </div>
               ) : (
                 <>

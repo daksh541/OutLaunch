@@ -326,9 +326,17 @@ export default function InboxView({ conversations: initialConversations = [], on
             </div>
 
             {isLoadingList ? (
-              <div className="p-8 text-center text-xs font-mono text-[#73827a] flex flex-col items-center">
-                <Loader2 className="w-5 h-5 animate-spin text-[#0d9467] mb-2" />
-                <span>Loading conversations...</span>
+              <div className="space-y-2 p-2 animate-fadeIn">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-3.5 rounded-2xl bg-white border border-[#0d1c15]/06 space-y-2 shadow-2xs">
+                    <div className="flex justify-between items-center">
+                      <div className="w-24 h-3.5 rounded skeleton-shimmer" />
+                      <div className="w-12 h-2.5 rounded skeleton-shimmer opacity-60" />
+                    </div>
+                    <div className="w-40 h-3 rounded skeleton-shimmer opacity-75" />
+                    <div className="w-full h-2.5 rounded skeleton-shimmer opacity-50" />
+                  </div>
+                ))}
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-[#0d1c15]/10 my-2">
@@ -444,9 +452,20 @@ export default function InboxView({ conversations: initialConversations = [], on
 
               {/* Message Transcript */}
               {isLoadingThread ? (
-                <div className="p-12 text-center text-xs font-mono text-[#73827a] flex flex-col items-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#0d9467] mb-2" />
-                  <span>Loading full conversation thread...</span>
+                <div className="space-y-4 p-4 animate-fadeIn">
+                  <div className="flex items-start gap-2.5 max-w-[80%]">
+                    <div className="w-8 h-8 rounded-full skeleton-shimmer shrink-0" />
+                    <div className="p-4 rounded-2xl bg-[#edf2ec]/60 border border-[#dbe5da]/50 space-y-2 w-72">
+                      <div className="w-full h-3 rounded skeleton-shimmer" />
+                      <div className="w-3/4 h-3 rounded skeleton-shimmer" />
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 max-w-[80%] ml-auto justify-end">
+                    <div className="p-4 rounded-2xl bg-[#0d1c15]/08 border border-[#0d1c15]/10 space-y-2 w-64">
+                      <div className="w-full h-3 rounded skeleton-shimmer" />
+                      <div className="w-1/2 h-3 rounded skeleton-shimmer" />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[360px] overflow-y-auto pr-2">

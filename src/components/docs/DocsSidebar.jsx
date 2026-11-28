@@ -14,7 +14,7 @@ const sectionDefinitions = [
 ];
 
 const methodColors = {
-  GET: 'text-[#009485]',
+  GET: 'text-[#0d9467]',
   POST: 'text-[#0a52af]',
   PATCH: 'text-[#ffaa01]',
   DEL: 'text-[#d52b2a]',
@@ -82,7 +82,7 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
 
       {/* Search Bar matching Scalar */}
       <div className="flex gap-1.5 px-3 pt-3">
-        <div className="flex items-center rounded-[3px] border border-[rgba(0,0,0,0.1)] text-base h-8 gap-1.5 pl-2 pr-1.5 w-full bg-white focus-within:border-[#009485] transition-colors">
+        <div className="flex items-center rounded-lg border border-[rgba(0,0,0,0.1)] text-base h-8 gap-1.5 pl-2 pr-1.5 w-full bg-white focus-within:border-[#0d9467] transition-colors">
           <Search className="w-3.5 h-3.5 text-[#8e8e8e] shrink-0" />
           <input
             type="text"
@@ -113,9 +113,9 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
           <button
             ref={activeRoute === 'introduction' ? activeItemRef : null}
             onClick={() => onSelectRoute && onSelectRoute('introduction')}
-            className={`w-full flex items-center h-8 px-2 rounded-[3px] text-left text-[14px] font-medium transition-colors cursor-pointer ${
+            className={`w-full flex items-center h-8 px-2.5 rounded-lg text-left text-[14px] font-medium transition-colors cursor-pointer ${
               activeRoute === 'introduction'
-                ? 'bg-[#ecf8f6] text-[#009485]'
+                ? 'bg-[#edf2ec] text-[#0d9467] font-semibold'
                 : 'text-[#1b1b1b] hover:bg-black/[0.04]'
             }`}
           >
@@ -146,9 +146,9 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
                   toggleSection(sec.key);
                   if (onSelectRoute) onSelectRoute('tag-' + sec.key);
                 }}
-                className={`flex items-center justify-between h-8 px-2 rounded-[3px] text-[14px] cursor-pointer group font-medium transition-colors ${
+                className={`flex items-center justify-between h-8 px-2.5 rounded-lg text-[14px] cursor-pointer group font-medium transition-colors ${
                   isTagActive
-                    ? 'bg-[#ecf8f6] text-[#009485]'
+                    ? 'bg-[#edf2ec] text-[#0d9467] font-semibold'
                     : 'text-[#1b1b1b] hover:bg-black/[0.04]'
                 }`}
               >
@@ -169,9 +169,9 @@ export default function DocsSidebar({ activeRoute = 'introduction', onSelectRout
                         key={ep.id}
                         ref={isItemActive ? activeItemRef : null}
                         onClick={() => onSelectRoute && onSelectRoute(ep.id)}
-                        className={`w-full flex items-center justify-between min-h-8 pl-5 pr-2 py-1 rounded-[3px] text-left text-[13px] group transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between min-h-8 pl-5 pr-2 py-1 rounded-lg text-left text-[13px] group transition-colors cursor-pointer ${
                           isItemActive
-                            ? 'bg-[#ecf8f6] text-[#009485] font-medium'
+                            ? 'bg-[#edf2ec] text-[#0d9467] font-semibold'
                             : 'text-[#606060] hover:bg-black/[0.04] hover:text-[#1b1b1b]'
                         }`}
                       >

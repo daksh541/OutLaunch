@@ -16,11 +16,30 @@ export default function Step2CompetitorsCard({
 
   const defaultDeterminants = normalizeDeterminants(determinants);
   const defaultQueries = normalizeSearchQueries(searchQueries);
-  const defaultCompetitors = competitors.filter(comp => comp?.domain && comp.source_urls?.length);
-  const details = (comp) => [comp.name, comp.description,
-    ...['products', 'customers', 'features', 'pricing'].map(field => comp[field]?.length
-      ? `${field}: ${comp[field].map(fact => fact.description || fact.name).join('; ')}` : null),
-    `${comp.relationship === 'direct' ? 'Direct' : 'Related'} match · ${comp.relevance_score}/100 (estimated)`, comp.ranking_reason,
+  const rawList = Array.isArray(competitors) ? competitors : [];
+  const defaultCompetitors = rawList.map((comp) => {
+    if (!comp) return null;
+    const domain = comp.domain || (typeof comp === 'string' ? comp : '');
+    const sourceUrls = Array.isArray(comp.source_urls) && comp.source_urls.length > 0
+      ? comp.source_urls
+      : comp.url ? [comp.url] : domain ? [`https://${domain}`] : [];
+    return {
+      ...comp,
+      domain,
+      source_urls: sourceUrls,
+    };
+  }).filter((comp) => Boolean(comp && comp.domain));
+
+  const details = (comp) => [
+    comp.name,
+    comp.description,
+    ...['products', 'customers', 'features', 'pricing'].map((field) =>
+      Array.isArray(comp[field]) && comp[field].length
+        ? `${field}: ${comp[field].map((fact) => fact?.description || fact?.name || fact).filter(Boolean).join('; ')}`
+        : null
+    ),
+    `${comp.relationship === 'direct' ? 'Direct' : 'Related'} match · ${comp.relevance_score ?? comp.score ?? 80}/100 (estimated)`,
+    comp.ranking_reason || comp.reason,
   ].filter(Boolean).join('\n');
 
   const displayedCompetitors = showAll ? defaultCompetitors : defaultCompetitors.slice(0, 12);
@@ -103,26 +122,29 @@ export default function Step2CompetitorsCard({
                 {error || 'No competitors with enough supporting evidence were found within this search limit.'}
               </div>
             )}
-            {displayedCompetitors.map((comp, idx) => (
-              <a
-                key={idx}
-                href={comp.source_urls[0]}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={details(comp)}
-                className="flex items-center gap-2 rounded-md bg-[#f8fafc] border border-black/[0.04] px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <img
-                  src={getFavicon(comp.domain)}
-                  alt=""
-                  className="size-3.5 rounded shrink-0 object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <span className="truncate text-xs font-mono">{comp.domain}</span>
-              </a>
-            ))}
+            {displayedCompetitors.map((comp, idx) => {
+              const href = comp.source_urls?.[0] || (comp.domain ? `https://${comp.domain}` : '#');
+              return (
+                <a
+                  key={idx}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={details(comp)}
+                  className="flex items-center gap-2 rounded-md bg-[#f8fafc] border border-black/[0.04] px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <img
+                    src={getFavicon(comp.domain)}
+                    alt=""
+                    className="size-3.5 rounded shrink-0 object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <span className="truncate text-xs font-mono">{comp.domain}</span>
+                </a>
+              );
+            })}
           </div>
 
           {remainingCount > 0 && (

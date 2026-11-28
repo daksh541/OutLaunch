@@ -112,17 +112,87 @@ function getFallbackResearch(name, body) {
   }
 
   if (name === 'competitor-research') {
+    const rawResults = [
+      {
+        domain: 'firebase.google.com',
+        name: 'Firebase',
+        description: 'Developer application platform with backend infrastructure and real-time database',
+        reason: 'Developer application platform',
+        score: 92,
+        relevance_score: 92,
+        relationship: 'direct',
+        source_urls: ['https://firebase.google.com/'],
+        ranking_reason: 'Shared product capabilities: enterprise database, auth, and developer tooling.',
+        products: [
+          { name: 'Cloud Firestore', description: 'Real-time document database' },
+          { name: 'Authentication', description: 'End-to-end user identity and session management' }
+        ],
+        customers: [
+          { name: 'Engineering Teams', description: 'Full-stack application builders' }
+        ],
+        features: [
+          { name: 'Scalable APIs', description: 'Automated REST and SDK integrations' }
+        ],
+        pricing: [
+          { name: 'Pay as you go', description: 'Usage-based pricing with free starter tier' }
+        ]
+      },
+      {
+        domain: 'neon.tech',
+        name: 'Neon',
+        description: 'Serverless cloud infrastructure and Postgres storage for modern apps',
+        reason: 'Serverless cloud infrastructure',
+        score: 88,
+        relevance_score: 88,
+        relationship: 'direct',
+        source_urls: ['https://neon.tech/'],
+        ranking_reason: 'Shared cloud infrastructure and developer automation workflows.',
+        products: [
+          { name: 'Serverless Postgres', description: 'Autoscaling database branches' }
+        ],
+        customers: [
+          { name: 'B2B SaaS', description: 'Modern cloud engineering departments' }
+        ],
+        features: [
+          { name: 'Instant Branching', description: 'Copy-on-write database branches' }
+        ],
+        pricing: [
+          { name: 'Pro Tier', description: 'Flat monthly and compute usage' }
+        ]
+      },
+      {
+        domain: 'planetscale.com',
+        name: 'PlanetScale',
+        description: 'Scalable database infrastructure with schema branch workflows',
+        reason: 'Scalable database infrastructure',
+        score: 84,
+        relevance_score: 84,
+        relationship: 'related',
+        source_urls: ['https://planetscale.com/'],
+        ranking_reason: 'Targeting enterprise engineering teams and scalable data architectures.',
+        products: [
+          { name: 'Database Platform', description: 'High-availability data clustering' }
+        ],
+        customers: [
+          { name: 'High-Growth Tech', description: 'Engineering and infrastructure leaders' }
+        ],
+        features: [
+          { name: 'Non-blocking Schema Changes', description: 'Safe continuous deployment migrations' }
+        ],
+        pricing: []
+      }
+    ];
+
     return {
       job_id: jobId,
       project_id: projectId,
       research: {
         status: 'completed',
         queries: [`${companyName} alternatives`, 'enterprise cloud tools', 'modern developer platform'],
-        results: [
-          { domain: 'firebase.google.com', name: 'Firebase', reason: 'Developer application platform', score: 92 },
-          { domain: 'neon.tech', name: 'Neon', reason: 'Serverless cloud infrastructure', score: 88 },
-          { domain: 'planetscale.com', name: 'PlanetScale', reason: 'Scalable database infrastructure', score: 84 }
-        ],
+        searches_used: 3,
+        candidates_count: rawResults.length,
+        pages_completed: rawResults.length,
+        results: rawResults,
         warnings: []
       }
     };

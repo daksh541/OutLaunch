@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EditorialNavbar from '../landing/EditorialNavbar';
 import EditorialHero from '../landing/EditorialHero';
-import WorkflowOverviewGrid from '../landing/WorkflowOverviewGrid';
+import OutLaunchScrollytellingWorkflow from '../landing/OutLaunchScrollytellingWorkflow';
+import ShiftingGradientMesh from '../landing/ShiftingGradientMesh';
+import SmoothScrollProvider from '../navigation/SmoothScrollProvider';
+import InitialPreloader from '../ui/InitialPreloader';
 import HumanApprovalSection from '../landing/HumanApprovalSection';
 import LeadDiscoverySection from '../landing/LeadDiscoverySection';
 import PersonalisationSection from '../landing/PersonalisationSection';
@@ -47,51 +50,55 @@ export default function OutreachAgentPage() {
   };
 
   return (
-    <div className="landing-editorial-root min-h-screen flex flex-col bg-[#f7f5f0] text-[#0d1c15] antialiased selection:bg-[#00e599]/30 selection:text-[#0d1c15]">
-      
-      {/* 1. Navigation */}
-      <EditorialNavbar />
+    <SmoothScrollProvider>
+      <InitialPreloader />
+      <div className="landing-editorial-root min-h-screen flex flex-col bg-[#f7f5f0] text-[#0d1c15] antialiased selection:bg-[#00e599]/30 selection:text-[#0d1c15] relative overflow-hidden">
+        {/* Subtle Canvas Shifting Gradient Mesh */}
+        <ShiftingGradientMesh />
 
-      <main className="flex-1 flex flex-col">
-        {/* 2. Hero Section */}
-        <EditorialHero />
+        {/* 1. Navigation */}
+        <EditorialNavbar />
 
-        {/* 3. Modular Outreach Workflow (OutLaunch Matrix) */}
-        <WorkflowOverviewGrid />
+        <main className="flex-1 flex flex-col relative z-10">
+          {/* 2. Hero Section */}
+          <EditorialHero />
 
-        {/* 4. Product Explanation (Human-in-the-Loop Review) */}
-        <HumanApprovalSection />
+          {/* 3. Scrollytelling Pinned Workflow Section (Lead Discovery -> Dossier -> Sequences -> Governance) */}
+          <OutLaunchScrollytellingWorkflow />
 
-        {/* 5. Lead Discovery */}
-        <LeadDiscoverySection />
+          {/* 4. Product Explanation (Human-in-the-Loop Review) */}
+          <HumanApprovalSection />
 
-        {/* 6. AI Research and Personalisation */}
-        <PersonalisationSection />
+          {/* 5. Lead Discovery Deep Dive */}
+          <LeadDiscoverySection />
 
-        {/* 7. Email and LinkedIn Outreach */}
-        <MultichannelOutreachSection />
+          {/* 6. AI Research and Personalisation */}
+          <PersonalisationSection />
 
-        {/* 8. Campaign Management */}
-        <CampaignManagementSection />
+          {/* 7. Email and LinkedIn Outreach */}
+          <MultichannelOutreachSection />
 
-        {/* 9. Trust, Safety and Control */}
-        <TrustControlSection />
+          {/* 8. Campaign Management */}
+          <CampaignManagementSection />
 
-        {/* 10. Interactive Cadence Simulator */}
-        <OutboundSequenceSimulator />
+          {/* 9. Trust, Safety and Control */}
+          <TrustControlSection />
 
-        {/* 11. FAQ */}
-        <EditorialFaqSection />
+          {/* 10. Interactive Cadence Simulator */}
+          <OutboundSequenceSimulator />
 
-        {/* 12. Final CTA */}
-        <EditorialFinalCta />
-      </main>
+          {/* 11. FAQ */}
+          <EditorialFaqSection />
 
-      {/* 13. Footer */}
-      <EditorialFooter />
+          {/* 12. Final CTA */}
+          <EditorialFinalCta />
+        </main>
 
-      {/* Floating Support Chat Widget with Light Dismiss */}
-      <div className="fixed bottom-6 right-6 z-40">
+        {/* 13. Footer */}
+        <EditorialFooter />
+
+        {/* Floating Support Chat Widget with Light Dismiss */}
+        <div className="fixed bottom-6 right-6 z-40">
         <button
           type="button"
           onClick={() => setChatOpen(!chatOpen)}
@@ -148,6 +155,7 @@ export default function OutreachAgentPage() {
         )}
       </div>
 
-    </div>
+      </div>
+    </SmoothScrollProvider>
   );
 }

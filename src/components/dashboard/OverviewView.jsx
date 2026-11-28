@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Send, MessageSquare, Calendar, TrendingUp, Sparkles, ArrowUpRight, CheckCircle2, Clock, ShieldCheck, Linkedin, Play, Pause } from 'lucide-react';
+import AnimatedCounter from '../landing/AnimatedCounter';
 
 export default function OverviewView({ metrics, campaigns, prospects, linkedinTasks, onNavigate, onToggleCampaignStatus }) {
+  const [chartMounted, setChartMounted] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setChartMounted(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
   const pendingTasks = linkedinTasks.filter(t => t.status === 'Pending');
   const upcomingTasks = pendingTasks.slice(0, 3);
   const activeCampaigns = campaigns.filter(c => c.status === 'Active');
@@ -45,60 +53,60 @@ export default function OverviewView({ metrics, campaigns, prospects, linkedinTa
 
       {/* 6 Key Metric Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Total Prospects</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2 tabular-nums">
-            {metrics.totalProspects.toLocaleString()}
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2">
+            <AnimatedCounter targetValue={metrics.totalProspects} />
           </div>
           <span className="text-[11px] font-mono text-[#0d9467] mt-1.5 flex items-center gap-1">
             <TrendingUp className="w-3 h-3" /> +140 this week
           </span>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Active Campaigns</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2 tabular-nums">
-            {campaigns.filter(c => c.status === 'Active').length}
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2">
+            <AnimatedCounter targetValue={activeCampaigns.length} />
           </div>
           <span className="text-[11px] font-mono text-[#5a6962] mt-1.5">
             4 sequences loaded
           </span>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Emails Sent</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2 tabular-nums">
-            {metrics.emailsSent.toLocaleString()}
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2">
+            <AnimatedCounter targetValue={metrics.emailsSent} />
           </div>
           <span className="text-[11px] font-mono text-[#0d9467] mt-1.5">
             99.4% inbox placement
           </span>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Reply Rate</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d9467] mt-2 tabular-nums">
-            {metrics.replyRate}%
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d9467] mt-2">
+            <AnimatedCounter targetValue={metrics.replyRate} decimals={1} suffix="%" />
           </div>
           <span className="text-[11px] font-mono text-[#0d9467] mt-1.5">
             3.8x industry avg
           </span>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Positive Replies</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2 tabular-nums">
-            {metrics.positiveReplies}
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d1c15] mt-2">
+            <AnimatedCounter targetValue={metrics.positiveReplies} />
           </div>
           <span className="text-[11px] font-mono text-[#0d9467] mt-1.5">
             64.2% intent score
           </span>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs flex flex-col justify-between">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#0d1c15]/08 shadow-xs hover:shadow-sm hover:border-[#0d1c15]/15 transition-all duration-200 flex flex-col justify-between">
           <span className="text-xs font-mono uppercase text-[#73827a] font-bold">Meetings Booked</span>
-          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d9467] mt-2 tabular-nums">
-            {metrics.meetingsBooked}
+          <div className="text-2xl sm:text-3xl font-display font-bold text-[#0d9467] mt-2">
+            <AnimatedCounter targetValue={metrics.meetingsBooked} />
           </div>
           <span className="text-[11px] font-mono text-[#0d1c15] font-semibold mt-1.5">
             Google Meet synced ✓
@@ -122,7 +130,10 @@ export default function OverviewView({ metrics, campaigns, prospects, linkedinTa
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-mono">
+              <div
+                className="flex items-center gap-4 text-xs font-mono transition-opacity duration-500"
+                style={{ opacity: chartMounted ? 1 : 0, transitionDelay: '300ms' }}
+              >
                 <span className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-sm bg-[#0d1c15]" /> Sent
                 </span>
@@ -151,13 +162,19 @@ export default function OverviewView({ metrics, campaigns, prospects, linkedinTa
                     <div className="w-full max-w-[42px] h-44 flex items-end justify-center gap-1 bg-[#edf2ec]/40 rounded-t-lg p-1">
                       {/* Sent bar */}
                       <div
-                        className="w-1/2 bg-[#0d1c15] rounded-t-sm transition-all duration-300 group-hover:bg-[#182e24]"
-                        style={{ height: `${heightPercent}%` }}
+                        className="w-1/2 bg-[#0d1c15] rounded-t-sm group-hover:bg-[#182e24]"
+                        style={{
+                          height: chartMounted ? `${heightPercent}%` : '0%',
+                          transition: `height 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 65}ms, background-color 0.2s ease`
+                        }}
                       />
                       {/* Replies bar */}
                       <div
-                        className="w-1/2 bg-[#0d9467] rounded-t-sm transition-all duration-300 group-hover:bg-[#00e599]"
-                        style={{ height: `${replyPercent}%` }}
+                        className="w-1/2 bg-[#0d9467] rounded-t-sm group-hover:bg-[#00e599]"
+                        style={{
+                          height: chartMounted ? `${replyPercent}%` : '0%',
+                          transition: `height 0.8s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 65 + 120}ms, background-color 0.2s ease`
+                        }}
                       />
                     </div>
 

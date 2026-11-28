@@ -11,6 +11,7 @@ import ExplorerPage from './components/explorer/ExplorerPage';
 import SignInPage from './components/auth/SignInPage';
 import AppAutoGtmPage from './components/autogtm/AppAutoGtmPage';
 import AutoGtmWorkflowPage from './components/autogtm/AutoGtmWorkflowPage';
+import WebsiteAnalysisFlow from './components/analysis/WebsiteAnalysisFlow';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import PublicBookingPage from './components/booking/PublicBookingPage';
 
@@ -117,6 +118,8 @@ function MainRouter() {
       return <DashboardLayout />;
     case 'app-auto-gtm':
       return <AppAutoGtmPage />;
+    case 'analysis':
+      return <WebsiteAnalysisFlow initialDomain={domain} />;
     case 'auto-gtm-explore':
       return <AutoGtmWorkflowPage key={`${domain}:${window.location.search}`} domain={domain} />;
     case 'outreach':

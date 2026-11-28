@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, Plus, Pause, Play, Users, Mail, Linkedin, ArrowUpRight, CheckCircle2, Clock, X, Sparkles, AlertCircle, Edit2, Trash2, Loader2, ShieldCheck } from 'lucide-react';
+import { TableSkeleton } from '../ui/DashboardSkeleton';
 import CampaignReviewModal from './CampaignReviewModal';
 
 export default function CampaignsView({
@@ -131,10 +132,7 @@ export default function CampaignsView({
 
       {/* Campaigns Grid */}
       {isLoading ? (
-        <div className="p-12 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-[#0d1c15]/08 shadow-sm">
-          <Loader2 className="w-8 h-8 text-[#0d9467] animate-spin mb-3" />
-          <p className="text-sm font-mono text-[#5a6962]">Loading campaigns from Supabase...</p>
-        </div>
+        <TableSkeleton rows={4} />
       ) : campaigns.length === 0 ? (
         <div className="p-12 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-[#0d1c15]/08 shadow-sm">
           <Send className="w-12 h-12 text-[#73827a]/40 mb-3" />

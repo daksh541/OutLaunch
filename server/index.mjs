@@ -22,6 +22,22 @@ import { SalesForecastService } from './salesForecastService.mjs';
 import { SalesTerritoryService } from './salesTerritoryService.mjs';
 import { AccountPrioritizationService } from './accountPrioritizationService.mjs';
 import { AccountPlanningService } from './accountPlanningService.mjs';
+import { CustomerHealthService } from './customerHealthService.mjs';
+import { CustomerRenewalService } from './customerRenewalService.mjs';
+import { CustomerExpansionService } from './customerExpansionService.mjs';
+import { CustomerSuccessPlanService } from './customerSuccessPlanService.mjs';
+import { SupportTicketService } from './supportTicketService.mjs';
+import { supportSlaService } from './supportSlaService.mjs';
+import { supportEscalationService } from './supportEscalationService.mjs';
+import { supportIssueAnalyticsService } from './supportIssueAnalyticsService.mjs';
+import { supportTicketIntelligenceService } from './supportTicketIntelligenceService.mjs';
+import { supportProviderAdapter } from './supportProviders/supportProviderAdapter.mjs';
+import { lifecycleEventService } from './lifecycleEventService.mjs';
+import { lifecycleWorkflowService } from './lifecycleWorkflowService.mjs';
+import { lifecycleActionService } from './lifecycleActionService.mjs';
+import { lifecycleExecutionService } from './lifecycleExecutionService.mjs';
+import { lifecycleRecommendationService } from './lifecycleRecommendationService.mjs';
+import { lifecycleAnalyticsService } from './lifecycleAnalyticsService.mjs';
 
 // Load environment variables from .env if present
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -212,6 +228,61 @@ const salesForecastService = new SalesForecastService(
 const salesTerritoryService = new SalesTerritoryService(supabaseAdmin, crmService, revenueIntelligenceService);
 const accountPrioritizationService = new AccountPrioritizationService(crmService, revenueIntelligenceService, meetingService, salesCallService);
 const accountPlanningService = new AccountPlanningService(crmService, accountPrioritizationService, salesCallService, { callOpenAI });
+
+// AI Customer Success & Renewal Intelligence Services
+const customerHealthService = new CustomerHealthService(
+  supabaseAdmin,
+  crmService,
+  meetingService,
+  salesCallService,
+  revenueIntelligenceService,
+  salesTerritoryService
+);
+const customerRenewalService = new CustomerRenewalService(
+  supabaseAdmin,
+  customerHealthService,
+  crmService,
+  meetingService,
+  salesCallService
+);
+const customerExpansionService = new CustomerExpansionService(
+  supabaseAdmin,
+  customerHealthService,
+  crmService,
+  salesCallService,
+  salesTerritoryService
+);
+const customerSuccessPlanService = new CustomerSuccessPlanService(
+  supabaseAdmin,
+  customerHealthService,
+  customerRenewalService,
+  customerExpansionService,
+  crmService
+);
+
+// AI Customer Support & Ticket Intelligence Service
+const supportTicketService = new SupportTicketService(
+  supabaseAdmin,
+  customerHealthService,
+  customerRenewalService,
+  crmService
+);
+customerHealthService.setSupportTicketService(supportTicketService);
+
+// AI Customer Engagement & Lifecycle Automation Services
+lifecycleActionService.crmService = crmService;
+lifecycleActionService.emailQueueWorker = emailWorker;
+lifecycleActionService.inboundEmailService = inboundService;
+lifecycleActionService.customerHealthService = customerHealthService;
+
+lifecycleRecommendationService.customerHealthService = customerHealthService;
+lifecycleRecommendationService.customerRenewalService = customerRenewalService;
+lifecycleRecommendationService.supportTicketService = supportTicketService;
+lifecycleRecommendationService.workflowService = lifecycleWorkflowService;
+
+lifecycleAnalyticsService.workflowService = lifecycleWorkflowService;
+lifecycleAnalyticsService.executionService = lifecycleExecutionService;
+lifecycleAnalyticsService.actionService = lifecycleActionService;
 
 // Parse request body safely (returns parsed JSON and rawBody buffer for signature verification)
 function parseJsonBody(req, maxSizeBytes = 15 * 1024 * 1024) {
@@ -4528,6 +4599,933 @@ Generate JSON with these keys:
     return;
   }
 
+
+  // ==============================================================================
+  // AI CUSTOMER SUCCESS & RENEWAL INTELLIGENCE ROUTES
+  // ==============================================================================
+
+  // 149. GET /api/customer-success/accounts
+  if (req.method === 'GET' && pathname === '/api/customer-success/accounts') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const accounts = await customerHealthService.getAccounts({
+        userId: user.id,
+        workspaceId,
+        role: user.role,
+        status: parsedUrl.searchParams.get('status'),
+        healthStatus: parsedUrl.searchParams.get('healthStatus'),
+        ownerId: parsedUrl.searchParams.get('ownerId'),
+        search: parsedUrl.searchParams.get('search'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, accounts }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 150. POST /api/customer-success/accounts
+  if (req.method === 'POST' && pathname === '/api/customer-success/accounts') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const body = await parseJsonBody(req);
+
+      // RBAC check: only managers or admins can assign account ownership to another user
+      const targetOwner = body.account_owner_id || body.accountOwnerId;
+      if (targetOwner && targetOwner !== user.id && user.role !== 'manager' && user.role !== 'admin') {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Forbidden: Only managers can assign account ownership to another user.' }));
+        return;
+      }
+
+      const account = await customerHealthService.createAccount({
+        ...body,
+        userId: user.id,
+        workspaceId,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, account }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('Forbidden') ? 403 : err.message.includes('Duplicate') ? 409 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 151. GET /api/customer-success/renewals
+  if (req.method === 'GET' && pathname === '/api/customer-success/renewals') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const renewals = await customerRenewalService.getUpcomingRenewals({
+        userId: user.id,
+        workspaceId,
+        daysAhead: parsedUrl.searchParams.get('daysAhead'),
+        period: parsedUrl.searchParams.get('period'),
+        status: parsedUrl.searchParams.get('status'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, renewals }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 152. GET or POST /api/customer-success/renewals/forecast
+  if ((req.method === 'GET' || req.method === 'POST') && pathname === '/api/customer-success/renewals/forecast') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+      const body = req.method === 'POST' ? await parseJsonBody(req).catch(() => ({})) : {};
+
+      const forecast = await customerRenewalService.getRenewalForecast({
+        userId: user.id,
+        workspaceId,
+        period: body.period || parsedUrl.searchParams.get('period') || 'quarterly',
+        currency: body.currency || parsedUrl.searchParams.get('currency'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, forecast }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 153. GET /api/customer-success/expansions
+  if (req.method === 'GET' && pathname === '/api/customer-success/expansions') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const expansions = await customerExpansionService.getExpansions({
+        userId: user.id,
+        workspaceId,
+        stage: parsedUrl.searchParams.get('stage'),
+        opportunityType: parsedUrl.searchParams.get('type'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, expansions }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 154. GET /api/customer-success/plans
+  if (req.method === 'GET' && pathname === '/api/customer-success/plans') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const plans = await customerSuccessPlanService.getSuccessPlans({
+        userId: user.id,
+        workspaceId,
+        status: parsedUrl.searchParams.get('status'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, plans }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 155. GET /api/customer-success/accounts/:id
+  const getCsAccountMatch = pathname.match(/^\/api\/customer-success\/accounts\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getCsAccountMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const accountId = getCsAccountMatch[1];
+      const account = await customerHealthService.getAccountById({
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+        accountId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, account }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : err.message.includes('not found') ? 404 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==============================================================================
+  // AI CUSTOMER SUPPORT & TICKET INTELLIGENCE ROUTES
+  // ==============================================================================
+
+  // 156. GET /api/support/tickets
+  if (req.method === 'GET' && pathname === '/api/support/tickets') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const result = await supportTicketService.getTickets({
+        workspaceId,
+        status: parsedUrl.searchParams.get('status'),
+        priority: parsedUrl.searchParams.get('priority'),
+        category: parsedUrl.searchParams.get('category'),
+        slaStatus: parsedUrl.searchParams.get('slaStatus'),
+        isEscalated: parsedUrl.searchParams.has('isEscalated')
+          ? parsedUrl.searchParams.get('isEscalated') === 'true'
+          : undefined,
+        leadId: parsedUrl.searchParams.get('leadId'),
+        customerSuccessAccountId: parsedUrl.searchParams.get('customerSuccessAccountId'),
+        search: parsedUrl.searchParams.get('search'),
+        limit: parsedUrl.searchParams.get('limit'),
+        offset: parsedUrl.searchParams.get('offset'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 157. POST /api/support/tickets
+  if (req.method === 'POST' && pathname === '/api/support/tickets') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const body = await parseJsonBody(req);
+
+      const ticket = await supportTicketService.createTicket(
+        { ...body, workspace_id: workspaceId },
+        { userId: user.id, email: user.email, name: user.user_metadata?.full_name || 'Agent', workspaceId }
+      );
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ticket }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 158. GET /api/support/metrics
+  if (req.method === 'GET' && pathname === '/api/support/metrics') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const metrics = await supportTicketService.getSupportMetrics(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, metrics }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 159. GET /api/support/analytics
+  if (req.method === 'GET' && pathname === '/api/support/analytics') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const analytics = await supportTicketService.getIssueAnalytics(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, analytics }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 160. GET /api/support/sla-policies
+  if (req.method === 'GET' && pathname === '/api/support/sla-policies') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const policies = await supportSlaService.getPolicies(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, policies }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 161. GET /api/support/providers
+  if (req.method === 'GET' && pathname === '/api/support/providers') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const providers = supportProviderAdapter.getProvidersStatus(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, providers }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 162. POST /api/support/import/csv
+  if (req.method === 'POST' && pathname === '/api/support/import/csv') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const body = await parseJsonBody(req);
+
+      const csvContent = body.csv_content || body.content || '';
+      const result = await supportTicketService.importCsvTickets(csvContent, workspaceId, {
+        userId: user.id,
+        email: user.email,
+        workspaceId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 163. GET /api/support/tickets/:id
+  const getSupportTicketMatch = pathname.match(/^\/api\/support\/tickets\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getSupportTicketMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const ticketId = getSupportTicketMatch[1];
+
+      const ticket = await supportTicketService.getTicketById(ticketId, workspaceId);
+      if (!ticket) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Ticket not found.' }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ticket }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 164. POST /api/support/tickets/:id/messages
+  const postSupportMessageMatch = pathname.match(/^\/api\/support\/tickets\/([a-zA-Z0-9_\-]+)\/messages$/);
+  if (req.method === 'POST' && postSupportMessageMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const ticketId = postSupportMessageMatch[1];
+      const body = await parseJsonBody(req);
+
+      const message = await supportTicketService.addMessage(ticketId, body, {
+        userId: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name || 'Support Agent',
+        workspaceId: user.workspace_id || 'default-workspace',
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized')
+        ? 401
+        : err.message.includes('not found')
+        ? 404
+        : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 165. POST /api/support/tickets/:id/ai-analyze
+  const postSupportAiAnalyzeMatch = pathname.match(/^\/api\/support\/tickets\/([a-zA-Z0-9_\-]+)\/ai-analyze$/);
+  if (req.method === 'POST' && postSupportAiAnalyzeMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const ticketId = postSupportAiAnalyzeMatch[1];
+
+      const insight = await supportTicketService.analyzeTicketWithAI(ticketId, {
+        userId: user.id,
+        email: user.email,
+        workspaceId: user.workspace_id || 'default-workspace',
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, insight }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized')
+        ? 401
+        : err.message.includes('not found')
+        ? 404
+        : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // ==============================================================================
+  // AI CUSTOMER ENGAGEMENT & LIFECYCLE AUTOMATION ROUTES
+  // ==============================================================================
+
+  // 166. GET /api/lifecycle/workflows: List workflows
+  if (req.method === 'GET' && pathname === '/api/lifecycle/workflows') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const result = await lifecycleWorkflowService.getWorkflows({
+        workspaceId,
+        status: parsedUrl.searchParams.get('status'),
+        workflowType: parsedUrl.searchParams.get('workflowType'),
+        search: parsedUrl.searchParams.get('search'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 167. POST /api/lifecycle/workflows: Create workflow draft
+  if (req.method === 'POST' && pathname === '/api/lifecycle/workflows') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const body = await parseJsonBody(req);
+
+      const workflow = await lifecycleWorkflowService.createWorkflow(
+        { ...body, workspace_id: workspaceId },
+        { userId: user.id, workspaceId }
+      );
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 168. GET /api/lifecycle/templates: Get starter templates
+  if (req.method === 'GET' && pathname === '/api/lifecycle/templates') {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const templates = lifecycleWorkflowService.getTemplates();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, templates }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 169. POST /api/lifecycle/templates/:id/instantiate: Create workflow from template
+  const postLifecycleTemplateMatch = pathname.match(/^\/api\/lifecycle\/templates\/([a-zA-Z0-9_\-]+)\/instantiate$/);
+  if (req.method === 'POST' && postLifecycleTemplateMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const templateId = postLifecycleTemplateMatch[1];
+
+      const workflow = await lifecycleWorkflowService.createFromTemplate(templateId, workspaceId, {
+        userId: user.id,
+        workspaceId,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 170. GET /api/lifecycle/runs: List runs across workspace
+  if (req.method === 'GET' && pathname === '/api/lifecycle/runs') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const result = await lifecycleExecutionService.getRuns({
+        workspaceId,
+        workflowId: parsedUrl.searchParams.get('workflowId'),
+        status: parsedUrl.searchParams.get('status'),
+        leadId: parsedUrl.searchParams.get('leadId'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 171. GET /api/lifecycle/events: List lifecycle events
+  if (req.method === 'GET' && pathname === '/api/lifecycle/events') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const result = await lifecycleEventService.getEvents({
+        workspaceId,
+        eventType: parsedUrl.searchParams.get('eventType'),
+        source: parsedUrl.searchParams.get('source'),
+        processingStatus: parsedUrl.searchParams.get('status'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 172. POST /api/lifecycle/events/ingest: Ingest verified lifecycle event
+  if (req.method === 'POST' && pathname === '/api/lifecycle/events/ingest') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const body = await parseJsonBody(req);
+
+      const result = await lifecycleEventService.recordEvent({
+        ...body,
+        workspace_id: workspaceId,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 173. GET /api/lifecycle/approvals: List pending approvals
+  if (req.method === 'GET' && pathname === '/api/lifecycle/approvals') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || '127.0.0.1'}`);
+
+      const result = await lifecycleActionService.getApprovals({
+        workspaceId,
+        status: parsedUrl.searchParams.get('status'),
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 174. POST /api/lifecycle/approvals/:id/approve: Approve action request
+  const postLifecycleApproveMatch = pathname.match(/^\/api\/lifecycle\/approvals\/([a-zA-Z0-9_\-]+)\/approve$/);
+  if (req.method === 'POST' && postLifecycleApproveMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const approvalId = postLifecycleApproveMatch[1];
+
+      const approval = await lifecycleActionService.approveAction(approvalId, {
+        userId: user.id,
+        email: user.email,
+      });
+
+      // Resume workflow run if attached
+      if (approval.workflow_run_id) {
+        await lifecycleExecutionService.resumeRun(approval.workflow_run_id);
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, approval }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 175. POST /api/lifecycle/approvals/:id/reject: Reject action request
+  const postLifecycleRejectMatch = pathname.match(/^\/api\/lifecycle\/approvals\/([a-zA-Z0-9_\-]+)\/reject$/);
+  if (req.method === 'POST' && postLifecycleRejectMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const approvalId = postLifecycleRejectMatch[1];
+      const body = await parseJsonBody(req);
+
+      const approval = await lifecycleActionService.rejectAction(approvalId, {
+        userId: user.id,
+        email: user.email,
+      }, body.reason || 'Action rejected');
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, approval }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 176. GET /api/lifecycle/recommendations: Get AI workflow recommendations
+  if (req.method === 'GET' && pathname === '/api/lifecycle/recommendations') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const recommendations = await lifecycleRecommendationService.generateRecommendations(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, recommendations }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 177. POST /api/lifecycle/recommendations/:id/create-draft: Create draft from suggestion
+  const postLifecycleRecDraftMatch = pathname.match(/^\/api\/lifecycle\/recommendations\/([a-zA-Z0-9_\-]+)\/create-draft$/);
+  if (req.method === 'POST' && postLifecycleRecDraftMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const recId = postLifecycleRecDraftMatch[1];
+
+      const workflow = await lifecycleRecommendationService.createDraftFromRecommendation(recId, workspaceId, {
+        userId: user.id,
+        workspaceId,
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 178. GET /api/lifecycle/analytics/overview: Overview metrics & execution stats
+  if (req.method === 'GET' && pathname === '/api/lifecycle/analytics/overview') {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+
+      const analytics = await lifecycleAnalyticsService.getOverviewAnalytics(workspaceId);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, analytics }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 179. GET /api/lifecycle/runs/:id: Single run detail
+  const getLifecycleRunMatch = pathname.match(/^\/api\/lifecycle\/runs\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getLifecycleRunMatch) {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const runId = getLifecycleRunMatch[1];
+      const run = await lifecycleExecutionService.getRunById(runId);
+      if (!run) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Run not found.' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, run }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 180. POST /api/lifecycle/runs/:id/cancel: Cancel run
+  const postLifecycleRunCancelMatch = pathname.match(/^\/api\/lifecycle\/runs\/([a-zA-Z0-9_\-]+)\/cancel$/);
+  if (req.method === 'POST' && postLifecycleRunCancelMatch) {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const runId = postLifecycleRunCancelMatch[1];
+      const body = await parseJsonBody(req);
+      const run = await lifecycleExecutionService.cancelRun(runId, body.reason);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, run }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 181. POST /api/lifecycle/runs/:id/retry: Retry run
+  const postLifecycleRunRetryMatch = pathname.match(/^\/api\/lifecycle\/runs\/([a-zA-Z0-9_\-]+)\/retry$/);
+  if (req.method === 'POST' && postLifecycleRunRetryMatch) {
+    try {
+      await verifySupabaseToken(req.headers.authorization);
+      const runId = postLifecycleRunRetryMatch[1];
+      const run = await lifecycleExecutionService.retryRun(runId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, run }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 182. GET /api/lifecycle/workflows/:id/versions: Get workflow version history
+  const getLifecycleWfVersionsMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)\/versions$/);
+  if (req.method === 'GET' && getLifecycleWfVersionsMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const workflowId = getLifecycleWfVersionsMatch[1];
+
+      const versions = await lifecycleWorkflowService.getWorkflowVersions(workflowId, workspaceId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, versions }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 183. POST /api/lifecycle/workflows/:id/publish: Publish version & activate
+  const postLifecycleWfPublishMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)\/publish$/);
+  if (req.method === 'POST' && postLifecycleWfPublishMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workflowId = postLifecycleWfPublishMatch[1];
+      const body = await parseJsonBody(req);
+
+      const result = await lifecycleWorkflowService.publishWorkflow(
+        workflowId,
+        body.change_summary || body.summary,
+        { userId: user.id, email: user.email }
+      );
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, ...result }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized')
+        ? 401
+        : err.message.includes('not found')
+        ? 404
+        : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 184. POST /api/lifecycle/workflows/:id/pause: Pause workflow
+  const postLifecycleWfPauseMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)\/pause$/);
+  if (req.method === 'POST' && postLifecycleWfPauseMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workflowId = postLifecycleWfPauseMatch[1];
+
+      const workflow = await lifecycleWorkflowService.pauseWorkflow(workflowId, {
+        userId: user.id,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 185. POST /api/lifecycle/workflows/:id/resume: Resume workflow
+  const postLifecycleWfResumeMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)\/resume$/);
+  if (req.method === 'POST' && postLifecycleWfResumeMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workflowId = postLifecycleWfResumeMatch[1];
+
+      const workflow = await lifecycleWorkflowService.resumeWorkflow(workflowId, {
+        userId: user.id,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 186. POST /api/lifecycle/workflows/:id/duplicate: Duplicate workflow
+  const postLifecycleWfDuplicateMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)\/duplicate$/);
+  if (req.method === 'POST' && postLifecycleWfDuplicateMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workflowId = postLifecycleWfDuplicateMatch[1];
+      const body = await parseJsonBody(req);
+
+      const workflow = await lifecycleWorkflowService.duplicateWorkflow(workflowId, body.name, {
+        userId: user.id,
+        workspaceId: user.workspace_id || 'default-workspace',
+      });
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 187. GET /api/lifecycle/workflows/:id: Get single workflow
+  const getLifecycleWfMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'GET' && getLifecycleWfMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workspaceId = user.workspace_id || 'default-workspace';
+      const workflowId = getLifecycleWfMatch[1];
+
+      const workflow = await lifecycleWorkflowService.getWorkflowById(workflowId, workspaceId);
+      if (!workflow) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Workflow not found.' }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized') ? 401 : 500;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
+  // 188. PATCH /api/lifecycle/workflows/:id: Update workflow draft
+  const patchLifecycleWfMatch = pathname.match(/^\/api\/lifecycle\/workflows\/([a-zA-Z0-9_\-]+)$/);
+  if (req.method === 'PATCH' && patchLifecycleWfMatch) {
+    try {
+      const user = await verifySupabaseToken(req.headers.authorization);
+      const workflowId = patchLifecycleWfMatch[1];
+      const body = await parseJsonBody(req);
+
+      const workflow = await lifecycleWorkflowService.updateWorkflow(workflowId, body, {
+        userId: user.id,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, workflow }));
+    } catch (err) {
+      const statusCode = err.message.includes('Unauthorized')
+        ? 401
+        : err.message.includes('not found')
+        ? 404
+        : 422;
+      res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // Not found
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Endpoint not found.' }));
@@ -4544,6 +5542,22 @@ server.listen(PORT, '127.0.0.1', () => {
 
 export {
   server,
+  lifecycleEventService,
+  lifecycleWorkflowService,
+  lifecycleActionService,
+  lifecycleExecutionService,
+  lifecycleRecommendationService,
+  lifecycleAnalyticsService,
+  supportTicketService,
+  supportSlaService,
+  supportEscalationService,
+  supportIssueAnalyticsService,
+  supportTicketIntelligenceService,
+  supportProviderAdapter,
+  customerHealthService,
+  customerRenewalService,
+  customerExpansionService,
+  customerSuccessPlanService,
   salesTerritoryService,
   accountPrioritizationService,
   accountPlanningService,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -23,6 +24,10 @@ export default function SignInPage({ initialMode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isShaking, setIsShaking] = useState(false);
+  const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
+
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   const isVerificationInitial =
     initialMode === 'verification-code' ||
@@ -100,17 +105,27 @@ export default function SignInPage({ initialMode }) {
     }
   };
 
+  const triggerShake = () => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 500);
+  };
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email) {
+      triggerShake();
+      return;
+    }
     setError('');
     setSuccessMessage('');
+    setIsSubmittedSuccess(false);
     setIsLoading(true);
 
     try {
       if (isForgotPassword) {
         await resetPassword(email);
         setForgotSuccess(true);
+        setIsSubmittedSuccess(true);
         setSuccessMessage('Password reset link sent! Check your inbox.');
         setIsLoading(false);
         return;
@@ -125,8 +140,9 @@ export default function SignInPage({ initialMode }) {
           company_name: companyName.trim() || undefined,
         });
 
+        setIsSubmittedSuccess(true);
         if (signUpResult?.session) {
-          navigate(PRODUCT_ROUTES.DASHBOARD);
+          setTimeout(() => navigate(PRODUCT_ROUTES.DASHBOARD), 350);
         } else {
           setSuccessMessage('Account created! Please check your email to confirm your account or sign in directly.');
         }
@@ -137,11 +153,13 @@ export default function SignInPage({ initialMode }) {
           email.trim().toLowerCase() === 'admin@company.com' ||
           email.trim().toLowerCase() === 'admin@outlaunch.com'
         ) {
-          navigate(PRODUCT_ROUTES.DASHBOARD);
+          setIsSubmittedSuccess(true);
+          setTimeout(() => navigate(PRODUCT_ROUTES.DASHBOARD), 300);
           return;
         }
         await signIn(email, password);
-        navigate(PRODUCT_ROUTES.DASHBOARD);
+        setIsSubmittedSuccess(true);
+        setTimeout(() => navigate(PRODUCT_ROUTES.DASHBOARD), 300);
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -150,6 +168,7 @@ export default function SignInPage({ initialMode }) {
         msg = 'Cannot reach Supabase (Failed to fetch). Please check that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file match your active Supabase project, or that the project is not paused.';
       }
       setError(msg);
+      triggerShake();
     } finally {
       setIsLoading(false);
     }
@@ -221,7 +240,7 @@ export default function SignInPage({ initialMode }) {
           {successMessage && <p role="status" className="mb-4 text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-500/20 px-3 py-2 rounded-lg text-center w-full">{successMessage}</p>}
 
           {/* Form */}
-          <form onSubmit={handlePasswordSubmit} className="w-full flex flex-col">
+          <form onSubmit={handlePasswordSubmit} className={`w-full flex flex-col transition-transform ${isShaking ? 'animate-shake' : ''}`}>
             {/* Registration specific fields */}
             {mode === 'register' && !isForgotPassword && (
               <>
@@ -291,7 +310,7 @@ export default function SignInPage({ initialMode }) {
                 onChange={(e) => setEmail(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                className={`w-full h-[44px] px-3.5 bg-transparent rounded-[10px] text-[15px] text-[#fafafa] transition-all duration-200 outline-none ${
+                className={`w-full h-[44px] pl-3.5 pr-10 bg-transparent rounded-[10px] text-[15px] text-[#fafafa] transition-all duration-200 outline-none ${
                   isFocused
                     ? 'border border-[rgba(16,185,129,0.5)] shadow-[0_0_0_3px_rgba(16,185,129,0.15)]'
                     : 'border border-white/[0.12] hover:border-white/[0.2]'
@@ -311,6 +330,18 @@ export default function SignInPage({ initialMode }) {
               >
                 Email
               </label>
+
+              {/* Draw-in checkmark when email is valid */}
+              {isEmailValid && (
+                <div
+                  aria-label="Valid email format"
+                  className="absolute right-3 top-3 flex items-center text-[#10b981] pointer-events-none"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" className="animate-check-draw" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Password Input (hidden in Forgot Password mode) */}
@@ -348,9 +379,21 @@ export default function SignInPage({ initialMode }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-xs text-[#a1a1a1] hover:text-white transition-colors cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-2.5 top-2.5 p-1 rounded text-[#a1a1a1] hover:text-white transition-colors cursor-pointer"
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  <div className="relative w-4 h-4 flex items-center justify-center">
+                    <Eye
+                      className={`w-4 h-4 transition-all duration-200 absolute ${
+                        showPassword ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'
+                      }`}
+                    />
+                    <EyeOff
+                      className={`w-4 h-4 transition-all duration-200 absolute ${
+                        !showPassword ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'
+                      }`}
+                    />
+                  </div>
                 </button>
               </div>
             )}
@@ -375,11 +418,18 @@ export default function SignInPage({ initialMode }) {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isSubmittedSuccess}
               className="w-full h-[44px] mt-2 rounded-[10px] bg-[#10b981] hover:bg-[#059669] active:bg-[#047857] text-black font-semibold text-[15px] shadow-[0_1px_2px_0_rgba(0,0,0,0.3)] flex items-center justify-center transition-all duration-150 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : isSubmittedSuccess ? (
+                <span className="flex items-center gap-1.5 text-black">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" className="animate-check-draw" />
+                  </svg>
+                  <span>Verified</span>
+                </span>
               ) : (
                 <span>
                   {isForgotPassword

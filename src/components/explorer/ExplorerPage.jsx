@@ -156,11 +156,11 @@ export default function ExplorerPage() {
           <div className="container mx-auto max-w-4xl">
             {/* Title & Description */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#05ac82] via-[#10b981] to-[#15addc]">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-3 tracking-tight text-[#0d1c15]">
                 Segments Explorer
               </h1>
-              <p className="text-sm md:text-base text-[#9ca3af] max-w-2xl mx-auto leading-relaxed px-2">
-                <span className="font-semibold text-white">Visualize</span> your market by exploring business clusters. See neighboring niches, understand <span className="font-semibold text-white">segment sizes</span>, and discover your exact <span className="font-semibold text-white">TAM</span> with company counts.
+              <p className="text-sm md:text-base text-[#4a5851] max-w-2xl mx-auto leading-relaxed px-2">
+                <span className="font-semibold text-[#0d1c15]">Visualize</span> your market by exploring business clusters. See neighboring niches, understand <span className="font-semibold text-[#0d1c15]">segment sizes</span>, and discover your exact <span className="font-semibold text-[#0d1c15]">TAM</span> with company counts.
               </p>
             </div>
 

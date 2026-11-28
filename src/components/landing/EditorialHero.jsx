@@ -3,6 +3,10 @@ import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Mail, Linkedin, UserCh
 import { useNavigation, PRODUCT_ROUTES } from '../../context/NavigationContext';
 import { normalizeWebsite } from '../../lib/companyResearch';
 import useAuthSession from '../../hooks/useAuthSession';
+import { gsap, ScrollTrigger, prefersReducedMotion, triggerCircularTransition } from '../../lib/motion';
+import TiltCard from '../ui/TiltCard';
+import MagneticButton from '../ui/MagneticButton';
+import AnimatedWordHighlight from './AnimatedWordHighlight';
 
 export default function EditorialHero() {
   const [inputValue, setInputValue] = useState('');
@@ -11,9 +15,77 @@ export default function EditorialHero() {
   const [activeWorkflowTab, setActiveWorkflowTab] = useState('prospect');
   const [isApproved, setIsApproved] = useState(false);
   const modalRef = useRef(null);
+  const launchBtnRef = useRef(null);
+  const heroCardRef = useRef(null);
+  const heroBgGridRef = useRef(null);
+  const badgeRef1 = useRef(null);
+  const badgeRef2 = useRef(null);
 
   const { navigate } = useNavigation();
   const { session, loading: authLoading } = useAuthSession();
+
+  // Multi-layer parallax with distinct depths
+  useEffect(() => {
+    if (prefersReducedMotion() || !heroCardRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // 1. Hero mock card floats slower than scroll
+      gsap.to(heroCardRef.current, {
+        y: 45,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroCardRef.current,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: 0.8,
+        },
+      });
+
+      // 2. Background grid lines move slowest
+      if (heroBgGridRef.current) {
+        gsap.to(heroBgGridRef.current, {
+          y: 20,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroBgGridRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1.4,
+          },
+        });
+      }
+
+      // 3. Floating upper badge drifts gently (clamped so it stays anchored to card at 1280, 1440, 1920)
+      if (badgeRef1.current) {
+        gsap.to(badgeRef1.current, {
+          y: 14,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroCardRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 0.6,
+          },
+        });
+      }
+
+      // 4. Floating lower badge counter-drifts gently (clamped)
+      if (badgeRef2.current) {
+        gsap.to(badgeRef2.current, {
+          y: -12,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroCardRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 0.6,
+          },
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   // Handle modal outside click & Esc key (Modern Web Guidance compliance)
   useEffect(() => {
@@ -45,7 +117,9 @@ export default function EditorialHero() {
         navigate(PRODUCT_ROUTES.SIGN_IN);
         return;
       }
-      navigate(`/auto-gtm/company/${encodeURIComponent(domain)}/explore?src=landing&phase=research_company_loading`);
+      triggerCircularTransition(launchBtnRef.current, () => {
+        navigate(`/analysis/${encodeURIComponent(domain)}`);
+      });
     } catch (err) {
       setError(err.message || 'Please enter a valid website address');
     }
@@ -54,7 +128,10 @@ export default function EditorialHero() {
   return (
     <section className="relative pt-8 sm:pt-14 pb-16 md:pb-24 bg-[#f7f5f0] text-[#0d1c15] overflow-hidden">
       {/* Subtle Architectural Grid Lines */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(13,28,21,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,28,21,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_15%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div
+        ref={heroBgGridRef}
+        className="absolute inset-0 bg-[linear-gradient(to_right,rgba(13,28,21,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,28,21,0.03)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_15%,#000_70%,transparent_100%)] pointer-events-none will-change-transform"
+      />
 
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative z-10">
         
@@ -71,10 +148,10 @@ export default function EditorialHero() {
               <span className="text-[#5a6962]">· v2.4 Engine</span>
             </div>
 
-            {/* Clean Editorial Headline */}
+            {/* Clean Editorial Headline with Staggered Word Entrance */}
             <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-[56px] tracking-[-0.03em] text-[#0d1c15] leading-[1.08] mb-5">
-              Precision outbound infrastructure for{' '}
-              <span className="text-[#0d9467] italic font-editorial font-normal">
+              <AnimatedWordHighlight entrance={true} text="Precision outbound infrastructure for" />{' '}
+              <span className="text-[#0d9467] italic font-editorial font-normal text-shimmer">
                 B2B revenue teams.
               </span>
             </h1>
@@ -105,14 +182,16 @@ export default function EditorialHero() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={authLoading}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] active:scale-[0.98] text-white font-semibold text-sm transition-all cursor-pointer shadow-xs shrink-0"
-                >
-                  <span>Launch Engine</span>
-                  <ArrowRight className="w-4 h-4 text-[#00e599]" />
-                </button>
+                <div ref={launchBtnRef} className="shrink-0 flex items-stretch">
+                  <MagneticButton
+                    type="submit"
+                    disabled={authLoading}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0d1c15] hover:bg-[#162b21] active:scale-[0.98] text-white font-semibold text-sm transition-all cursor-pointer shadow-xs shrink-0 group"
+                  >
+                    <span>Launch Engine</span>
+                    <ArrowRight className="w-4 h-4 text-[#00e599] transition-transform duration-200 group-hover:translate-x-1" />
+                  </MagneticButton>
+                </div>
               </form>
 
               {error && (
@@ -160,9 +239,27 @@ export default function EditorialHero() {
 
           </div>
 
-          {/* Right Column: Original OutLaunch Interface Preview (6 cols) */}
-          <div className="lg:col-span-6 w-full">
-            <div className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/12 shadow-[0_20px_50px_rgba(13,28,21,0.08)] overflow-hidden">
+          {/* Right Column: Original OutLaunch Interface Preview (6 cols) with 3D Tilt */}
+          <div ref={heroCardRef} className="lg:col-span-6 w-full will-change-transform relative overflow-visible">
+            {/* Floating Upper Badge with Depth Parallax */}
+            <div
+              ref={badgeRef1}
+              className="hidden sm:flex absolute -top-3.5 -right-3.5 px-3 py-1.5 rounded-full bg-white/95 border border-[#0d1c15]/12 shadow-lg items-center gap-1.5 text-xs font-mono text-[#0d9467] font-semibold z-20 backdrop-blur-xs will-change-transform"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#00e599]" />
+              <span>SPF / DKIM / DMARC Aligned</span>
+            </div>
+
+            {/* Floating Lower Badge with Counter Parallax */}
+            <div
+              ref={badgeRef2}
+              className="hidden sm:flex absolute -bottom-3.5 -left-3.5 px-3 py-1.5 rounded-full bg-[#0d1c15] text-[#00e599] border border-[#00e599]/30 shadow-xl items-center gap-2 text-xs font-mono font-semibold z-20 will-change-transform"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#00e599] animate-ping" />
+              <span>Human Approval Required</span>
+            </div>
+
+            <TiltCard className="bg-white rounded-2xl md:rounded-3xl border border-[#0d1c15]/12 shadow-[0_20px_50px_rgba(13,28,21,0.08)] overflow-hidden">
               
               {/* Product Header Bar */}
               <div className="px-5 py-3.5 bg-[#fcfbf9] border-b border-[#0d1c15]/08 flex flex-wrap items-center justify-between gap-3">
@@ -177,14 +274,31 @@ export default function EditorialHero() {
                 </div>
               </div>
 
-              {/* Interactive Tabs */}
-              <div className="flex border-b border-[#0d1c15]/08 bg-[#f7f5f0]/50 p-1.5 gap-1 text-xs font-mono">
+              {/* Interactive Tabs with Sliding Pill */}
+              <div className="relative flex border-b border-[#0d1c15]/08 bg-[#f7f5f0]/60 p-1.5 gap-1 text-xs font-mono">
+                {/* Sliding active pill indicator */}
+                <div
+                  className="absolute top-1.5 bottom-1.5 rounded-lg bg-white shadow-xs border border-[#0d1c15]/08 tab-pill-slider pointer-events-none"
+                  style={{
+                    width: 'calc(25% - 5px)',
+                    transform: `translateX(${
+                      activeWorkflowTab === 'prospect'
+                        ? '0%'
+                        : activeWorkflowTab === 'research'
+                        ? '100%'
+                        : activeWorkflowTab === 'email'
+                        ? '200%'
+                        : '300%'
+                    })`,
+                  }}
+                />
+
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('prospect')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                  className={`relative z-10 flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'prospect'
-                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      ? 'text-[#0d1c15] font-semibold scale-100'
                       : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
@@ -193,9 +307,9 @@ export default function EditorialHero() {
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('research')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                  className={`relative z-10 flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'research'
-                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      ? 'text-[#0d1c15] font-semibold scale-100'
                       : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
@@ -204,9 +318,9 @@ export default function EditorialHero() {
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('email')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                  className={`relative z-10 flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'email'
-                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      ? 'text-[#0d1c15] font-semibold scale-100'
                       : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
@@ -215,9 +329,9 @@ export default function EditorialHero() {
                 <button
                   type="button"
                   onClick={() => setActiveWorkflowTab('linkedin')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                  className={`relative z-10 flex-1 py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                     activeWorkflowTab === 'linkedin'
-                      ? 'bg-white text-[#0d1c15] font-semibold shadow-xs border border-[#0d1c15]/08'
+                      ? 'text-[#0d1c15] font-semibold scale-100'
                       : 'text-[#5a6962] hover:text-[#0d1c15]'
                   }`}
                 >
@@ -393,7 +507,7 @@ export default function EditorialHero() {
                 <span>Secondary Domain Warm-up: 100%</span>
               </div>
 
-            </div>
+            </TiltCard>
           </div>
 
         </div>

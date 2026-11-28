@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TableSkeleton } from '../ui/DashboardSkeleton';
 import {
   Search,
   Filter,
@@ -558,10 +559,7 @@ export default function FindLeadsView({
 
         {/* Results List */}
         {isLoading ? (
-          <div className="p-16 flex flex-col items-center justify-center text-center">
-            <Loader2 className="w-8 h-8 text-[#0d9467] animate-spin mb-3" />
-            <p className="text-xs font-mono text-[#5a6962]">Searching verified B2B prospect records...</p>
-          </div>
+          <TableSkeleton rows={6} columns={6} />
         ) : sortedResults.length === 0 ? (
           <div className="p-16 text-center">
             <Users className="w-10 h-10 text-[#73827a]/30 mx-auto mb-3" />

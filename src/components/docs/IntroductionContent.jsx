@@ -51,7 +51,7 @@ export default function IntroductionContent() {
   ];
 
   const methodColors = {
-    GET: 'text-[#009485]',
+    GET: 'text-[#0d9467]',
     POST: 'text-[#0a52af]',
     PATCH: 'text-[#ffaa01]',
     DEL: 'text-[#d52b2a]',
@@ -113,7 +113,7 @@ export default function IntroductionContent() {
                 >
                   <button
                     type="button"
-                    className="download-button flex items-center gap-1.5 text-[16px] text-[#1b1b1b] font-normal hover:text-[#009485] cursor-pointer bg-transparent border-0 p-0"
+                    className="download-button flex items-center gap-1.5 text-[16px] text-[#1b1b1b] font-normal hover:text-[#0d9467] cursor-pointer bg-transparent border-0 p-0"
                   >
                     <span>Download OpenAPI Document</span>
                     {downloadHover && (
@@ -122,14 +122,14 @@ export default function IntroductionContent() {
                           href="/public/api/openapi.json"
                           target="_blank"
                           rel="noreferrer"
-                          className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#009485]"
+                          className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#0d9467]"
                         >
                           json
                         </a>
                         <a
                           href="/public/api/openapi.json"
                           download="openapi.yaml"
-                          className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#009485]"
+                          className="badge rounded-2xl border border-[rgba(0,0,0,0.1)] bg-[#fcfcfc] px-1.5 py-0.5 text-[#757575] text-[11px] font-mono hover:bg-white hover:text-[#0d9467]"
                         >
                           yaml
                         </a>
@@ -148,7 +148,7 @@ export default function IntroductionContent() {
                         href="/public/api/openapi.json"
                         rel="nofollow"
                         target="_blank"
-                        className="text-[#1b1b1b] underline hover:text-[#009485]"
+                        className="text-[#1b1b1b] underline hover:text-[#0d9467]"
                       >
                         /public/api/openapi.json
                       </a>{' '}
@@ -190,7 +190,7 @@ export default function IntroductionContent() {
                       Generate your API key in your{' '}
                       <a
                         href="/dashboard"
-                        className="text-[#009485] hover:underline font-medium"
+                        className="text-[#0d9467] hover:underline font-medium"
                       >
                         OutLaunch Workspace Settings
                       </a>
@@ -326,7 +326,7 @@ export default function IntroductionContent() {
                       <span className={`w-[62px] min-w-[62px] shrink-0 text-right font-['JetBrains_Mono',monospace] text-[14px] font-normal leading-[21.7px] uppercase ${methodColors[op.method]}`}>
                         {op.method}
                       </span>
-                      <span className="ml-3 font-['JetBrains_Mono',monospace] text-[14px] font-normal leading-[21.7px] text-[#1b1b1b] group-hover:text-[#009485] truncate">
+                      <span className="ml-3 font-['JetBrains_Mono',monospace] text-[14px] font-normal leading-[21.7px] text-[#1b1b1b] group-hover:text-[#0d9467] truncate">
                         {op.path}
                       </span>
                     </a>

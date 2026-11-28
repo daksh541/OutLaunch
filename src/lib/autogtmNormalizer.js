@@ -138,10 +138,26 @@ export function normalizeSegments(raw) {
 }
 
 /**
- * Normalizes competitor list into a guaranteed Array<{ domain: string, name?: string, faviconUrl?: string }>.
+ * Normalizes competitor list into a guaranteed Array<{
+ *   domain: string,
+ *   name: string,
+ *   faviconUrl: string,
+ *   description?: string,
+ *   source_urls: string[],
+ *   sourceUrls: string[],
+ *   relevance_score: number,
+ *   relationship: 'direct' | 'related',
+ *   ranking_reason: string,
+ *   products: Array<{ name: string, description?: string }>,
+ *   customers: Array<{ name: string, description?: string }>,
+ *   features: Array<{ name: string, description?: string }>,
+ *   pricing: Array<{ name: string, description?: string }>,
+ *   reason?: string,
+ *   score?: number
+ * }>.
  *
  * @param {any} raw - Array, JSON string, or nested object.
- * @returns {Array<{ domain: string, name: string, faviconUrl: string|null }>}
+ * @returns {Array<any>}
  */
 export function normalizeCompetitors(raw) {
   if (!raw) return [];
@@ -160,35 +176,94 @@ export function normalizeCompetitors(raw) {
   if (Array.isArray(value)) {
     list = value;
   } else if (value && typeof value === 'object') {
-    if (Array.isArray(value.competitors)) {
+    if (Array.isArray(value.results)) {
+      list = value.results;
+    } else if (Array.isArray(value.competitors)) {
       list = value.competitors;
     } else if (Array.isArray(value.items)) {
       list = value.items;
+    } else if (Array.isArray(value.data)) {
+      list = value.data;
     } else {
       list = Object.values(value).filter(
-        (v) => v && typeof v === 'object' && v.domain
+        (v) => v && typeof v === 'object' && (v.domain || v.name)
       );
     }
   }
 
-  return list.map((item, idx) => {
-    if (typeof item === 'string') {
-      return {
-        domain: item,
-        name: item,
-        faviconUrl: `https://www.google.com/s2/favicons?domain=${item}&sz=32`,
+  return list
+    .filter((item) => Boolean(item))
+    .map((item, idx) => {
+      if (typeof item === 'string') {
+        const cleanDomain = item.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0];
+        return {
+          domain: cleanDomain,
+          name: cleanDomain,
+          faviconUrl: `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=32`,
+          description: '',
+          source_urls: [`https://${cleanDomain}`],
+          sourceUrls: [`https://${cleanDomain}`],
+          relevance_score: 75,
+          relationship: 'direct',
+          ranking_reason: 'Identified competitor domain',
+          products: [],
+          customers: [],
+          features: [],
+          pricing: [],
+        };
+      }
+
+      const domain =
+        item.domain ||
+        (item.website ? item.website.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split('/')[0] : '') ||
+        `competitor-${idx + 1}.com`;
+
+      const safeSourceUrls = Array.isArray(item.source_urls) && item.source_urls.length > 0
+        ? item.source_urls
+        : Array.isArray(item.sourceUrls) && item.sourceUrls.length > 0
+        ? item.sourceUrls
+        : item.url
+        ? [item.url]
+        : [`https://${domain}`];
+
+      const toFactArray = (facts) => {
+        if (!facts) return [];
+        if (Array.isArray(facts)) {
+          return facts.map(f => {
+            if (typeof f === 'string') return { name: f, description: f };
+            if (f && typeof f === 'object') return { name: f.name || String(f), description: f.description || f.evidence_quote || '' };
+            return { name: String(f), description: '' };
+          });
+        }
+        return [];
       };
-    }
-    const domain = item?.domain || `competitor-${idx + 1}.com`;
-    return {
-      domain,
-      name: item?.name || domain,
-      faviconUrl:
-        item?.faviconUrl ||
-        item?.favicon_url ||
-        `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-    };
-  });
+
+      const score = typeof item.relevance_score === 'number'
+        ? item.relevance_score
+        : typeof item.score === 'number'
+        ? item.score
+        : 80;
+
+      return {
+        domain,
+        name: item.name || domain,
+        faviconUrl:
+          item.faviconUrl ||
+          item.favicon_url ||
+          `https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
+        description: item.description || item.reason || '',
+        source_urls: safeSourceUrls,
+        sourceUrls: safeSourceUrls,
+        relevance_score: score,
+        score: score,
+        relationship: item.relationship === 'direct' ? 'direct' : 'related',
+        ranking_reason: item.ranking_reason || item.reason || 'Identified competitive overlap',
+        products: toFactArray(item.products),
+        customers: toFactArray(item.customers),
+        features: toFactArray(item.features),
+        pricing: toFactArray(item.pricing),
+      };
+    });
 }
 
 /**

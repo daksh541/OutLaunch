@@ -135,17 +135,21 @@ export default function LinkedInTasksView({ tasks, onCompleteTask }) {
                     onClick={() => handleCopy(task.id, task.draft)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#0d1c15]/15 hover:bg-[#fcfbf9] text-xs font-semibold text-[#0d1c15] transition-colors cursor-pointer"
                   >
-                    {copiedTaskId === task.id ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-[#0d9467]" />
-                        <span className="text-[#0d9467] font-bold">Copied to Clipboard!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 text-[#5a6962]" />
-                        <span>Copy Message Draft</span>
-                      </>
-                    )}
+                    <div className="relative w-3.5 h-3.5">
+                      <Copy
+                        className={`w-3.5 h-3.5 text-[#5a6962] transition-all duration-200 absolute inset-0 ${
+                          copiedTaskId === task.id ? 'opacity-0 scale-50' : 'opacity-100 scale-100'
+                        }`}
+                      />
+                      <Check
+                        className={`w-3.5 h-3.5 text-[#0d9467] transition-all duration-200 absolute inset-0 ${
+                          copiedTaskId === task.id ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                        }`}
+                      />
+                    </div>
+                    <span className={copiedTaskId === task.id ? 'text-[#0d9467] font-bold' : ''}>
+                      {copiedTaskId === task.id ? 'Copied to Clipboard!' : 'Copy Message Draft'}
+                    </span>
                   </button>
 
                   <div className="flex items-center gap-2">

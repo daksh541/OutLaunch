@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getRegionBySlug } from '../data/gm/regionData';
 import { getCountryBySlug } from '../data/gm/countryData';
+import { ScrollTrigger } from '../lib/motion';
 
 const NavigationContext = createContext(null);
 
@@ -16,6 +17,7 @@ export const PRODUCT_ROUTES = {
   VERIFICATION_CODE: '/register/verification-code',
   AUTO_GTM: '/app-auto-gtm',
   AUTO_GTM_EXPLORE: '/auto-gtm/company',
+  ANALYSIS: '/analysis',
 };
 
 // Map URL paths or hashes to product IDs
@@ -89,6 +91,25 @@ export function resolveProductFromLocation() {
       product: 'sign-in',
       authMode: 'sign-in',
       canonicalPath: PRODUCT_ROUTES.SIGN_IN,
+    };
+  }
+
+  // 0c-2. Redesigned Website Analysis Flow (/analysis, /company-analysis)
+  const analysisMatch = pathname.match(/\/analysis(?:\/([^/]+))?/) || hash.match(/\/analysis(?:\/([^/]+))?/);
+  if (analysisMatch || pathname.includes('/company-analysis')) {
+    let domainParam = '';
+    if (analysisMatch && analysisMatch[1]) {
+      try { domainParam = decodeURIComponent(analysisMatch[1]).replace(/^www\./, '').replace(/\.$/, ''); } catch (_) {}
+    } else {
+      const q = new URLSearchParams(window.location.search).get('domain') || new URLSearchParams(window.location.search).get('website');
+      if (q) {
+        try { domainParam = decodeURIComponent(q).replace(/^www\./, '').replace(/\.$/, ''); } catch (_) {}
+      }
+    }
+    return {
+      product: 'analysis',
+      domain: domainParam,
+      canonicalPath: domainParam ? `/analysis/${domainParam}` : PRODUCT_ROUTES.ANALYSIS,
     };
   }
 
@@ -269,8 +290,24 @@ export function NavigationProvider({ children }) {
       window.history.pushState({}, '', targetPath);
     }
 
-    setRouteState(resolveProductFromLocation());
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Kill any active ScrollTriggers on route change to prevent memory leaks and ghost pins
+    if (typeof ScrollTrigger !== 'undefined' && ScrollTrigger.getAll) {
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    }
+
+    if (
+      typeof document !== 'undefined' &&
+      typeof document.startViewTransition === 'function' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      document.startViewTransition(() => {
+        setRouteState(resolveProductFromLocation());
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      });
+    } else {
+      setRouteState(resolveProductFromLocation());
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, []);
 
   return (

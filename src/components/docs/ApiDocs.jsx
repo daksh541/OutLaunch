@@ -100,7 +100,7 @@ export default function ApiDocs({ onBackToLanding }) {
               </p>
               <button
                 onClick={() => handleSelectRoute('introduction')}
-                className="mt-4 px-4 py-2 bg-[#009485] text-white text-xs font-semibold rounded-lg hover:bg-[#007f72] transition-colors cursor-pointer"
+                className="mt-4 px-4 py-2 bg-[#0d9467] text-white text-xs font-semibold rounded-lg hover:bg-[#0a7a54] transition-colors cursor-pointer"
               >
                 Return to Introduction
               </button>
